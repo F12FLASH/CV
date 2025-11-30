@@ -51,6 +51,8 @@ const emptyProject = {
   featured: false,
 };
 
+const defaultCategory = "full-stack";
+
 export default function AdminProjectsEnhanced() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -240,7 +242,7 @@ export default function AdminProjectsEnhanced() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {["all", "featured", "published", "draft", ...categories.map(c => c.id)].map((f) => (
+          {["all", "featured", "published", "draft", ...categories.map(c => c.slug)].map((f) => (
             <Button
               key={f}
               variant={filter === f ? "default" : "outline"}
@@ -252,7 +254,7 @@ export default function AdminProjectsEnhanced() {
                f === "featured" ? "Featured" :
                f === "published" ? "Published" :
                f === "draft" ? "Draft" :
-               categories.find(c => c.id === f)?.label || f}
+               categories.find(c => c.slug === f)?.name || f}
             </Button>
           ))}
         </div>
@@ -320,7 +322,7 @@ export default function AdminProjectsEnhanced() {
                     <span className="flex items-center gap-1">
                       <Eye className="w-4 h-4" /> {project.views}
                     </span>
-                    <span>{categories.find(c => c.id === project.category)?.label || project.category}</span>
+                    <span>{categories.find(c => c.slug === project.category)?.name || project.category}</span>
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t">
                     <div className="flex items-center gap-2">
@@ -420,11 +422,15 @@ export default function AdminProjectsEnhanced() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
+                    {categories.length > 0 ? (
+                      categories.map((cat: Category) => (
+                        <SelectItem key={cat.id} value={cat.slug} data-testid={`option-${cat.slug}`}>
+                          {cat.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="default" disabled>No categories available</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

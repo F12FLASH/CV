@@ -76,6 +76,16 @@ Preferred communication style: Simple, everyday language.
   - Default post categories: Web Development, Backend, Frontend, Tutorial
   - Categories stored in database with proper slug generation
   - Prevents duplicate categories from being created on restart
+- **FIXED: Category dropdown and display in Projects page (Nov 30)**
+  - Fixed category dropdown in Projects create/edit dialog to show category names
+  - Changed from `cat.label` to `cat.name` (proper field from database)
+  - Changed value from `cat.id` to `cat.slug` (for consistency)
+  - Fixed filter buttons to display category names correctly
+  - Now displays: "Full-stack", "Frontend", "Backend", "Mobile", "Design" instead of IDs
+  - Fixed display of selected category in project cards
+- **Dialog Components Fixed**
+  - PostCategories and ProjectCategories dialogs now properly render and handle form submission
+  - All mutations include proper error handling and user feedback via toast notifications
 
 ### Backend Architecture
 
