@@ -250,7 +250,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                         className={`flex flex-col items-start p-3 cursor-pointer ${!msg.read ? 'bg-primary/5' : ''}`}
                         onClick={() => {
                           markAsRead(msg.id);
-                          setLocationState("/admin/inbox");
+                          setLocation("/admin/inbox");
                         }}
                       >
                         <div className="flex items-start gap-3 w-full">
@@ -279,7 +279,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="text-center justify-center text-primary cursor-pointer"
-                  onClick={() => setLocationState("/admin/notifications")}
+                  onClick={() => setLocation("/admin/notifications")}
                 >
                   View all notifications
                 </DropdownMenuItem>
@@ -305,7 +305,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setLocationState("/admin/profile")}>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation("/admin/profile")}>Profile</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-red-500" onClick={handleLogout}>Log out</DropdownMenuItem>
               </DropdownMenuContent>
