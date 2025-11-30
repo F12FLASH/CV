@@ -777,7 +777,7 @@ export default function AdminThemeEnhanced() {
             <Card className="overflow-hidden">
               <CardContent className="p-6 bg-muted/30">
                 <div 
-                  className={`mx-auto transition-all duration-300 ${
+                  className={`mx-auto transition-all duration-300 overflow-y-auto max-h-[600px] ${
                     previewMode === 'desktop' ? 'max-w-full' :
                     previewMode === 'tablet' ? 'max-w-[768px]' :
                     'max-w-[375px]'
@@ -790,29 +790,34 @@ export default function AdminThemeEnhanced() {
                       borderRadius: `${theme.borderRadius}px`
                     }}
                   >
+                    {/* Navbar */}
                     <div 
-                      className="h-12 border-b flex items-center justify-between px-4"
-                      style={{ borderColor: `${theme.primaryColor}20` }}
+                      className="h-14 border-b flex items-center justify-between px-4 sticky top-0 z-10"
+                      style={{ 
+                        backgroundColor: `${theme.primaryColor}10`,
+                        borderColor: `${theme.primaryColor}20`
+                      }}
                     >
-                      <div className="font-bold" style={{ color: theme.primaryColor, fontFamily: theme.headingFont }}>
-                        LOI
+                      <div className="font-bold text-lg" style={{ color: theme.primaryColor, fontFamily: theme.headingFont }}>
+                        Loi Developer
                       </div>
                       <div className="flex gap-4 text-xs">
-                        <span>Home</span>
-                        <span>About</span>
+                        <span>Portfolio</span>
+                        <span>Blog</span>
                         <span>Contact</span>
                       </div>
                     </div>
 
-                    <div className="p-8 text-center space-y-4">
+                    {/* Hero Section */}
+                    <div className="p-8 text-center space-y-3 bg-gradient-to-b from-background to-muted/20">
                       <h1 
-                        className="text-2xl font-bold" 
-                        style={{ fontFamily: theme.headingFont }}
+                        className="text-3xl font-bold" 
+                        style={{ fontFamily: theme.headingFont, color: theme.primaryColor }}
                       >
-                        Building Digital Experiences
+                        Hello, I'm Loi Developer
                       </h1>
-                      <p className="text-sm text-muted-foreground">
-                        This is how your website content will appear with the selected theme settings.
+                      <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                        Full-stack Developer | UI/UX Enthusiast | Creative Thinker
                       </p>
                       <Button 
                         size="sm" 
@@ -820,32 +825,79 @@ export default function AdminThemeEnhanced() {
                           backgroundColor: theme.primaryColor,
                           borderRadius: `${theme.borderRadius}px`
                         }}
+                        className="text-white"
                       >
-                        Get Started
+                        View My Work
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 p-4 bg-muted/20">
-                      {[1, 2, 3].map(i => (
-                        <div 
-                          key={i} 
-                          className="bg-background p-4 border"
-                          style={{ 
-                            borderRadius: `${theme.borderRadius}px`,
-                            boxShadow: theme.shadowPreset === 'none' ? 'none' :
-                              theme.shadowPreset === 'soft' ? '0 1px 3px rgba(0,0,0,0.1)' :
-                              theme.shadowPreset === 'medium' ? '0 4px 6px rgba(0,0,0,0.1)' :
-                              '0 10px 15px rgba(0,0,0,0.1)'
-                          }}
-                        >
+                    {/* Services Section */}
+                    <div className="p-6 space-y-3 border-t">
+                      <h2 className="text-xl font-bold" style={{ fontFamily: theme.headingFont }}>Featured Services</h2>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          'Web Development',
+                          'UI/UX Design',
+                          'Backend APIs',
+                          'DevOps'
+                        ].map(service => (
                           <div 
-                            className="w-8 h-8 rounded mb-2" 
-                            style={{ backgroundColor: `${theme.primaryColor}20` }} 
-                          />
-                          <div className="h-2 w-20 bg-muted rounded mb-2" />
-                          <div className="h-2 w-full bg-muted rounded" />
-                        </div>
-                      ))}
+                            key={service}
+                            className="p-3 border bg-card"
+                            style={{ 
+                              borderRadius: `${theme.borderRadius}px`,
+                              borderColor: `${theme.primaryColor}30`,
+                              boxShadow: theme.shadowPreset === 'none' ? 'none' :
+                                theme.shadowPreset === 'soft' ? '0 1px 3px rgba(0,0,0,0.1)' :
+                                theme.shadowPreset === 'medium' ? '0 4px 6px rgba(0,0,0,0.1)' :
+                                '0 10px 15px rgba(0,0,0,0.1)'
+                            }}
+                          >
+                            <div className="text-xs text-center font-medium" style={{ color: theme.primaryColor }}>
+                              {service}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Projects Section */}
+                    <div className="p-6 space-y-3 border-t">
+                      <h2 className="text-xl font-bold" style={{ fontFamily: theme.headingFont }}>Latest Projects</h2>
+                      <div className="space-y-2">
+                        {[1, 2, 3].map(i => (
+                          <div 
+                            key={i}
+                            className="p-3 border bg-card flex items-start gap-2"
+                            style={{ 
+                              borderRadius: `${theme.borderRadius}px`,
+                              borderColor: `${theme.primaryColor}20`
+                            }}
+                          >
+                            <div 
+                              className="w-12 h-12 rounded flex-shrink-0" 
+                              style={{ 
+                                backgroundColor: `${theme.primaryColor}20`,
+                                borderRadius: `${theme.borderRadius}px`
+                              }} 
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="h-2 w-24 bg-muted rounded mb-1" />
+                              <div className="h-2 w-32 bg-muted/60 rounded" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div 
+                      className="p-4 text-center text-xs border-t"
+                      style={{ borderColor: `${theme.primaryColor}20` }}
+                    >
+                      <p className="text-muted-foreground">
+                        2024 Loi Developer. All rights reserved.
+                      </p>
                     </div>
                   </div>
                 </div>
