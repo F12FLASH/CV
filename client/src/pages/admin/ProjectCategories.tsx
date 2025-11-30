@@ -148,7 +148,7 @@ export default function AdminProjectCategories() {
       .replace(/[^\w\s-]/g, "")
       .replace(/[\s_]+/g, "-")
       .replace(/^-+|-+$/g, "");
-    setFormData({ ...formData, slug });
+    return slug;
   };
 
   return (
@@ -234,8 +234,9 @@ export default function AdminProjectCategories() {
                 id="name"
                 value={formData.name}
                 onChange={(e) => {
-                  setFormData({ ...formData, name: e.target.value });
-                  generateSlug(e.target.value);
+                  const newName = e.target.value;
+                  const newSlug = generateSlug(newName);
+                  setFormData({ ...formData, name: newName, slug: newSlug });
                 }}
                 placeholder="e.g., Full-stack"
                 data-testid="input-category-name"
