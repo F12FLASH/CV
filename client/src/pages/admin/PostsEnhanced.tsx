@@ -120,7 +120,6 @@ export default function AdminPostsEnhanced() {
   const [postToDelete, setPostToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState<PostFormData>(defaultFormData);
   const [tagsInput, setTagsInput] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
 
   const postsPerPage = 5;
 
