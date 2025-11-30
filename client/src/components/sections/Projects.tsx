@@ -27,9 +27,9 @@ export function Projects() {
   const allProjects = mockData?.projects || [];
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
 
-  const publishedProjects = allProjects.filter(p => p.status === "Published");
+  const featuredProjects = allProjects.filter(p => p.status === "Published" && p.featured === true);
 
-  const filteredProjects = publishedProjects.filter(
+  const filteredProjects = featuredProjects.filter(
     (p) => {
       if (filter === "all") return true;
       return p.category.toLowerCase().includes(filter.toLowerCase()) || filter.toLowerCase().includes(p.category.toLowerCase());
