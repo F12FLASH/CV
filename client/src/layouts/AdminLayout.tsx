@@ -225,9 +225,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="text-center justify-center text-primary cursor-pointer"
-                  onClick={() => setLocation("/admin/inbox")}
+                  onClick={() => setLocation("/admin/notifications")}
                 >
-                  View all messages
+                  View all notifications
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
