@@ -31,7 +31,9 @@ import {
   Moon,
   Sun,
   Inbox,
-  Code2
+  Code2,
+  Check,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -44,11 +46,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { formatDistanceToNow } from "date-fns";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { isAuthenticated, logout, messages } = useMockData();
+  const { isAuthenticated, logout, messages, markAsRead } = useMockData();
   const { theme, setTheme } = useTheme();
   
   useWebSocket();
@@ -155,19 +159,78 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
               {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="relative"
-              onClick={() => setLocation("/admin/inbox")}
-            >
-              <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full text-xs text-white flex items-center justify-center font-medium">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative"
+                >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full text-xs text-white flex items-center justify-center font-medium animate-pulse">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal flex items-center justify-between">
+                  <span className="font-semibold">Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="text-xs text-muted-foreground">{unreadCount} unread</span>
+                  )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <ScrollArea className="h-[300px]">
+                  {messages.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      <Bell className="mx-auto h-8 w-8 mb-2 opacity-50" />
+                      <p className="text-sm">No notifications yet</p>
+                    </div>
+                  ) : (
+                    messages.slice(0, 10).map((msg) => (
+                      <DropdownMenuItem 
+                        key={msg.id} 
+                        className={`flex flex-col items-start p-3 cursor-pointer ${!msg.read ? 'bg-primary/5' : ''}`}
+                        onClick={() => {
+                          markAsRead(msg.id);
+                          setLocation("/admin/inbox");
+                        }}
+                      >
+                        <div className="flex items-start gap-3 w-full">
+                          <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!msg.read ? 'bg-primary' : 'bg-transparent'}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-medium text-sm truncate">{msg.sender || 'Unknown'}</p>
+                              {msg.createdAt && (
+                                <span className="text-xs text-muted-foreground flex-shrink-0">
+                                  {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">
+                              {msg.subject || 'No subject'}
+                            </p>
+                            <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
+                              {msg.message ? `${msg.message.substring(0, 50)}...` : 'No message content'}
+                            </p>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </ScrollArea>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-center justify-center text-primary cursor-pointer"
+                  onClick={() => setLocation("/admin/inbox")}
+                >
+                  View all messages
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

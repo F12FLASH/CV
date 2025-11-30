@@ -8,14 +8,10 @@ export function setupWebSocket(server: Server) {
   wss = new WebSocketServer({ server, path: "/ws" });
 
   wss.on("connection", (ws: WebSocket) => {
-    console.log("WebSocket client connected");
-
     ws.on("close", () => {
-      console.log("WebSocket client disconnected");
     });
 
-    ws.on("error", (error) => {
-      console.error("WebSocket error:", error);
+    ws.on("error", () => {
     });
   });
 

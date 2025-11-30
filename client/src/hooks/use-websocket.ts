@@ -12,6 +12,7 @@ const notificationSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10I
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isClosingRef = useRef(false);
   const { toast } = useToast();
   const { isAuthenticated, refetchMessages } = useMockData();
 
@@ -22,7 +23,7 @@ export function useWebSocket() {
   }, []);
 
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    if (wsRef.current?.readyState === WebSocket.OPEN || isClosingRef.current) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -31,7 +32,6 @@ export function useWebSocket() {
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
-        console.log("WebSocket connected");
       };
 
       wsRef.current.onmessage = async (event) => {
@@ -43,7 +43,7 @@ export function useWebSocket() {
             
             toast({
               title: "New Contact Message",
-              description: `${message.data.sender}: ${message.data.subject || "No subject"}`,
+              description: `${message.data?.sender || 'Someone'}: ${message.data?.subject || "No subject"}`,
               duration: 5000,
             });
 
@@ -59,21 +59,20 @@ export function useWebSocket() {
       };
 
       wsRef.current.onclose = () => {
-        console.log("WebSocket disconnected");
-        if (isAuthenticated) {
+        if (!isClosingRef.current && isAuthenticated) {
           reconnectTimeoutRef.current = setTimeout(connect, 3000);
         }
       };
 
       wsRef.current.onerror = (error) => {
-        console.error("WebSocket error:", error);
+        console.error("WebSocket connection error:", error);
       };
     } catch (error) {
-      console.error("Failed to create WebSocket connection:", error);
     }
   }, [isAuthenticated, playNotificationSound, toast, refetchMessages]);
 
   const disconnect = useCallback(() => {
+    isClosingRef.current = true;
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
@@ -82,6 +81,9 @@ export function useWebSocket() {
       wsRef.current.close();
       wsRef.current = null;
     }
+    setTimeout(() => {
+      isClosingRef.current = false;
+    }, 100);
   }, []);
 
   useEffect(() => {
@@ -91,7 +93,17 @@ export function useWebSocket() {
       disconnect();
     }
 
+    const handleBeforeUnload = () => {
+      isClosingRef.current = true;
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       disconnect();
     };
   }, [isAuthenticated, connect, disconnect]);

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useMockData } from "@/context/MockContext";
 
-// Safe wrapper for useMockData hook
 const useSafeMockData = () => {
   try {
     return useMockData();
@@ -25,13 +24,14 @@ const categories = [
 export function Projects() {
   const [filter, setFilter] = useState("all");
   const mockData = useSafeMockData();
-  const projects = mockData?.projects || [];
+  const allProjects = mockData?.projects || [];
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
 
-  const filteredProjects = projects.filter(
+  const publishedProjects = allProjects.filter(p => p.status === "Published");
+
+  const filteredProjects = publishedProjects.filter(
     (p) => {
       if (filter === "all") return true;
-      // Case insensitive matching and ensuring category exists
       return p.category.toLowerCase().includes(filter.toLowerCase()) || filter.toLowerCase().includes(p.category.toLowerCase());
     }
   );
