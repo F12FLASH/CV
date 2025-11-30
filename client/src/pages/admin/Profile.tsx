@@ -6,39 +6,60 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { useMockData } from "@/context/MockContext";
 import { Camera, Save, Mail, User as UserIcon, Shield, Clock } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { api } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function AdminProfile() {
-  const { currentUser, updateUser } = useMockData();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: currentUser?.name || "",
-    email: currentUser?.email || "",
-    username: currentUser?.username || "",
+    name: "",
+    email: "",
+    username: "",
   });
 
-  const handleSave = async () => {
-    if (!currentUser) return;
-    
-    try {
-      await updateUser(currentUser.id, formData);
+  const { data: currentUser, isLoading } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: api.getCurrentUser,
+  });
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || "",
+        email: currentUser.email || "",
+        username: currentUser.username || "",
+      });
+    }
+  }, [currentUser]);
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => api.updateUser(currentUser.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       setIsEditing(false);
       toast({
         title: "Profile Updated",
         description: "Your profile has been updated successfully.",
       });
-    } catch (error) {
+    },
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to update profile.",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const handleSave = async () => {
+    if (!currentUser) return;
+    updateMutation.mutate(formData);
   };
 
   const handleCancel = () => {
@@ -50,7 +71,25 @@ export default function AdminProfile() {
     setIsEditing(false);
   };
 
-  if (!currentUser) return null;
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-96">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-96">
+          <div className="text-muted-foreground">Please log in to view your profile</div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -65,9 +104,9 @@ export default function AdminProfile() {
           ) : (
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-              <Button onClick={handleSave}>
+              <Button onClick={handleSave} disabled={updateMutation.isPending}>
                 <Save className="w-4 h-4 mr-2" />
-                Save Changes
+                {updateMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           )}
