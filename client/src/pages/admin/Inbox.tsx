@@ -23,9 +23,10 @@ export default function AdminInbox() {
     queryKey: ['/api/messages'],
     enabled: isAuthenticated,
   });
-  const [selectedMessageId, setSelectedMessageId] = useState<number>(messages[0]?.id || 0);
+  const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
 
-  const selectedMessage = messages.find(m => m.id === selectedMessageId) || messages[0];
+  const effectiveSelectedId = selectedMessageId ?? messages[0]?.id ?? null;
+  const selectedMessage = messages.find(m => m.id === effectiveSelectedId) || messages[0];
 
   const handleSelectMessage = (id: number) => {
     setSelectedMessageId(id);
@@ -35,7 +36,7 @@ export default function AdminInbox() {
   const handleDelete = (id: number) => {
     if (confirm("Move this message to trash?")) {
       deleteMessage(id);
-      if (selectedMessageId === id && messages.length > 1) {
+      if (effectiveSelectedId === id && messages.length > 1) {
         const nextMessage = messages.find(m => m.id !== id);
         if (nextMessage) setSelectedMessageId(nextMessage.id);
       }
@@ -61,7 +62,7 @@ export default function AdminInbox() {
                   onClick={() => handleSelectMessage(msg.id)}
                   className={`flex flex-col gap-2 p-4 text-left border-b border-border hover:bg-muted/50 transition-colors ${
                     !msg.read ? "bg-primary/5" : ""
-                  } ${selectedMessageId === msg.id ? "bg-muted" : ""}`}
+                  } ${effectiveSelectedId === msg.id ? "bg-muted" : ""}`}
                 >
                   <div className="flex justify-between items-start w-full">
                     <span className={`font-medium ${!msg.read ? "text-foreground" : "text-muted-foreground"}`}>
