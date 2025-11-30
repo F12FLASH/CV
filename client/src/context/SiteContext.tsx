@@ -15,7 +15,6 @@ export interface SiteSettings {
   aboutDescription2: string;
   aboutImage: string;
   aboutName: string;
-  aboutEmail: string;
   aboutLocation: string;
   aboutFreelance: string;
   contactEmail: string;
@@ -55,7 +54,6 @@ const defaultSettings: SiteSettings = {
   aboutDescription2: "My philosophy is simple: Code with passion, build with purpose. Whether it's a complex backend system or a pixel-perfect frontend interface, I strive for excellence in every line of code.",
   aboutImage: "",
   aboutName: "Nguyen Thanh Loi",
-  aboutEmail: "loideveloper@example.com",
   aboutLocation: "Ho Chi Minh City",
   aboutFreelance: "Available",
   contactEmail: "loideveloper@example.com",
@@ -98,7 +96,6 @@ export function SiteProvider({ children }: { children: ReactNode }) {
           aboutDescription2: data.aboutDescription2 || defaultSettings.aboutDescription2,
           aboutImage: data.aboutImage || defaultSettings.aboutImage,
           aboutName: data.aboutName || defaultSettings.aboutName,
-          aboutEmail: data.aboutEmail || defaultSettings.aboutEmail,
           aboutLocation: data.aboutLocation || defaultSettings.aboutLocation,
           aboutFreelance: data.aboutFreelance || defaultSettings.aboutFreelance,
           contactEmail: data.contactEmail || defaultSettings.contactEmail,

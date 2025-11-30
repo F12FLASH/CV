@@ -14,7 +14,7 @@ export function About() {
   const aboutDescription = settings?.aboutDescription || "I started my coding journey with a curiosity for how things work on the web. Now, I specialize in building modern, scalable, and user-friendly applications using the latest technologies.";
   const aboutDescription2 = settings?.aboutDescription2 || "My philosophy is simple: Code with passion, build with purpose. Whether it's a complex backend system or a pixel-perfect frontend interface, I strive for excellence in every line of code.";
   const aboutName = settings?.aboutName || "Nguyen Thanh Loi";
-  const aboutEmail = settings?.aboutEmail || settings?.contactEmail || "loideveloper@example.com";
+  const aboutEmail = settings?.contactEmail || "loideveloper@example.com";
   const aboutLocation = settings?.aboutLocation || "Ho Chi Minh City";
   const aboutFreelance = settings?.aboutFreelance || "Available";
 

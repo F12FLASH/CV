@@ -198,26 +198,14 @@ export default function AdminSettingsEnhanced() {
                   <p className="text-xs text-muted-foreground">Upload via FileManager and paste the URL here</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Your Name</Label>
-                    <Input 
-                      value={settings.aboutName}
-                      onChange={(e) => updateSettings({ aboutName: e.target.value })}
-                      placeholder="e.g., Nguyen Thanh Loi"
-                      data-testid="input-about-name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input 
-                      type="email" 
-                      value={settings.aboutEmail}
-                      onChange={(e) => updateSettings({ aboutEmail: e.target.value })}
-                      placeholder="e.g., hello@example.com"
-                      data-testid="input-about-email"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Your Name</Label>
+                  <Input 
+                    value={settings.aboutName}
+                    onChange={(e) => updateSettings({ aboutName: e.target.value })}
+                    placeholder="e.g., Nguyen Thanh Loi"
+                    data-testid="input-about-name"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -271,17 +259,6 @@ export default function AdminSettingsEnhanced() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Contact Email (for contact section)</Label>
-                  <Input 
-                    type="email" 
-                    value={settings.contactEmail}
-                    onChange={(e) => updateSettings({ contactEmail: e.target.value })}
-                    placeholder="e.g., hello@example.com"
-                    data-testid="input-contact-email"
-                  />
-                  <p className="text-xs text-muted-foreground">This email is used in both About and Contact sections</p>
-                </div>
               </CardContent>
             </Card>
 
@@ -310,6 +287,18 @@ export default function AdminSettingsEnhanced() {
                     data-testid="input-contact-subtitle"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Contact Email</Label>
+                  <Input 
+                    type="email" 
+                    value={settings.contactEmail}
+                    onChange={(e) => updateSettings({ contactEmail: e.target.value })}
+                    placeholder="e.g., hello@example.com"
+                    data-testid="input-contact-email"
+                  />
+                  <p className="text-xs text-muted-foreground">This email is used in both About and Contact sections</p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Phone Number</Label>
