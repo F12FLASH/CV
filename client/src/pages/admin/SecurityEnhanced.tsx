@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Key, Lock, Smartphone, Globe, AlertTriangle, Download, Trash2 } from "lucide-react";
+import { Shield, Key, Lock, Smartphone, Globe, AlertTriangle, Download, Trash2, Filter } from "lucide-react";
 
 export default function AdminSecurityEnhanced() {
   return (
@@ -17,7 +17,7 @@ export default function AdminSecurityEnhanced() {
         </div>
 
         {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card className="border-green-500/50 bg-green-500/5">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -62,13 +62,25 @@ export default function AdminSecurityEnhanced() {
               </div>
             </CardContent>
           </Card>
+          <Card className="border-blue-500/50 bg-blue-500/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <Shield className="w-6 h-6 text-blue-500" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Last Scan</p>
+                  <p className="font-bold text-sm">2 days ago</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="authentication" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5">
             <TabsTrigger value="authentication">Authentication</TabsTrigger>
             <TabsTrigger value="firewall">Firewall</TabsTrigger>
             <TabsTrigger value="backup">Backup</TabsTrigger>
+            <TabsTrigger value="scanner">Scanner</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
@@ -281,11 +293,65 @@ export default function AdminSecurityEnhanced() {
             </Card>
           </TabsContent>
 
+          {/* VULNERABILITY SCANNER */}
+          <TabsContent value="scanner" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Vulnerability Scanner</CardTitle>
+                <CardDescription>Automated security scanning for threats and vulnerabilities</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                  <p className="font-medium text-sm mb-2">Last Scan: 2 days ago</p>
+                  <p className="text-xs text-muted-foreground mb-3">Status: All clear ✓</p>
+                  <Button>Run Scan Now</Button>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-sm mb-3">Scan History</h4>
+                  <div className="space-y-2">
+                    {[
+                      { date: "2 days ago", issues: 0, status: "Clean" },
+                      { date: "9 days ago", issues: 2, status: "Fixed" },
+                      { date: "16 days ago", issues: 1, status: "Fixed" },
+                    ].map((scan, i) => (
+                      <div key={i} className="flex items-center justify-between p-2 border rounded text-sm">
+                        <span>{scan.date}</span>
+                        <Badge variant={scan.status === "Clean" ? "default" : "secondary"}>
+                          {scan.issues > 0 ? `${scan.issues} issues` : "Clean"}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-sm mb-2">Scan Settings</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm">Auto-scan Schedule</label>
+                      <select className="p-1 rounded border bg-background text-sm">
+                        <option>Weekly</option>
+                        <option>Daily</option>
+                        <option>Monthly</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* ACTIVITY LOG */}
           <TabsContent value="activity" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Security Activity Log</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Security Activity Log</CardTitle>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    <Filter className="w-4 h-4" /> Filter
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {[

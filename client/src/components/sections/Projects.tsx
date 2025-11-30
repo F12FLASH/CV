@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useMockData } from "@/context/MockContext";
 
+// Safe wrapper for useMockData hook
+const useSafeMockData = () => {
+  try {
+    return useMockData();
+  } catch (e) {
+    return { projects: [] };
+  }
+};
+
 const categories = [
   { id: "all", label: "All" },
   { id: "full-stack", label: "Full-stack" },
@@ -15,16 +24,8 @@ const categories = [
 
 export function Projects() {
   const [filter, setFilter] = useState("all");
-  
-  let projects: any[] = [];
-  try {
-    const mockData = useMockData();
-    projects = mockData?.projects || [];
-  } catch (e) {
-    // Fallback to empty if not in MockProvider context
-    projects = [];
-  }
-  
+  const mockData = useSafeMockData();
+  const projects = mockData?.projects || [];
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
 
   const filteredProjects = projects.filter(

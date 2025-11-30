@@ -6,8 +6,10 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Upload, Mail, Database, Zap, Key } from "lucide-react";
+import { Save, Upload, Mail, Database, Zap, Key, Plug } from "lucide-react";
 import { useState } from "react";
+import { SettingsPerformance } from "./SettingsPerformance";
+import { SettingsIntegrations } from "./SettingsIntegrations";
 
 export default function AdminSettingsEnhanced() {
   const [logoFile, setLogoFile] = useState<string | null>(null);
@@ -26,12 +28,14 @@ export default function AdminSettingsEnhanced() {
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-6">
+          <TabsList className="grid w-full max-w-6xl grid-cols-8">
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="branding">Branding</TabsTrigger>
             <TabsTrigger value="seo">SEO</TabsTrigger>
             <TabsTrigger value="email">Email</TabsTrigger>
             <TabsTrigger value="storage">Storage</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
 
@@ -299,6 +303,16 @@ export default function AdminSettingsEnhanced() {
                 <Button variant="outline" className="w-full">View File Management</Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* PERFORMANCE TAB */}
+          <TabsContent value="performance" className="space-y-4">
+            <SettingsPerformance />
+          </TabsContent>
+
+          {/* INTEGRATIONS TAB */}
+          <TabsContent value="integrations" className="space-y-4">
+            <SettingsIntegrations />
           </TabsContent>
 
           {/* SECURITY TAB */}

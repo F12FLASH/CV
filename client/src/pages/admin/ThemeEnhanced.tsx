@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Palette, Type, Layout, Monitor, Smartphone, Save, RotateCcw, Download, Upload } from "lucide-react";
 import { useState } from "react";
+import { ThemeComparison } from "./ThemeComparison";
 
 const THEME_PRESETS = [
   { name: "Modern", colors: { primary: "#7c3aed", secondary: "#ec4899", accent: "#f59e0b" } },
@@ -214,6 +215,15 @@ export default function AdminThemeEnhanced() {
                     <Input defaultValue="0.5" />
                   </div>
                 </div>
+
+                {/* Google Fonts */}
+                <div>
+                  <label className="text-sm font-medium block mb-2">Google Fonts Integration</label>
+                  <div className="flex gap-2">
+                    <Input placeholder="Search Google Fonts..." />
+                    <Button>Add Font</Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -334,6 +344,8 @@ export default function AdminThemeEnhanced() {
 
           {/* PREVIEW */}
           <TabsContent value="preview" className="space-y-6">
+            <ThemeComparison />
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardHeader>
