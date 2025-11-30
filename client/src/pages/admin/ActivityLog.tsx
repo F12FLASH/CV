@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Download, Calendar, User, Activity } from "lucide-react";
+import { Filter, Download, Calendar, User, Activity, AlertTriangle } from "lucide-react";
 
 export default function AdminActivityLog() {
   const logs = [
@@ -78,5 +78,3 @@ export default function AdminActivityLog() {
     </AdminLayout>
   );
 }
-
-import { AlertTriangle } from "lucide-react";

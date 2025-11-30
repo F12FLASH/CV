@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useMockData } from "@/context/MockContext";
+import { useTheme } from "next-themes";
 import { 
   LayoutDashboard, 
   FileText, 
@@ -27,7 +28,9 @@ import {
   Key,
   GitBranch,
   Clock,
-  Download
+  Download,
+  Moon,
+  Sun
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -45,6 +48,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { isAuthenticated, logout } = useMockData();
+  const { theme, setTheme } = useTheme();
 
   // Protect route
   useEffect(() => {
@@ -142,6 +146,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+              {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+            </Button>
             <Button variant="ghost" size="icon" className="relative">
               <Bell size={20} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
