@@ -125,15 +125,20 @@ export default function AdminProjects() {
   );
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this project?")) {
-      return;
-    }
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${project.title}"?\n\nThis action cannot be undone.`
+    );
+    
+    if (!confirmed) return;
     
     try {
       await api.deleteProject(id);
       toast({
         title: "Success",
-        description: "Project deleted successfully",
+        description: `"${project.title}" has been deleted successfully`,
       });
       await loadProjects();
     } catch (error: any) {
@@ -169,13 +174,30 @@ export default function AdminProjects() {
     setIsDialogOpen(true);
   };
 
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+    setEditingProject(null);
+    setFormData(defaultFormData);
+    setTechInput("");
+  };
+
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = async () => {
+    // Validate required fields
     if (!formData.title.trim()) {
       toast({
-        title: "Error",
+        title: "Validation Error",
         description: "Project title is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.category) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a category",
         variant: "destructive",
       });
       return;
@@ -184,24 +206,28 @@ export default function AdminProjects() {
     setIsSaving(true);
     try {
       const projectData = {
-        ...formData,
-        image: formData.image || null,
-        description: formData.description || null,
-        link: formData.link || null,
-        github: formData.github || null,
+        title: formData.title.trim(),
+        category: formData.category,
+        image: formData.image.trim() || null,
+        description: formData.description.trim() || null,
+        tech: formData.tech,
+        link: formData.link.trim() || null,
+        github: formData.github.trim() || null,
+        status: formData.status,
+        featured: formData.featured,
       };
 
       if (editingProject) {
         await api.updateProject(editingProject.id, projectData);
         toast({
           title: "Success",
-          description: "Project updated successfully",
+          description: `"${projectData.title}" has been updated successfully`,
         });
       } else {
         await api.createProject(projectData);
         toast({
           title: "Success",
-          description: "Project created successfully",
+          description: `"${projectData.title}" has been created successfully`,
         });
       }
       
@@ -223,10 +249,27 @@ export default function AdminProjects() {
   };
 
   const addTech = () => {
-    if (techInput.trim() && !formData.tech.includes(techInput.trim())) {
-      setFormData({ ...formData, tech: [...formData.tech, techInput.trim()] });
-      setTechInput("");
+    const tech = techInput.trim();
+    if (!tech) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a technology name",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    if (formData.tech.includes(tech)) {
+      toast({
+        title: "Validation Error",
+        description: "This technology is already added",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setFormData({ ...formData, tech: [...formData.tech, tech] });
+    setTechInput("");
   };
 
   const removeTech = (tech: string) => {
@@ -234,12 +277,15 @@ export default function AdminProjects() {
   };
 
   const toggleStatus = async (id: number, currentStatus: string) => {
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+
     try {
       const newStatus = currentStatus === "Published" ? "Draft" : "Published";
       await api.updateProject(id, { status: newStatus });
       toast({
-        title: "Success",
-        description: `Project ${newStatus === "Published" ? "published" : "unpublished"}`,
+        title: "Status Updated",
+        description: `"${project.title}" is now ${newStatus.toLowerCase()}`,
       });
       await loadProjects();
     } catch (error: any) {
@@ -252,13 +298,16 @@ export default function AdminProjects() {
   };
 
   const toggleFeatured = async (id: number, currentFeatured: boolean) => {
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+
     try {
       await api.updateProject(id, { featured: !currentFeatured });
       toast({
-        title: currentFeatured ? "Removed from featured" : "Added to featured",
-        description: currentFeatured 
-          ? "Project will no longer appear in featured section" 
-          : "Project will now appear in featured section",
+        title: !currentFeatured ? "Featured Added" : "Featured Removed",
+        description: !currentFeatured 
+          ? `"${project.title}" will appear in featured section` 
+          : `"${project.title}" removed from featured section`,
       });
       await loadProjects();
     } catch (error: any) {
@@ -453,7 +502,7 @@ export default function AdminProjects() {
         </div>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle>
@@ -604,11 +653,18 @@ export default function AdminProjects() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
+            <Button variant="outline" onClick={closeDialog} disabled={isSaving}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={isSaving}>
-              {isSaving ? "Saving..." : (editingProject ? "Save Changes" : "Create Project")}
+            <Button onClick={handleSubmit} disabled={isSaving || !formData.title.trim()}>
+              {isSaving ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Saving...
+                </>
+              ) : (
+                editingProject ? "Save Changes" : "Create Project"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
