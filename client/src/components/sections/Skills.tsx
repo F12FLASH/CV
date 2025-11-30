@@ -53,7 +53,7 @@ export function Skills() {
 
   const groupedSkills: Record<string, Array<{name: string; level: number}>> = {};
   
-  if (skillsData.length > 0) {
+  if (Array.isArray(skillsData) && skillsData.length > 0) {
     skillsData.forEach((skill: any) => {
       const category = skill.category || 'Other';
       if (!groupedSkills[category]) {
@@ -63,7 +63,7 @@ export function Skills() {
     });
   }
 
-  const skills = Object.keys(groupedSkills).length > 0 ? groupedSkills : defaultSkills;
+  const skills: Record<string, Array<{name: string; level: number}>> = Object.keys(groupedSkills).length > 0 ? groupedSkills : defaultSkills;
   const categories = Object.keys(skills);
 
   return (
