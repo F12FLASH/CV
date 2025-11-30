@@ -30,7 +30,9 @@ import {
   Clock,
   Download,
   Moon,
-  Sun
+  Sun,
+  Inbox,
+  Brackets
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -72,6 +74,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { icon: MessageSquare, label: "Comments", href: "/admin/comments" },
     { icon: Code, label: "Skills", href: "/admin/skills" },
     { icon: Mail, label: "Newsletter", href: "/admin/newsletter" },
+    { icon: Inbox, label: "Inbox", href: "/admin/inbox" },
     { icon: Palette, label: "Theme", href: "/admin/theme" },
     { icon: Share2, label: "Social", href: "/admin/social" },
     { icon: Database, label: "System", href: "/admin/system" },
@@ -81,6 +84,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { icon: GitBranch, label: "Roles", href: "/admin/roles" },
     { icon: Key, label: "API Keys", href: "/admin/api-keys" },
     { icon: Download, label: "Export/Import", href: "/admin/export-import" },
+    { icon: Brackets, label: "Code Editor", href: "/admin/editor" },
     { icon: Users, label: "Users", href: "/admin/users" },
     { icon: BarChart, label: "Analytics", href: "/admin/analytics" },
     { icon: Shield, label: "Security", href: "/admin/security" },
