@@ -39,6 +39,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  type: string;
+  description?: string;
+}
+
 interface PostFormData {
   title: string;
   slug: string;
@@ -52,18 +60,18 @@ interface PostFormData {
   publishedAt: Date | null;
 }
 
-const defaultFormData: PostFormData = {
+const getDefaultFormData = (): PostFormData => ({
   title: "",
   slug: "",
   content: "",
   excerpt: "",
-  category: "Development",
+  category: "",
   author: "Loi Developer",
   status: "Draft",
   tags: [],
   featuredImage: null,
   publishedAt: null,
-};
+});
 
 function generateSlug(title: string): string {
   return title
@@ -77,6 +85,14 @@ export default function AdminPostsEnhanced() {
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["admin-posts"],
     queryFn: () => api.getPosts(),
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["/api/categories", "post"],
+    queryFn: () =>
+      fetch("/api/categories?type=post", { credentials: "include" })
+        .then(res => res.json() as Promise<Category[]>)
+        .catch(() => []),
   });
 
   const createMutation = useMutation({
@@ -119,7 +135,7 @@ export default function AdminPostsEnhanced() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<number | null>(null);
   const [postToDelete, setPostToDelete] = useState<number | null>(null);
-  const [formData, setFormData] = useState<PostFormData>(defaultFormData);
+  const [formData, setFormData] = useState<PostFormData>(getDefaultFormData());
   const [tagsInput, setTagsInput] = useState("");
 
   const postsPerPage = 5;
@@ -165,7 +181,7 @@ export default function AdminPostsEnhanced() {
       }
     } else {
       setEditingPost(null);
-      setFormData(defaultFormData);
+      setFormData(getDefaultFormData());
       setTagsInput("");
     }
     setIsDialogOpen(true);
@@ -174,7 +190,7 @@ export default function AdminPostsEnhanced() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingPost(null);
-    setFormData(defaultFormData);
+    setFormData(getDefaultFormData());
     setTagsInput("");
   };
 
@@ -460,12 +476,15 @@ export default function AdminPostsEnhanced() {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Development">Development</SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Business">Business</SelectItem>
-                    <SelectItem value="Tutorial">Tutorial</SelectItem>
-                    <SelectItem value="News">News</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {categories.length > 0 ? (
+                      categories.map((cat: Category) => (
+                        <SelectItem key={cat.id} value={cat.slug} data-testid={`option-${cat.slug}`}>
+                          {cat.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="default" disabled>No categories available</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
