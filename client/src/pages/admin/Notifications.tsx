@@ -90,7 +90,7 @@ export default function AdminNotifications() {
   });
 
   const allNotifications: NotificationItem[] = [
-    ...messages.map(m => ({
+    ...messages.filter(m => !m.archived).map(m => ({
       id: `msg-${m.id}`,
       type: 'message' as const,
       sender: m.sender || 'Unknown',
@@ -203,20 +203,28 @@ export default function AdminNotifications() {
       return;
     }
     
-    if (confirm(`Clear all ${total} notifications?\n\nThis will mark all notifications as read. Your messages, comments, and reviews will NOT be deleted.`)) {
+    if (confirm(`Clear all ${total} notifications?\n\nThis will remove all notifications from your list. The original data will not be deleted.`)) {
       try {
-        // Mark ALL messages as read
+        // Archive ALL messages
         for (const msg of messages) {
-          await markMessageReadMutation.mutateAsync(msg.id);
+          await fetch(`/api/messages/${msg.id}/archive`, {
+            method: 'PUT',
+            credentials: 'include'
+          });
         }
-        // Mark ALL comments as read
+        // Mark ALL comments as read (comments don't have archive)
         for (const comment of comments) {
           await markCommentReadMutation.mutateAsync(comment.id);
         }
-        // Mark ALL reviews as read
+        // Mark ALL reviews as read (reviews don't have archive)
         for (const review of reviews) {
           await markReviewReadMutation.mutateAsync(review.id);
         }
+        
+        // Refetch to update the UI
+        await refetchMessages();
+        await refetchComments();
+        await refetchReviews();
         
         toast({ title: "Success", description: `Cleared all ${total} notifications` });
       } catch (error) {
@@ -430,8 +438,16 @@ export default function AdminNotifications() {
                             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                             title="Remove from notifications"
                             onClick={async () => {
-                              await markMessageReadMutation.mutateAsync(notif.originalId);
-                              toast({ description: "Notification removed" });
+                              try {
+                                await fetch(`/api/messages/${notif.originalId}/archive`, {
+                                  method: 'PUT',
+                                  credentials: 'include'
+                                });
+                                await refetchMessages();
+                                toast({ description: "Notification removed" });
+                              } catch (error) {
+                                toast({ description: "Failed to remove notification", variant: "destructive" });
+                              }
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
@@ -460,7 +476,7 @@ export default function AdminNotifications() {
                             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                             title="Remove from notifications"
                             onClick={async () => {
-                              await markReviewMutation.mutateAsync(notif.originalId);
+                              await markReviewReadMutation.mutateAsync(notif.originalId);
                               toast({ description: "Notification removed" });
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
