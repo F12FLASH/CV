@@ -17,10 +17,25 @@ import {
 import { useState } from "react";
 
 export default function AdminInbox() {
-  const { messages } = useMockData();
+  const { messages, markAsRead, deleteMessage } = useMockData();
   const [selectedMessageId, setSelectedMessageId] = useState<number>(messages[0]?.id || 0);
 
   const selectedMessage = messages.find(m => m.id === selectedMessageId) || messages[0];
+
+  const handleSelectMessage = (id: number) => {
+    setSelectedMessageId(id);
+    markAsRead(id);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Move this message to trash?")) {
+      deleteMessage(id);
+      if (selectedMessageId === id && messages.length > 1) {
+        const nextMessage = messages.find(m => m.id !== id);
+        if (nextMessage) setSelectedMessageId(nextMessage.id);
+      }
+    }
+  };
 
   return (
     <AdminLayout>
@@ -38,7 +53,7 @@ export default function AdminInbox() {
               {messages.map((msg) => (
                 <button
                   key={msg.id}
-                  onClick={() => setSelectedMessageId(msg.id)}
+                  onClick={() => handleSelectMessage(msg.id)}
                   className={`flex flex-col gap-2 p-4 text-left border-b border-border hover:bg-muted/50 transition-colors ${
                     !msg.read ? "bg-primary/5" : ""
                   } ${selectedMessageId === msg.id ? "bg-muted" : ""}`}
@@ -74,7 +89,7 @@ export default function AdminInbox() {
               <div className="h-16 border-b border-border flex items-center justify-between px-6">
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon"><Archive size={18} /></Button>
-                  <Button variant="ghost" size="icon"><Trash2 size={18} /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => selectedMessage && handleDelete(selectedMessage.id)}><Trash2 size={18} /></Button>
                   <Separator orientation="vertical" className="h-6 mx-2" />
                   <Button variant="ghost" size="icon"><Star size={18} /></Button>
                 </div>

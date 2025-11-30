@@ -28,12 +28,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function AdminProjects() {
-  const { projects, deleteProject, addProject } = useMockData();
+  const { projects, deleteProject, addProject, updateProject } = useMockData();
   const { toast } = useToast();
 
   const handleDelete = (id: number) => {
     if (confirm("Are you sure you want to delete this project?")) {
       deleteProject(id);
+      toast({
+        title: "Project deleted",
+        description: "The project has been removed successfully.",
+      });
     }
   };
 
@@ -47,6 +51,19 @@ export default function AdminProjects() {
       description: "A new project added from admin panel",
       link: "#",
       github: "#"
+    });
+    toast({
+      title: "Project created",
+      description: "New project has been added to your portfolio.",
+    });
+  };
+
+  const toggleStatus = (id: number, currentStatus: string) => {
+    const newStatus = currentStatus === "Published" ? "Draft" : "Published";
+    updateProject(id, { status: newStatus });
+    toast({
+      title: "Status updated",
+      description: `Project is now ${newStatus}`,
     });
   };
 
@@ -100,7 +117,8 @@ export default function AdminProjects() {
                               <h3 className="text-xl font-bold">{project.title}</h3>
                               <Badge 
                                 variant={project.status === "Published" ? "default" : "outline"}
-                                className={project.status === "Published" ? "bg-green-500 hover:bg-green-600" : ""}
+                                className={`cursor-pointer ${project.status === "Published" ? "bg-green-500 hover:bg-green-600" : "hover:bg-muted"}`}
+                                onClick={() => toggleStatus(project.id, project.status)}
                               >
                                 {project.status}
                               </Badge>

@@ -34,18 +34,21 @@ interface MockContextType {
   isAuthenticated: boolean;
   login: () => void;
   logout: () => void;
-  projects: Project[];
-  messages: Message[];
-  addProject: (project: Omit<Project, "id" | "views" | "date">) => void;
-  deleteProject: (id: number) => void;
-  addMessage: (msg: Omit<Message, "id" | "date" | "read" | "tag">) => void;
-  markMessageRead: (id: number) => void;
   posts: Post[];
-  addPost: (post: Omit<Post, "id" | "views" | "date">) => void;
+  addPost: (post: Omit<Post, 'id' | 'date'>) => void;
+  updatePost: (id: number, post: Partial<Post>) => void;
   deletePost: (id: number) => void;
+  projects: Project[];
+  addProject: (project: Omit<Project, 'id' | 'date' | 'views'>) => void;
+  updateProject: (id: number, project: Partial<Project>) => void;
+  deleteProject: (id: number) => void;
   users: User[];
-  addUser: (user: Omit<User, "id" | "lastActive">) => void;
+  addUser: (user: Omit<User, 'id' | 'lastActive'>) => void;
+  updateUser: (id: number, user: Partial<User>) => void;
   deleteUser: (id: number) => void;
+  messages: Message[];
+  markAsRead: (id: number) => void;
+  deleteMessage: (id: number) => void;
   activityLogs: ActivityLog[];
   notifications: Notification[];
 }
@@ -270,46 +273,20 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
   const login = () => setIsAuthenticated(true);
   const logout = () => setIsAuthenticated(false);
 
-  const addProject = (newProject: Omit<Project, "id" | "views" | "date">) => {
-    const project: Project = {
-      ...newProject,
-      id: Date.now(),
-      views: 0,
-      date: new Date().toISOString().split('T')[0]
+  // Posts
+  const addPost = (post: Omit<Post, 'id' | 'date'>) => {
+    const newPost: Post = {
+      ...post,
+      id: Date.now(), // Use Date.now() for unique IDs
+      date: new Date().toISOString().split('T')[0] // Use ISO format for consistency
     };
-    setProjects([project, ...projects]);
-    toast({ title: "Project Added", description: `${newProject.title} has been created.` });
-  };
-
-  const deleteProject = (id: number) => {
-    setProjects(projects.filter(p => p.id !== id));
-    toast({ title: "Project Deleted", description: "The project has been removed." });
-  };
-
-  const addMessage = (msg: Omit<Message, "id" | "date" | "read" | "tag">) => {
-    const newMessage: Message = {
-      ...msg,
-      id: Date.now(),
-      date: "Just now",
-      read: false,
-      tag: "New"
-    };
-    setMessages([newMessage, ...messages]);
-  };
-
-  const markMessageRead = (id: number) => {
-    setMessages(messages.map(m => m.id === id ? { ...m, read: true } : m));
-  };
-
-  const addPost = (newPost: Omit<Post, "id" | "views" | "date">) => {
-    const post: Post = {
-      ...newPost,
-      id: Date.now(),
-      views: 0,
-      date: new Date().toISOString().split('T')[0]
-    };
-    setPosts([post, ...posts]);
+    setPosts([newPost, ...posts]);
     toast({ title: "Post Created", description: `${newPost.title} has been saved.` });
+  };
+
+  const updatePost = (id: number, post: Partial<Post>) => {
+    setPosts(posts.map(p => p.id === id ? { ...p, ...post } : p));
+    toast({ title: "Post Updated", description: `Post with ID ${id} has been updated.` });
   };
 
   const deletePost = (id: number) => {
@@ -317,14 +294,42 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
     toast({ title: "Post Deleted", description: "The post has been moved to trash." });
   };
 
+  // Projects
+  const addProject = (newProject: Omit<Project, "id" | "views" | "date">) => {
+    const project: Project = {
+      ...newProject,
+      id: Date.now(), // Use Date.now() for unique IDs
+      views: 0,
+      date: new Date().toISOString().split('T')[0] // Use ISO format for consistency
+    };
+    setProjects([project, ...projects]);
+    toast({ title: "Project Added", description: `${newProject.title} has been created.` });
+  };
+
+  const updateProject = (id: number, project: Partial<Project>) => {
+    setProjects(projects.map(p => p.id === id ? { ...p, ...project } : p));
+    toast({ title: "Project Updated", description: `Project with ID ${id} has been updated.` });
+  };
+
+  const deleteProject = (id: number) => {
+    setProjects(projects.filter(p => p.id !== id));
+    toast({ title: "Project Deleted", description: "The project has been removed." });
+  };
+
+  // Users
   const addUser = (newUser: Omit<User, "id" | "lastActive">) => {
     const user: User = {
       ...newUser,
-      id: Date.now(),
-      lastActive: "Never"
+      id: Date.now(), // Use Date.now() for unique IDs
+      lastActive: "Never" // Default value
     };
     setUsers([user, ...users]);
     toast({ title: "User Added", description: `${newUser.name} has been invited.` });
+  };
+
+  const updateUser = (id: number, user: Partial<User>) => {
+    setUsers(users.map(u => u.id === id ? { ...u, ...user } : u));
+    toast({ title: "User Updated", description: `User with ID ${id} has been updated.` });
   };
 
   const deleteUser = (id: number) => {
@@ -332,23 +337,37 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
     toast({ title: "User Removed", description: "User access has been revoked." });
   };
 
+  // Messages
+  const markAsRead = (id: number) => {
+    setMessages(messages.map(m => m.id === id ? { ...m, read: true } : m));
+    // No toast for read status change as it's a minor UI update
+  };
+
+  const deleteMessage = (id: number) => {
+    setMessages(messages.filter(m => m.id !== id));
+    toast({ title: "Message Deleted", description: "The message has been removed." });
+  };
+
   return (
-    <MockContext.Provider value={{ 
-      isAuthenticated, 
-      login, 
-      logout, 
-      projects, 
-      messages, 
-      addProject, 
-      deleteProject, 
-      addMessage,
-      markMessageRead,
+    <MockContext.Provider value={{
+      isAuthenticated,
+      login,
+      logout,
       posts,
       addPost,
+      updatePost,
       deletePost,
+      projects,
+      addProject,
+      updateProject,
+      deleteProject,
       users,
       addUser,
+      updateUser,
       deleteUser,
+      messages,
+      markAsRead,
+      deleteMessage,
       activityLogs,
       notifications
     }}>

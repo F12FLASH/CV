@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useMockData } from "@/context/MockContext";
+import { useState } from "react";
 import { 
   Plus, 
   Search, 
@@ -23,7 +24,8 @@ import {
 } from "lucide-react";
 
 export default function AdminUsers() {
-  const { users, deleteUser, addUser } = useMockData();
+  const { users, deleteUser, addUser, updateUser } = useMockData();
+  const [editingRoleId, setEditingRoleId] = useState<number | null>(null);
 
   const handleDelete = (id: number) => {
     if (confirm("Are you sure you want to remove this user?")) {
@@ -39,6 +41,16 @@ export default function AdminUsers() {
       status: "Active",
       avatar: ""
     });
+  };
+
+  const changeRole = (id: number, newRole: string) => {
+    updateUser(id, { role: newRole });
+    setEditingRoleId(null);
+  };
+
+  const toggleStatus = (id: number, currentStatus: string) => {
+    const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
+    updateUser(id, { status: newStatus });
   };
 
   return (
@@ -93,15 +105,31 @@ export default function AdminUsers() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      {user.role === "Super Admin" && <Shield className="w-3 h-3 text-primary" />}
-                      <span>{user.role}</span>
-                    </div>
+                    {editingRoleId === user.id ? (
+                      <select 
+                        className="p-1 rounded border bg-background text-sm"
+                        defaultValue={user.role}
+                        onChange={(e) => changeRole(user.id, e.target.value)}
+                        onBlur={() => setEditingRoleId(null)}
+                        autoFocus
+                      >
+                        <option>Super Admin</option>
+                        <option>Admin</option>
+                        <option>Editor</option>
+                        <option>Viewer</option>
+                      </select>
+                    ) : (
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={() => setEditingRoleId(user.id)}>
+                        {user.role === "Super Admin" && <Shield className="w-3 h-3 text-primary" />}
+                        <span>{user.role}</span>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge 
                       variant="outline" 
-                      className={user.status === "Active" ? "text-green-500 border-green-500/20 bg-green-500/10" : "text-muted-foreground"}
+                      className={`cursor-pointer ${user.status === "Active" ? "text-green-500 border-green-500/20 bg-green-500/10" : "text-muted-foreground"}`}
+                      onClick={() => toggleStatus(user.id, user.status)}
                     >
                       {user.status}
                     </Badge>

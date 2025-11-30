@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useMockData } from "@/context/MockContext";
+import { useState } from "react";
 import { 
   Plus, 
   Search, 
@@ -21,7 +22,9 @@ import {
 } from "lucide-react";
 
 export default function AdminPosts() {
-  const { posts, deletePost, addPost } = useMockData();
+  const { posts, deletePost, addPost, updatePost } = useMockData();
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
 
   const handleDelete = (id: number) => {
     if (confirm("Are you sure you want to move this post to trash?")) {
@@ -36,6 +39,24 @@ export default function AdminPosts() {
       author: "Loi Developer",
       status: "Draft",
     });
+  };
+
+  const toggleStatus = (id: number, currentStatus: string) => {
+    const newStatus = currentStatus === "Published" ? "Draft" : "Published";
+    updatePost(id, { status: newStatus });
+  };
+
+  const startEdit = (id: number, title: string) => {
+    setEditingId(id);
+    setEditTitle(title);
+  };
+
+  const saveEdit = () => {
+    if (editingId) {
+      updatePost(editingId, { title: editTitle });
+      setEditingId(null);
+      setEditTitle("");
+    }
   };
 
   return (
@@ -83,7 +104,18 @@ export default function AdminPosts() {
                       <div className="w-8 h-8 bg-primary/10 rounded flex items-center justify-center text-primary">
                         <FileText size={16} />
                       </div>
-                      <span className="font-medium">{post.title}</span>
+                      {editingId === post.id ? (
+                        <Input 
+                          value={editTitle} 
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          onBlur={saveEdit}
+                          onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                          autoFocus
+                          className="max-w-md"
+                        />
+                      ) : (
+                        <span className="font-medium">{post.title}</span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>{post.author}</TableCell>
@@ -91,7 +123,8 @@ export default function AdminPosts() {
                   <TableCell>
                     <Badge 
                       variant={post.status === "Published" ? "default" : "secondary"}
-                      className={post.status === "Published" ? "bg-green-500 hover:bg-green-600" : ""}
+                      className={`cursor-pointer ${post.status === "Published" ? "bg-green-500 hover:bg-green-600" : ""}`}
+                      onClick={() => toggleStatus(post.id, post.status)}
                     >
                       {post.status}
                     </Badge>
@@ -99,7 +132,7 @@ export default function AdminPosts() {
                   <TableCell>{post.date}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => startEdit(post.id, post.title)}>
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDelete(post.id)}>
