@@ -114,10 +114,12 @@ export interface IStorage {
   getApprovedCommentsByProject(projectId: number): Promise<Comment[]>;
   getPendingComments(): Promise<Comment[]>;
   getUnreadComments(): Promise<Comment[]>;
+  getUnarchivedComments(): Promise<Comment[]>;
   createComment(comment: InsertComment): Promise<Comment>;
   updateComment(id: number, comment: Partial<InsertComment>): Promise<Comment | undefined>;
   approveComment(id: number): Promise<boolean>;
   markCommentAsRead(id: number): Promise<boolean>;
+  archiveComment(id: number): Promise<boolean>;
   deleteComment(id: number): Promise<boolean>;
 
   // Reviews
@@ -127,10 +129,12 @@ export interface IStorage {
   getApprovedReviewsByProject(projectId: number): Promise<Review[]>;
   getPendingReviews(): Promise<Review[]>;
   getUnreadReviews(): Promise<Review[]>;
+  getUnarchivedReviews(): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
   updateReview(id: number, review: Partial<InsertReview>): Promise<Review | undefined>;
   approveReview(id: number): Promise<boolean>;
   markReviewAsRead(id: number): Promise<boolean>;
+  archiveReview(id: number): Promise<boolean>;
   deleteReview(id: number): Promise<boolean>;
 }
 
@@ -533,6 +537,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(comments).where(eq(comments.read, false)).orderBy(desc(comments.createdAt));
   }
 
+  async getUnarchivedComments(): Promise<Comment[]> {
+    return await db.select().from(comments).where(eq(comments.archived, false)).orderBy(desc(comments.createdAt));
+  }
+
   async createComment(insertComment: InsertComment): Promise<Comment> {
     const [comment] = await db.insert(comments).values(insertComment).returning();
     return comment;
@@ -550,6 +558,11 @@ export class DatabaseStorage implements IStorage {
 
   async markCommentAsRead(id: number): Promise<boolean> {
     const result = await db.update(comments).set({ read: true }).where(eq(comments.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async archiveComment(id: number): Promise<boolean> {
+    const result = await db.update(comments).set({ archived: true }).where(eq(comments.id, id)).returning();
     return result.length > 0;
   }
 
@@ -586,6 +599,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(reviews).where(eq(reviews.read, false)).orderBy(desc(reviews.createdAt));
   }
 
+  async getUnarchivedReviews(): Promise<Review[]> {
+    return await db.select().from(reviews).where(eq(reviews.archived, false)).orderBy(desc(reviews.createdAt));
+  }
+
   async createReview(insertReview: InsertReview): Promise<Review> {
     const [review] = await db.insert(reviews).values(insertReview).returning();
     return review;
@@ -603,6 +620,11 @@ export class DatabaseStorage implements IStorage {
 
   async markReviewAsRead(id: number): Promise<boolean> {
     const result = await db.update(reviews).set({ read: true }).where(eq(reviews.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async archiveReview(id: number): Promise<boolean> {
+    const result = await db.update(reviews).set({ archived: true }).where(eq(reviews.id, id)).returning();
     return result.length > 0;
   }
 

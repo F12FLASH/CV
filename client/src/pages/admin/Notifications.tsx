@@ -77,19 +77,20 @@ export default function AdminNotifications() {
     },
   });
 
-  const deleteMessageMutation = useMutation({
-    mutationFn: (id: number) => api.deleteMessage(id),
-    onSuccess: () => refetchMessages(),
+  const archiveCommentMutation = useMutation({
+    mutationFn: (id: number) => api.archiveComment(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
+      await refetchComments();
+    },
   });
 
-  const deleteCommentMutation = useMutation({
-    mutationFn: (id: number) => api.deleteComment(id),
-    onSuccess: () => refetchComments(),
-  });
-
-  const deleteReviewMutation = useMutation({
-    mutationFn: (id: number) => api.deleteReview(id),
-    onSuccess: () => refetchReviews(),
+  const archiveReviewMutation = useMutation({
+    mutationFn: (id: number) => api.archiveReview(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
+      await refetchReviews();
+    },
   });
 
   const allNotifications: NotificationItem[] = [
@@ -103,7 +104,7 @@ export default function AdminNotifications() {
       createdAt: m.createdAt ? new Date(m.createdAt) : null,
       originalId: m.id,
     })),
-    ...comments.map((c: any) => ({
+    ...comments.filter((c: any) => !c.archived).map((c: any) => ({
       id: `comment-${c.id}`,
       type: 'comment' as const,
       sender: c.authorName || 'Unknown',
@@ -113,7 +114,7 @@ export default function AdminNotifications() {
       createdAt: c.createdAt ? new Date(c.createdAt) : null,
       originalId: c.id,
     })),
-    ...reviews.map((r: any) => ({
+    ...reviews.filter((r: any) => !r.archived).map((r: any) => ({
       id: `review-${r.id}`,
       type: 'review' as const,
       sender: r.authorName || 'Unknown',
@@ -214,7 +215,7 @@ export default function AdminNotifications() {
       return;
     }
     
-    if (confirm(`Clear all ${total} notifications?\n\nThis will archive messages and delete comments/reviews from the notifications list.`)) {
+    if (confirm(`Clear all ${total} notifications?\n\nThis will hide all notifications from this list. The original data (comments, reviews) will be preserved.`)) {
       try {
         // Archive messages that are not archived
         const messagesToArchive = messages.filter(m => !m.archived);
@@ -225,14 +226,16 @@ export default function AdminNotifications() {
           });
         }
         
-        // Delete all comments
-        for (const comment of comments) {
-          await deleteCommentMutation.mutateAsync(comment.id);
+        // Archive all unarchived comments
+        const commentsToArchive = comments.filter((c: any) => !c.archived);
+        for (const comment of commentsToArchive) {
+          await archiveCommentMutation.mutateAsync(comment.id);
         }
         
-        // Delete all reviews
-        for (const review of reviews) {
-          await deleteReviewMutation.mutateAsync(review.id);
+        // Archive all unarchived reviews
+        const reviewsToArchive = reviews.filter((r: any) => !r.archived);
+        for (const review of reviewsToArchive) {
+          await archiveReviewMutation.mutateAsync(review.id);
         }
         
         // Invalidate cache after all mutations
@@ -480,14 +483,13 @@ export default function AdminNotifications() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                            title="Delete comment"
+                            title="Remove from notifications"
                             onClick={async () => {
                               try {
-                                await deleteCommentMutation.mutateAsync(notif.originalId);
-                                await queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
-                                toast({ description: "Comment deleted" });
+                                await archiveCommentMutation.mutateAsync(notif.originalId);
+                                toast({ description: "Notification removed" });
                               } catch (error) {
-                                toast({ description: "Failed to delete comment", variant: "destructive" });
+                                toast({ description: "Failed to remove notification", variant: "destructive" });
                               }
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
@@ -500,14 +502,13 @@ export default function AdminNotifications() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                            title="Delete review"
+                            title="Remove from notifications"
                             onClick={async () => {
                               try {
-                                await deleteReviewMutation.mutateAsync(notif.originalId);
-                                await queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
-                                toast({ description: "Review deleted" });
+                                await archiveReviewMutation.mutateAsync(notif.originalId);
+                                toast({ description: "Notification removed" });
                               } catch (error) {
-                                toast({ description: "Failed to delete review", variant: "destructive" });
+                                toast({ description: "Failed to remove notification", variant: "destructive" });
                               }
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
@@ -555,8 +556,8 @@ export default function AdminNotifications() {
                   <div>
                     <p className="text-xs text-muted-foreground">Comments</p>
                     <p className="text-2xl font-bold">
-                      {comments.filter((c: any) => !c.read).length}
-                      <span className="text-sm font-normal text-muted-foreground ml-1">/ {comments.length}</span>
+                      {comments.filter((c: any) => !c.archived && !c.read).length}
+                      <span className="text-sm font-normal text-muted-foreground ml-1">/ {comments.filter((c: any) => !c.archived).length}</span>
                     </p>
                   </div>
                   <MessageSquare className="w-8 h-8 text-muted-foreground/50" />
@@ -565,8 +566,8 @@ export default function AdminNotifications() {
                   <div>
                     <p className="text-xs text-muted-foreground">Reviews</p>
                     <p className="text-2xl font-bold">
-                      {reviews.filter((r: any) => !r.read).length}
-                      <span className="text-sm font-normal text-muted-foreground ml-1">/ {reviews.length}</span>
+                      {reviews.filter((r: any) => !r.archived && !r.read).length}
+                      <span className="text-sm font-normal text-muted-foreground ml-1">/ {reviews.filter((r: any) => !r.archived).length}</span>
                     </p>
                   </div>
                   <Star className="w-8 h-8 text-muted-foreground/50" />

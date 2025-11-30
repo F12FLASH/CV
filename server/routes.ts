@@ -1127,6 +1127,18 @@ export async function registerRoutes(
     }
   });
 
+  app.put("/api/comments/:id/archive", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.archiveComment(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      res.json({ message: "Comment archived" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.delete("/api/comments/:id", requireAuth, async (req, res) => {
     try {
       const success = await storage.deleteComment(parseInt(req.params.id));
@@ -1245,6 +1257,18 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Review not found" });
       }
       res.json({ message: "Review marked as read" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/reviews/:id/archive", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.archiveReview(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      res.json({ message: "Review archived" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

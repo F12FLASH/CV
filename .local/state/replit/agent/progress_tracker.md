@@ -12,7 +12,9 @@
 [x] 12. Reinstall tsx package that was missing after migration
 [x] 13. Run database migrations using npm run db:push to create all required tables
 [x] 14. Verify application is running successfully with all API endpoints responding correctly
-[x] 15. Fix admin/notifications Clear All and Trash buttons - now properly delete comments/reviews
+[x] 15. Fix admin/notifications Clear All and Trash buttons - now properly archive (not delete) comments/reviews
 [x] 16. Fix Quick Stats to show unread/total counts (e.g., "0 / 4") for consistency with All Notifications list
-[x] 17. Show ALL comments and reviews in notifications list (not just unread ones)
-[x] 15. Final migration verification - tsx package reinstalled and workflow running successfully
+[x] 17. Show ALL non-archived comments and reviews in notifications list
+[x] 18. Add "archived" field to comments and reviews tables to preserve data when removing from notifications
+[x] 19. Add archive API endpoints and client functions for comments and reviews
+[x] 20. Final migration verification - tsx package reinstalled and workflow running successfully

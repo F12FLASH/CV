@@ -259,12 +259,14 @@ export const comments = pgTable("comments", {
   parentId: integer("parent_id"),
   status: text("status").notNull().default("Pending"),
   read: boolean("read").notNull().default(false),
+  archived: boolean("archived").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertCommentSchema = createInsertSchema(comments).omit({
   id: true,
   read: true,
+  archived: true,
   createdAt: true,
 });
 export type InsertComment = z.infer<typeof insertCommentSchema>;
@@ -281,12 +283,14 @@ export const reviews = pgTable("reviews", {
   rating: integer("rating").notNull().default(5),
   status: text("status").notNull().default("Pending"),
   read: boolean("read").notNull().default(false),
+  archived: boolean("archived").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertReviewSchema = createInsertSchema(reviews).omit({
   id: true,
   read: true,
+  archived: true,
   createdAt: true,
 });
 export type InsertReview = z.infer<typeof insertReviewSchema>;
