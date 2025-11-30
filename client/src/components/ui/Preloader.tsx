@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
+const hackerTexts = [
+  "Initializing system...",
+  "Connecting to database...",
+  "Loading components...",
+  "Access granted...",
+];
+
 export function Preloader({ onComplete }: { onComplete: () => void }) {
   const [progress, setProgress] = useState(0);
   const [textIndex, setTextIndex] = useState(0);
