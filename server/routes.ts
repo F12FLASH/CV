@@ -73,7 +73,7 @@ export async function registerRoutes(
       if (!username || !password) {
         return res.status(400).json({ message: "Username and password required" });
       }
-      const user = await storage.getUserByUsername(username);
+      const user = await storage.getUserByUsernameOrEmail(username);
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
