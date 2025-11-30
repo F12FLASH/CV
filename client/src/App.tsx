@@ -14,6 +14,7 @@ import AdminProjects from "@/pages/admin/Projects";
 import AdminInbox from "@/pages/admin/Inbox";
 import AdminNewsletter from "@/pages/admin/Newsletter";
 import AdminNotifications from "@/pages/admin/Notifications";
+import AdminProfile from "@/pages/admin/Profile";
 import AdminTheme from "@/pages/admin/Theme";
 import AdminSocial from "@/pages/admin/Social";
 import AdminMedia from "@/pages/admin/Media";
@@ -64,6 +65,7 @@ function Router() {
       <Route path="/admin/skills" component={AdminSkills} />
       <Route path="/admin/newsletter" component={AdminNewsletter} />
       <Route path="/admin/notifications" component={AdminNotifications} />
+      <Route path="/admin/profile" component={AdminProfile} />
       <Route path="/admin/theme" component={AdminThemeEnhanced} />
       <Route path="/admin/social" component={AdminSocial} />
       <Route path="/admin/system" component={AdminSystem} />

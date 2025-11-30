@@ -250,15 +250,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Loi Developer</p>
+                    <p className="text-sm font-medium leading-none">{currentUser?.name || "Loi Developer"}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      admin@loideveloper.com
+                      {currentUser?.email || "admin@loideveloper.com"}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation("/admin/profile")}>Profile</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-red-500" onClick={handleLogout}>Log out</DropdownMenuItem>
               </DropdownMenuContent>
