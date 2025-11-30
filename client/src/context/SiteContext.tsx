@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { api } from "@/lib/api";
 
 export interface SiteSettings {
   siteTitle: string;
@@ -29,17 +30,35 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("siteSettings");
-    if (stored) {
-      try {
-        setSettings(JSON.parse(stored));
-      } catch (e) {
-        console.error("Failed to parse site settings:", e);
+  const loadSettings = useCallback(async () => {
+    try {
+      const data = await api.getSettings();
+      if (data && Object.keys(data).length > 0) {
+        setSettings({
+          siteTitle: data.siteTitle || defaultSettings.siteTitle,
+          tagline: data.tagline || defaultSettings.tagline,
+          contactEmail: data.contactEmail || defaultSettings.contactEmail,
+          maintenanceMode: data.maintenanceMode ?? defaultSettings.maintenanceMode,
+        });
       }
+    } catch (error) {
+      console.error("Failed to load settings from API, using defaults");
+      const stored = localStorage.getItem("siteSettings");
+      if (stored) {
+        try {
+          setSettings(JSON.parse(stored));
+        } catch (e) {
+          console.error("Failed to parse site settings:", e);
+        }
+      }
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const updateSettings = (newSettings: Partial<SiteSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
@@ -48,8 +67,11 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const saveSettings = async () => {
     setIsSaving(true);
     try {
+      await api.updateSettings(settings);
       localStorage.setItem("siteSettings", JSON.stringify(settings));
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    } catch (error) {
+      console.error("Failed to save settings to API, saving to localStorage");
+      localStorage.setItem("siteSettings", JSON.stringify(settings));
     } finally {
       setIsSaving(false);
     }

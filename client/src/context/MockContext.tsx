@@ -1,356 +1,319 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import dashboardImg from "@assets/generated_images/project_screenshot_dashboard.png";
-import ecommerceImg from "@assets/generated_images/project_screenshot_ecommerce.png";
-import mobileImg from "@assets/generated_images/project_screenshot_mobile_app.png";
+import { api } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-// Types
 export interface Project {
   id: number;
   title: string;
   category: string;
-  image: string;
-  description: string;
+  image: string | null;
+  description: string | null;
   tech: string[];
-  link: string;
-  github: string;
+  link: string | null;
+  github: string | null;
   status: "Published" | "Draft" | "Archived";
-  date: string;
   views: number;
+  featured: boolean;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 }
 
 export interface Message {
   id: number;
   sender: string;
   email: string;
-  subject: string;
+  subject: string | null;
   message: string;
-  date: string;
+  tag: string | null;
   read: boolean;
-  tag: string;
-}
-
-interface MockContextType {
-  isAuthenticated: boolean;
-  login: () => void;
-  logout: () => void;
-  posts: Post[];
-  addPost: (post: Omit<Post, 'id' | 'date'>) => void;
-  updatePost: (id: number, post: Partial<Post>) => void;
-  deletePost: (id: number) => void;
-  projects: Project[];
-  addProject: (project: Omit<Project, 'id' | 'date' | 'views'>) => void;
-  updateProject: (id: number, project: Partial<Project>) => void;
-  deleteProject: (id: number) => void;
-  users: User[];
-  addUser: (user: Omit<User, 'id' | 'lastActive'>) => void;
-  updateUser: (id: number, user: Partial<User>) => void;
-  deleteUser: (id: number) => void;
-  messages: Message[];
-  markAsRead: (id: number) => void;
-  deleteMessage: (id: number) => void;
-  activityLogs: ActivityLog[];
-  notifications: Notification[];
+  archived: boolean;
+  createdAt: Date | null;
 }
 
 export interface Post {
   id: number;
   title: string;
+  slug: string;
+  content: string | null;
+  excerpt: string | null;
   category: string;
   author: string;
   status: "Published" | "Draft" | "Archived";
-  date: string;
   views: number;
+  featuredImage: string | null;
+  tags: string[];
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  publishedAt: Date | null;
 }
 
 export interface User {
   id: number;
+  username: string;
   name: string;
   email: string;
   role: "Super Admin" | "Admin" | "Editor" | "Subscriber";
   status: "Active" | "Inactive";
-  lastActive: string;
-  avatar: string;
+  avatar: string | null;
+  lastActive: Date | null;
+  createdAt: Date | null;
 }
 
 export interface ActivityLog {
   id: number;
   action: string;
-  user: string;
-  time: string;
+  userId: number | null;
+  userName: string | null;
   type: "info" | "warning" | "success" | "error";
+  metadata: any;
+  createdAt: Date | null;
 }
 
 export interface Notification {
   id: number;
   message: string;
   type: "system" | "security" | "update";
-  date: string;
+  read: boolean;
+  userId: number | null;
+  createdAt: Date | null;
 }
 
-// Mock data context for admin panel
-// TODO: Replace with real API calls to /api/* endpoints
+interface MockContextType {
+  isAuthenticated: boolean;
+  currentUser: User | null;
+  login: (username: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  posts: Post[];
+  addPost: (post: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'views'>) => Promise<void>;
+  updatePost: (id: number, post: Partial<Post>) => Promise<void>;
+  deletePost: (id: number) => Promise<void>;
+  projects: Project[];
+  addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'views'>) => Promise<void>;
+  updateProject: (id: number, project: Partial<Project>) => Promise<void>;
+  deleteProject: (id: number) => Promise<void>;
+  users: User[];
+  addUser: (user: any) => Promise<void>;
+  updateUser: (id: number, user: Partial<User>) => Promise<void>;
+  deleteUser: (id: number) => Promise<void>;
+  messages: Message[];
+  markAsRead: (id: number) => Promise<void>;
+  deleteMessage: (id: number) => Promise<void>;
+  activityLogs: ActivityLog[];
+  notifications: Notification[];
+  isLoading: boolean;
+  refetchAll: () => void;
+}
+
 const MockContext = createContext<MockContextType | undefined>(undefined);
-
-// Initial Data
-const initialActivityLogs: ActivityLog[] = [
-  { id: 1, action: "Admin published post 'React 19 Guide'", user: "Loi Developer", time: "2 mins ago", type: "success" },
-  { id: 2, action: "Deleted spam comment", user: "Sarah Editor", time: "15 mins ago", type: "warning" },
-  { id: 3, action: "Updated SEO settings", user: "Loi Developer", time: "1 hour ago", type: "info" },
-  { id: 4, action: "Failed login attempt from IP 192.168.x.x", user: "System", time: "2 hours ago", type: "error" },
-];
-
-const initialNotifications: Notification[] = [
-  { id: 1, message: "Plugin 'SEO Pro' needs update", type: "update", date: "Today" },
-  { id: 2, message: "Weekly backup completed", type: "system", date: "Yesterday" },
-  { id: 3, message: "New security patch available", type: "security", date: "2 days ago" },
-];
-
-const initialPosts: Post[] = [
-  {
-    id: 1,
-    title: "Getting Started with React 19",
-    category: "Development",
-    author: "Loi Developer",
-    status: "Published",
-    date: "2024-03-20",
-    views: 1542
-  },
-  {
-    id: 2,
-    title: "The Future of AI in Web Design",
-    category: "Design",
-    author: "Loi Developer",
-    status: "Published",
-    date: "2024-03-18",
-    views: 980
-  },
-  {
-    id: 3,
-    title: "Optimizing Next.js Performance",
-    category: "Development",
-    author: "Loi Developer",
-    status: "Draft",
-    date: "2024-03-22",
-    views: 0
-  }
-];
-
-const initialUsers: User[] = [
-  {
-    id: 1,
-    name: "Loi Developer",
-    email: "admin@loideveloper.com",
-    role: "Super Admin",
-    status: "Active",
-    lastActive: "Just now",
-    avatar: "https://github.com/shadcn.png"
-  },
-  {
-    id: 2,
-    name: "Sarah Editor",
-    email: "sarah@example.com",
-    role: "Editor",
-    status: "Active",
-    lastActive: "2 hours ago",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80"
-  },
-  {
-    id: 3,
-    name: "John Guest",
-    email: "john@example.com",
-    role: "Subscriber",
-    status: "Inactive",
-    lastActive: "5 days ago",
-    avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&q=80"
-  }
-];
-
-const initialProjects: Project[] = [
-  {
-    id: 1,
-    title: "Analytics Dashboard",
-    category: "full-stack",
-    image: dashboardImg,
-    description: "A comprehensive data analytics platform with real-time visualization.",
-    tech: ["React", "D3.js", "Node.js", "PostgreSQL"],
-    link: "#",
-    github: "#",
-    status: "Published",
-    date: "2024-03-15",
-    views: 1234
-  },
-  {
-    id: 2,
-    title: "E-commerce Platform",
-    category: "frontend",
-    image: ecommerceImg,
-    description: "Modern shopping experience with headless architecture.",
-    tech: ["Next.js", "Tailwind", "Stripe"],
-    link: "#",
-    github: "#",
-    status: "Published",
-    date: "2024-03-10",
-    views: 856
-  },
-  {
-    id: 3,
-    title: "Social Mobile App",
-    category: "mobile",
-    image: mobileImg,
-    description: "React Native application for community engagement.",
-    tech: ["React Native", "Firebase", "Redux"],
-    link: "#",
-    github: "#",
-    status: "Published",
-    date: "2024-02-28",
-    views: 2341
-  },
-];
-
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    sender: "Sarah Wilson",
-    email: "sarah@designstudio.com",
-    subject: "Project Collaboration Inquiry",
-    message: "Hi Loi, I came across your portfolio and I'm really impressed with your work...",
-    date: "10:42 AM",
-    read: false,
-    tag: "Work"
-  }
-];
 
 export function MockProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [activityLogs] = useState<ActivityLog[]>(initialActivityLogs);
-  const [notifications] = useState<Notification[]>(initialNotifications);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Load from localStorage on mount to simulate persistence
   useEffect(() => {
     const savedAuth = localStorage.getItem("isAuthenticated");
-    if (savedAuth === "true") setIsAuthenticated(true);
-
-    const savedProjects = localStorage.getItem("projects");
-    if (savedProjects) setProjects(JSON.parse(savedProjects));
-
-    const savedMessages = localStorage.getItem("messages");
-    if (savedMessages) setMessages(JSON.parse(savedMessages));
-
-    const savedPosts = localStorage.getItem("posts");
-    if (savedPosts) setPosts(JSON.parse(savedPosts));
-
-    const savedUsers = localStorage.getItem("users");
-    if (savedUsers) setUsers(JSON.parse(savedUsers));
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedAuth === "true" && savedUser) {
+      setIsAuthenticated(true);
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Failed to parse saved user");
+      }
+    }
   }, []);
 
-  // Save to localStorage on change
-  useEffect(() => {
-    localStorage.setItem("isAuthenticated", String(isAuthenticated));
-  }, [isAuthenticated]);
+  const { data: projects = [], isLoading: projectsLoading, refetch: refetchProjects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => api.getProjects(),
+    staleTime: 30000,
+  });
 
-  useEffect(() => {
-    localStorage.setItem("projects", JSON.stringify(projects));
-  }, [projects]);
+  const { data: posts = [], isLoading: postsLoading, refetch: refetchPosts } = useQuery({
+    queryKey: ['posts'],
+    queryFn: () => api.getPosts(),
+    staleTime: 30000,
+  });
 
-  useEffect(() => {
-    localStorage.setItem("messages", JSON.stringify(messages));
-  }, [messages]);
+  const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => api.getUsers(),
+    staleTime: 30000,
+  });
 
-  useEffect(() => {
-    localStorage.setItem("posts", JSON.stringify(posts));
-  }, [posts]);
+  const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery({
+    queryKey: ['messages'],
+    queryFn: () => api.getMessages(),
+    staleTime: 30000,
+  });
 
-  useEffect(() => {
-    localStorage.setItem("users", JSON.stringify(users));
-  }, [users]);
+  const { data: activityLogs = [], refetch: refetchActivityLogs } = useQuery({
+    queryKey: ['activityLogs'],
+    queryFn: () => api.getActivityLogs(20),
+    staleTime: 30000,
+  });
 
-  const login = () => setIsAuthenticated(true);
-  const logout = () => setIsAuthenticated(false);
+  const { data: notifications = [], refetch: refetchNotifications } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => api.getNotifications(),
+    staleTime: 30000,
+  });
 
-  // Posts
-  const addPost = (post: Omit<Post, 'id' | 'date'>) => {
-    const newPost: Post = {
-      ...post,
-      id: Date.now(), // Use Date.now() for unique IDs
-      date: new Date().toISOString().split('T')[0] // Use ISO format for consistency
-    };
-    setPosts([newPost, ...posts]);
-    toast({ title: "Post Created", description: `${newPost.title} has been saved.` });
+  const isLoading = projectsLoading || postsLoading || usersLoading || messagesLoading;
+
+  const refetchAll = useCallback(() => {
+    refetchProjects();
+    refetchPosts();
+    refetchUsers();
+    refetchMessages();
+    refetchActivityLogs();
+    refetchNotifications();
+  }, [refetchProjects, refetchPosts, refetchUsers, refetchMessages, refetchActivityLogs, refetchNotifications]);
+
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const response = await api.login(username, password);
+      setIsAuthenticated(true);
+      setCurrentUser(response.user);
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("currentUser", JSON.stringify(response.user));
+      toast({ title: "Login Successful", description: `Welcome back, ${response.user.name}!` });
+      return true;
+    } catch (error: any) {
+      toast({ title: "Login Failed", description: error.message, variant: "destructive" });
+      return false;
+    }
   };
 
-  const updatePost = (id: number, post: Partial<Post>) => {
-    setPosts(posts.map(p => p.id === id ? { ...p, ...post } : p));
-    toast({ title: "Post Updated", description: `Post with ID ${id} has been updated.` });
+  const logout = async () => {
+    try {
+      await api.logout();
+    } catch (error) {
+      console.error("Logout API error:", error);
+    }
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("currentUser");
+    toast({ title: "Logged Out", description: "You have been logged out successfully." });
   };
 
-  const deletePost = (id: number) => {
-    setPosts(posts.filter(p => p.id !== id));
-    toast({ title: "Post Deleted", description: "The post has been moved to trash." });
+  const addPost = async (post: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'views'>) => {
+    try {
+      await api.createPost(post);
+      await refetchPosts();
+      toast({ title: "Post Created", description: `${post.title} has been saved.` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  // Projects
-  const addProject = (newProject: Omit<Project, "id" | "views" | "date">) => {
-    const project: Project = {
-      ...newProject,
-      id: Date.now(), // Use Date.now() for unique IDs
-      views: 0,
-      date: new Date().toISOString().split('T')[0] // Use ISO format for consistency
-    };
-    setProjects([project, ...projects]);
-    toast({ title: "Project Added", description: `${newProject.title} has been created.` });
+  const updatePost = async (id: number, post: Partial<Post>) => {
+    try {
+      await api.updatePost(id, post);
+      await refetchPosts();
+      toast({ title: "Post Updated", description: "Post has been updated." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  const updateProject = (id: number, project: Partial<Project>) => {
-    setProjects(projects.map(p => p.id === id ? { ...p, ...project } : p));
-    toast({ title: "Project Updated", description: `Project with ID ${id} has been updated.` });
+  const deletePost = async (id: number) => {
+    try {
+      await api.deletePost(id);
+      await refetchPosts();
+      toast({ title: "Post Deleted", description: "The post has been removed." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  const deleteProject = (id: number) => {
-    setProjects(projects.filter(p => p.id !== id));
-    toast({ title: "Project Deleted", description: "The project has been removed." });
+  const addProject = async (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'views'>) => {
+    try {
+      await api.createProject(project);
+      await refetchProjects();
+      toast({ title: "Project Added", description: `${project.title} has been created.` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  // Users
-  const addUser = (newUser: Omit<User, "id" | "lastActive">) => {
-    const user: User = {
-      ...newUser,
-      id: Date.now(), // Use Date.now() for unique IDs
-      lastActive: "Never" // Default value
-    };
-    setUsers([user, ...users]);
-    toast({ title: "User Added", description: `${newUser.name} has been invited.` });
+  const updateProject = async (id: number, project: Partial<Project>) => {
+    try {
+      await api.updateProject(id, project);
+      await refetchProjects();
+      toast({ title: "Project Updated", description: "Project has been updated." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  const updateUser = (id: number, user: Partial<User>) => {
-    setUsers(users.map(u => u.id === id ? { ...u, ...user } : u));
-    toast({ title: "User Updated", description: `User with ID ${id} has been updated.` });
+  const deleteProject = async (id: number) => {
+    try {
+      await api.deleteProject(id);
+      await refetchProjects();
+      toast({ title: "Project Deleted", description: "The project has been removed." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  const deleteUser = (id: number) => {
-    setUsers(users.filter(u => u.id !== id));
-    toast({ title: "User Removed", description: "User access has been revoked." });
+  const addUser = async (user: any) => {
+    try {
+      await api.register(user);
+      await refetchUsers();
+      toast({ title: "User Added", description: `${user.name} has been invited.` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  // Messages
-  const markAsRead = (id: number) => {
-    setMessages(messages.map(m => m.id === id ? { ...m, read: true } : m));
-    // No toast for read status change as it's a minor UI update
+  const updateUser = async (id: number, user: Partial<User>) => {
+    try {
+      await api.updateUser(id, user);
+      await refetchUsers();
+      toast({ title: "User Updated", description: "User has been updated." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  const deleteMessage = (id: number) => {
-    setMessages(messages.filter(m => m.id !== id));
-    toast({ title: "Message Deleted", description: "The message has been removed." });
+  const deleteUser = async (id: number) => {
+    try {
+      await api.deleteUser(id);
+      await refetchUsers();
+      toast({ title: "User Removed", description: "User access has been revoked." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const markAsRead = async (id: number) => {
+    try {
+      await api.markMessageAsRead(id);
+      await refetchMessages();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const deleteMessage = async (id: number) => {
+    try {
+      await api.deleteMessage(id);
+      await refetchMessages();
+      toast({ title: "Message Deleted", description: "The message has been removed." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
   return (
     <MockContext.Provider value={{
       isAuthenticated,
+      currentUser,
       login,
       logout,
       posts,
@@ -369,7 +332,9 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
       markAsRead,
       deleteMessage,
       activityLogs,
-      notifications
+      notifications,
+      isLoading,
+      refetchAll
     }}>
       {children}
     </MockContext.Provider>

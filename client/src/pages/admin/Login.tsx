@@ -1,41 +1,36 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, Mail, Shield, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Shield, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { useMockData } from "@/context/MockContext";
 import loginBg from "@assets/generated_images/admin_login_background.png";
 
 export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
   const { login } = useMockData();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      login(); // Set auth state in context
-      toast({
-        title: "Welcome back!",
-        description: "Successfully logged into Admin Dashboard",
-      });
+    const success = await login(username, password);
+    setIsLoading(false);
+    
+    if (success) {
       setLocation("/admin");
-    }, 1500);
+    }
   };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-black">
-      {/* Background */}
       <div className="absolute inset-0 z-0">
         <img 
           src={loginBg} 
@@ -45,7 +40,6 @@ export default function AdminLogin() {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
       </div>
 
-      {/* Animated Particles/Grid */}
       <div className="absolute inset-0 z-0 opacity-20 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
 
       <motion.div
@@ -68,12 +62,14 @@ export default function AdminLogin() {
           <CardContent className="pt-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-white/80">Email Address</Label>
+                <Label className="text-white/80">Username</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                   <Input 
-                    type="email" 
-                    placeholder="admin@loideveloper.com" 
+                    type="text" 
+                    placeholder="admin" 
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-primary/50 focus:bg-white/10 transition-all"
                     required 
                   />
@@ -89,7 +85,9 @@ export default function AdminLogin() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                   <Input 
                     type={showPassword ? "text" : "password"} 
-                    placeholder="••••••••" 
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="pl-9 pr-9 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-primary/50 focus:bg-white/10 transition-all"
                     required 
                   />
