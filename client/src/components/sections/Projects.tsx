@@ -82,7 +82,7 @@ export function Projects() {
                 {/* Image */}
                 <div className="aspect-video overflow-hidden bg-muted">
                   <img
-                    src={project.image}
+                    src={project.image || '/placeholder.jpg'}
                     alt={project.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />

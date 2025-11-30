@@ -56,7 +56,7 @@ export function Blog() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar size={14} />
-                      <span>{post.date}</span>
+                      <span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : 'Draft'}</span>
                     </div>
                   </div>
                   <Button variant="ghost" className="group/btn p-0 h-auto">

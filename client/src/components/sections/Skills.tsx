@@ -1,34 +1,24 @@
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
-const skills = {
-  frontend: [
+const defaultSkills = {
+  Frontend: [
     { name: "React.js", level: 95 },
     { name: "TypeScript", level: 90 },
     { name: "Tailwind CSS", level: 95 },
-    { name: "Next.js", level: 85 },
-    { name: "Three.js", level: 70 },
-    { name: "Framer Motion", level: 85 },
   ],
-  backend: [
+  Backend: [
     { name: "Node.js", level: 85 },
     { name: "Express", level: 85 },
-    { name: "Python", level: 70 },
-    { name: "Go", level: 60 },
   ],
-  database: [
+  Database: [
     { name: "PostgreSQL", level: 80 },
-    { name: "MongoDB", level: 85 },
-    { name: "Redis", level: 60 },
-    { name: "Supabase", level: 90 },
   ],
-  devops: [
+  DevOps: [
     { name: "Git & GitHub", level: 95 },
-    { name: "Docker", level: 70 },
-    { name: "AWS", level: 60 },
-    { name: "CI/CD", level: 75 },
-    { name: "Figma", level: 80 },
   ],
 };
 
@@ -55,6 +45,27 @@ function SkillBar({ name, level, delay }: { name: string; level: number; delay: 
 }
 
 export function Skills() {
+  const { data: skillsData = [] } = useQuery({
+    queryKey: ['skills'],
+    queryFn: () => api.getSkills(),
+    staleTime: 60000,
+  });
+
+  const groupedSkills: Record<string, Array<{name: string; level: number}>> = {};
+  
+  if (skillsData.length > 0) {
+    skillsData.forEach((skill: any) => {
+      const category = skill.category || 'Other';
+      if (!groupedSkills[category]) {
+        groupedSkills[category] = [];
+      }
+      groupedSkills[category].push({ name: skill.name, level: skill.level });
+    });
+  }
+
+  const skills = Object.keys(groupedSkills).length > 0 ? groupedSkills : defaultSkills;
+  const categories = Object.keys(skills);
+
   return (
     <section id="skills" className="py-24 bg-muted/30 relative overflow-hidden">
       {/* Background decoration */}
@@ -71,17 +82,22 @@ export function Skills() {
           <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full" />
         </div>
 
-        <Tabs defaultValue="frontend" className="w-full max-w-4xl mx-auto">
+        <Tabs defaultValue={categories[0]?.toLowerCase() || "frontend"} className="w-full max-w-4xl mx-auto">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-12 h-auto p-1 bg-background/50 backdrop-blur border border-border/50 rounded-xl">
-            <TabsTrigger value="frontend" className="py-3 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300">Front-end</TabsTrigger>
-            <TabsTrigger value="backend" className="py-3 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300">Back-end</TabsTrigger>
-            <TabsTrigger value="database" className="py-3 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300">Database</TabsTrigger>
-            <TabsTrigger value="devops" className="py-3 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300">DevOps & Tools</TabsTrigger>
+            {categories.map((cat) => (
+              <TabsTrigger 
+                key={cat} 
+                value={cat.toLowerCase()} 
+                className="py-3 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-300"
+              >
+                {cat}
+              </TabsTrigger>
+            ))}
           </TabsList>
           
           <div className="min-h-[400px]">
             {Object.entries(skills).map(([category, items]) => (
-              <TabsContent key={category} value={category} className="mt-0">
+              <TabsContent key={category} value={category.toLowerCase()} className="mt-0">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}

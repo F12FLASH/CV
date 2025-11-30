@@ -2,57 +2,46 @@ import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
-const testimonials = [
+const defaultTestimonials = [
   {
     id: 1,
-    name: "Sarah Chen",
-    role: "CEO, TechStart Inc",
-    content:
-      "The expertise and professionalism exceeded our expectations. They delivered a world-class web platform that transformed our business.",
+    name: "John Smith",
+    role: "CEO",
+    company: "TechCorp",
+    content: "Loi delivered exceptional work on our web application. His attention to detail and technical expertise exceeded our expectations.",
     rating: 5,
-    avatar: "SC",
   },
   {
     id: 2,
-    name: "James Wilson",
-    role: "Product Manager, Creative Agency",
-    content:
-      "Outstanding work! The team understood our vision perfectly and brought it to life with exceptional attention to detail.",
+    name: "Sarah Johnson",
+    role: "Product Manager",
+    company: "StartupXYZ",
+    content: "Working with Loi was a fantastic experience. He understood our vision and translated it into a beautiful, functional product.",
     rating: 5,
-    avatar: "JW",
-  },
-  {
-    id: 3,
-    name: "Maria Garcia",
-    role: "Founder, E-Commerce Store",
-    content:
-      "Best investment we made for our online presence. The e-commerce platform increased our sales by 300% in the first quarter.",
-    rating: 5,
-    avatar: "MG",
-  },
-  {
-    id: 4,
-    name: "David Park",
-    role: "CTO, SaaS Company",
-    content:
-      "Technical excellence combined with great communication. They solved complex problems with elegant solutions. Highly recommended!",
-    rating: 5,
-    avatar: "DP",
   },
 ];
 
 export function Testimonials() {
+  const { data: testimonialsData = [] } = useQuery({
+    queryKey: ['testimonials', 'active'],
+    queryFn: () => api.getTestimonials(true),
+    staleTime: 60000,
+  });
+
+  const testimonials = testimonialsData.length > 0 ? testimonialsData : defaultTestimonials;
   const [current, setCurrent] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
 
   useEffect(() => {
-    if (!autoplay) return;
+    if (!autoplay || testimonials.length === 0) return;
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % testimonials.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [autoplay]);
+  }, [autoplay, testimonials.length]);
 
   const next = () => {
     setCurrent((prev) => (prev + 1) % testimonials.length);
@@ -63,6 +52,8 @@ export function Testimonials() {
     setCurrent((prev) => (prev - 1 + testimonials.length) % testimonials.length);
     setAutoplay(false);
   };
+
+  if (testimonials.length === 0) return null;
 
   return (
     <section className="py-24 bg-background">
@@ -102,11 +93,15 @@ export function Testimonials() {
 
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="font-bold text-primary">{testimonials[current].avatar}</span>
+                  <span className="font-bold text-primary">
+                    {testimonials[current].name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                  </span>
                 </div>
                 <div>
                   <p className="font-bold">{testimonials[current].name}</p>
-                  <p className="text-sm text-muted-foreground">{testimonials[current].role}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {testimonials[current].role}{testimonials[current].company ? `, ${testimonials[current].company}` : ''}
+                  </p>
                 </div>
               </div>
             </motion.div>

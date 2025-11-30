@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, User, Shield, ArrowRight } from "lucide-react";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useMockData } from "@/context/MockContext";
 import loginBg from "@assets/generated_images/admin_login_background.png";
 
 export default function AdminLogin() {
@@ -15,43 +15,23 @@ export default function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const { login, isAuthenticated } = useMockData();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLocation("/admin");
+    }
+  }, [isAuthenticated, setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Logged in successfully",
-        });
+      const success = await login(username, password);
+      if (success) {
         setLocation("/admin");
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Invalid credentials",
-          variant: "destructive",
-        });
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to connect to server",
-        variant: "destructive",
-      });
     } finally {
       setIsLoading(false);
     }
