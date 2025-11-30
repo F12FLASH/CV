@@ -193,6 +193,14 @@ export default function AdminNotifications() {
       for (const review of unreadReviews) {
         await markReviewReadMutation.mutateAsync(review.id);
       }
+      
+      // Refetch all data to update UI
+      await Promise.all([
+        refetchMessages(),
+        refetchComments(),
+        refetchReviews()
+      ]);
+      
       toast({ title: "Success", description: `Marked all ${totalUnread} notifications as read` });
     } catch (error) {
       toast({ title: "Error", description: "Failed to mark notifications as read", variant: "destructive" });
@@ -228,6 +236,13 @@ export default function AdminNotifications() {
         for (const review of unreadReviews) {
           await markReviewReadMutation.mutateAsync(review.id);
         }
+        
+        // Refetch all data to update UI
+        await Promise.all([
+          refetchMessages(),
+          refetchComments(),
+          refetchReviews()
+        ]);
         
         toast({ title: "Success", description: `Cleared all ${total} notifications` });
       } catch (error) {
