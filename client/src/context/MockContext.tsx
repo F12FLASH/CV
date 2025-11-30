@@ -150,24 +150,28 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
     queryKey: ['users'],
     queryFn: () => api.getUsers(),
     staleTime: 30000,
+    enabled: isAuthenticated,
   });
 
   const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery({
     queryKey: ['messages'],
     queryFn: () => api.getMessages(),
     staleTime: 30000,
+    enabled: isAuthenticated,
   });
 
   const { data: activityLogs = [], refetch: refetchActivityLogs } = useQuery({
     queryKey: ['activityLogs'],
     queryFn: () => api.getActivityLogs(20),
     staleTime: 30000,
+    enabled: isAuthenticated,
   });
 
   const { data: notifications = [], refetch: refetchNotifications } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => api.getNotifications(),
     staleTime: 30000,
+    enabled: isAuthenticated,
   });
 
   const isLoading = projectsLoading || postsLoading || usersLoading || messagesLoading;
