@@ -68,17 +68,25 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { messages, markAsRead, logout } = useMockData();
   const { theme, setTheme } = useTheme();
 
-  useWebSocket();
+  const { isConnected } = useWebSocket();
 
-  const { data: comments = [] } = useQuery<Comment[]>({
+  const { data: comments = [], refetch: refetchComments } = useQuery<Comment[]>({
     queryKey: ['/api/comments'],
     enabled: isAuthenticated,
   });
 
-  const { data: reviews = [] } = useQuery<Review[]>({
+  const { data: reviews = [], refetch: refetchReviews } = useQuery<Review[]>({
     queryKey: ['/api/reviews'],
     enabled: isAuthenticated,
   });
+
+  // Auto-refetch comments and reviews when WebSocket connects to get real-time updates
+  useEffect(() => {
+    if (isConnected && isAuthenticated) {
+      refetchComments();
+      refetchReviews();
+    }
+  }, [isConnected, isAuthenticated, refetchComments, refetchReviews]);
 
   const unreadMessages = messages.filter(m => !m.read).length;
   const unreadComments = comments.filter(c => !c.read).length;
