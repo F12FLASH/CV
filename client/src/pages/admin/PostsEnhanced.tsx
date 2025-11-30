@@ -142,6 +142,13 @@ export default function AdminPostsEnhanced() {
       const post = posts.find((p) => p.id === postId);
       if (post) {
         setEditingPost(postId);
+        let parsedPublishedAt: Date | null = null;
+        if (post.publishedAt) {
+          const date = new Date(post.publishedAt);
+          if (!isNaN(date.getTime())) {
+            parsedPublishedAt = date;
+          }
+        }
         setFormData({
           title: post.title,
           slug: post.slug,
@@ -152,7 +159,7 @@ export default function AdminPostsEnhanced() {
           status: post.status,
           tags: post.tags || [],
           featuredImage: post.featuredImage,
-          publishedAt: post.publishedAt,
+          publishedAt: parsedPublishedAt,
         });
         setTagsInput(post.tags?.join(", ") || "");
       }
@@ -191,6 +198,25 @@ export default function AdminPostsEnhanced() {
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
+  const getPublishedAtForSubmit = (): string | null => {
+    if (formData.status !== "Published") {
+      return null;
+    }
+    
+    if (formData.publishedAt instanceof Date && !isNaN(formData.publishedAt.getTime())) {
+      return formData.publishedAt.toISOString();
+    }
+    
+    if (formData.publishedAt && typeof formData.publishedAt === 'string') {
+      const date = new Date(formData.publishedAt);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString();
+      }
+    }
+    
+    return new Date().toISOString();
+  };
+
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
@@ -205,19 +231,7 @@ export default function AdminPostsEnhanced() {
         .map((t) => t.trim())
         .filter(Boolean);
 
-      let publishedAt: string | null = null;
-      if (formData.status === "Published") {
-        // If publishing for the first time, set to now
-        if (!formData.publishedAt) {
-          publishedAt = new Date().toISOString();
-        } else if (typeof formData.publishedAt === "string") {
-          // Keep existing published date if already a string
-          publishedAt = formData.publishedAt;
-        } else if (formData.publishedAt instanceof Date) {
-          // If it's a Date object, convert to ISO string
-          publishedAt = formData.publishedAt.toISOString();
-        }
-      }
+      const publishedAt = getPublishedAtForSubmit();
 
       const postData = {
         title: formData.title.trim(),
