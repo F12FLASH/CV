@@ -31,6 +31,9 @@ import AdminActivityLog from "@/pages/admin/ActivityLog";
 import AdminRoles from "@/pages/admin/Roles";
 import AdminAPIKeys from "@/pages/admin/APIKeys";
 import AdminExportImport from "@/pages/admin/ExportImport";
+import AdminPostsEnhanced from "@/pages/admin/PostsEnhanced";
+import AdminProjectsEnhanced from "@/pages/admin/ProjectsEnhanced";
+import AdminServicesEnhanced from "@/pages/admin/ServicesEnhanced";
 import { ThemeProvider } from "next-themes";
 import { lazy } from "react";
 
@@ -43,9 +46,9 @@ function Router() {
       {/* Admin Routes */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/posts" component={AdminPosts} />
-      <Route path="/admin/projects" component={AdminProjects} />
-      <Route path="/admin/services" component={AdminServices} />
+      <Route path="/admin/posts" component={AdminPostsEnhanced} />
+      <Route path="/admin/projects" component={AdminProjectsEnhanced} />
+      <Route path="/admin/services" component={AdminServicesEnhanced} />
       <Route path="/admin/comments" component={AdminComments} />
       <Route path="/admin/faqs" component={AdminFAQs} />
       <Route path="/admin/skills" component={AdminSkills} />
