@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, projects, posts, skills, services, testimonials, siteSettings } from "@shared/schema";
+import { users, projects, posts, skills, services, testimonials, siteSettings, comments, reviews } from "@shared/schema";
 import bcrypt from "bcrypt";
 
 const SALT_ROUNDS = 12;
@@ -197,6 +197,80 @@ async function seed() {
       { key: "maintenanceMode", value: false }
     ]);
     console.log("Site settings seeded");
+
+    await db.insert(comments).values([
+      {
+        authorName: "David Miller",
+        authorEmail: "david@example.com",
+        content: "Great article! Very helpful for understanding React 19 features.",
+        postId: 1,
+        status: "Approved",
+        isRead: true,
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+      },
+      {
+        authorName: "Lisa Chen",
+        authorEmail: "lisa@example.com",
+        content: "I love the Analytics Dashboard project! The UI is very clean.",
+        projectId: 1,
+        status: "Approved",
+        isRead: true,
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      },
+      {
+        authorName: "Tom Wilson",
+        authorEmail: "tom@example.com",
+        content: "This is exactly what I was looking for. Thanks for sharing!",
+        postId: 1,
+        status: "Pending",
+        isRead: false,
+        createdAt: new Date()
+      },
+      {
+        authorName: "Emma Brown",
+        authorEmail: "emma@example.com",
+        content: "Would love to see more tutorials like this.",
+        postId: 2,
+        status: "Pending",
+        isRead: false,
+        createdAt: new Date()
+      }
+    ]);
+    console.log("Comments seeded");
+
+    await db.insert(reviews).values([
+      {
+        authorName: "Alex Johnson",
+        authorEmail: "alex@example.com",
+        content: "Excellent work on this project! Very professional and well-documented code.",
+        projectId: 1,
+        rating: 5,
+        status: "Approved",
+        isRead: true,
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+      },
+      {
+        authorName: "Maria Garcia",
+        authorEmail: "maria@example.com",
+        content: "The e-commerce platform is beautifully designed. Love the user experience!",
+        projectId: 2,
+        rating: 5,
+        status: "Approved",
+        isRead: true,
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+      },
+      {
+        authorName: "James Lee",
+        authorEmail: "james@example.com",
+        content: "Good project but could use some improvements in mobile responsiveness.",
+        projectId: 3,
+        rating: 4,
+        status: "Pending",
+        isRead: false,
+        createdAt: new Date()
+      }
+    ]);
+    console.log("Reviews seeded");
 
     console.log("Database seeding completed!");
   } catch (error) {
