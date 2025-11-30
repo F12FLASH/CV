@@ -55,25 +55,25 @@ export default function AdminNotifications() {
 
   const markMessageReadMutation = useMutation({
     mutationFn: (id: number) => api.markMessageAsRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
-      refetchMessages();
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+      await refetchMessages();
     },
   });
 
   const markCommentReadMutation = useMutation({
     mutationFn: (id: number) => api.markCommentAsRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
-      refetchComments();
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
+      await refetchComments();
     },
   });
 
   const markReviewReadMutation = useMutation({
     mutationFn: (id: number) => api.markReviewAsRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
-      refetchReviews();
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
+      await refetchReviews();
     },
   });
 
@@ -236,6 +236,11 @@ export default function AdminNotifications() {
         for (const review of unreadReviews) {
           await markReviewReadMutation.mutateAsync(review.id);
         }
+        
+        // Invalidate cache after all mutations
+        await queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
         
         // Refetch all data to update UI
         await Promise.all([
@@ -481,6 +486,7 @@ export default function AdminNotifications() {
                             onClick={async () => {
                               try {
                                 await markCommentReadMutation.mutateAsync(notif.originalId);
+                                await new Promise(resolve => setTimeout(resolve, 300));
                                 toast({ description: "Notification removed" });
                               } catch (error) {
                                 toast({ description: "Failed to remove notification", variant: "destructive" });
@@ -500,6 +506,7 @@ export default function AdminNotifications() {
                             onClick={async () => {
                               try {
                                 await markReviewReadMutation.mutateAsync(notif.originalId);
+                                await new Promise(resolve => setTimeout(resolve, 300));
                                 toast({ description: "Notification removed" });
                               } catch (error) {
                                 toast({ description: "Failed to remove notification", variant: "destructive" });
