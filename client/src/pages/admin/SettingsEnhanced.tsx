@@ -401,9 +401,9 @@ export default function AdminSettingsEnhanced() {
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   {[
-                    { name: "Discord Notifications", url: "https://discord.com/api/webhooks/...", events: ["new_comment", "contact_form"], status: "active" },
-                    { name: "Slack Channel", url: "https://hooks.slack.com/services/...", events: ["security_alert"], status: "active" },
-                    { name: "Custom API", url: "https://api.myapp.com/webhook", events: ["all"], status: "inactive" },
+                    { name: "Discord Notifications", url: "https://discord.com/api/webhooks/...", events: ["new_comment", "contact_form"], status: "active", lastDelivery: "2 mins ago", successRate: "98%" },
+                    { name: "Slack Channel", url: "https://hooks.slack.com/services/...", events: ["security_alert"], status: "active", lastDelivery: "1 hour ago", successRate: "100%" },
+                    { name: "Custom API", url: "https://api.myapp.com/webhook", events: ["all"], status: "inactive", lastDelivery: "Never", successRate: "N/A" },
                   ].map((webhook, i) => (
                     <div key={i} className="p-4 border rounded-lg space-y-3">
                       <div className="flex items-center justify-between">
@@ -414,15 +414,21 @@ export default function AdminSettingsEnhanced() {
                           </Badge>
                         </div>
                         <div className="flex gap-2">
+                          <Button variant="outline" size="sm">Test</Button>
                           <Button variant="ghost" size="sm">Edit</Button>
                           <Button variant="ghost" size="sm" className="text-destructive">Delete</Button>
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground font-mono truncate">{webhook.url}</p>
-                      <div className="flex gap-1 flex-wrap">
-                        {webhook.events.map((event, j) => (
-                          <Badge key={j} variant="outline" className="text-xs">{event}</Badge>
-                        ))}
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-1 flex-wrap">
+                          {webhook.events.map((event, j) => (
+                            <Badge key={j} variant="outline" className="text-xs">{event}</Badge>
+                          ))}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Last: {webhook.lastDelivery} • Success: {webhook.successRate}
+                        </div>
                       </div>
                     </div>
                   ))}
