@@ -58,6 +58,16 @@ export default function AdminNotifications() {
     onSuccess: () => refetchMessages(),
   });
 
+  const markCommentReadMutation = useMutation({
+    mutationFn: (id: number) => api.markCommentAsRead(id),
+    onSuccess: () => refetchComments(),
+  });
+
+  const markReviewReadMutation = useMutation({
+    mutationFn: (id: number) => api.markReviewAsRead(id),
+    onSuccess: () => refetchReviews(),
+  });
+
   const deleteMessageMutation = useMutation({
     mutationFn: (id: number) => api.deleteMessage(id),
     onSuccess: () => refetchMessages(),
@@ -360,6 +370,28 @@ export default function AdminNotifications() {
                             className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
                             title="Mark as read"
                             onClick={() => markMessageReadMutation.mutate(notif.originalId)}
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {notif.type === 'comment' && !notif.read && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                            title="Mark as read"
+                            onClick={() => markCommentReadMutation.mutate(notif.originalId)}
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {notif.type === 'review' && !notif.read && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                            title="Mark as read"
+                            onClick={() => markReviewReadMutation.mutate(notif.originalId)}
                           >
                             <CheckCircle className="w-4 h-4" />
                           </Button>

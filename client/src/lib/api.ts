@@ -228,9 +228,25 @@ export const api = {
     return handleResponse<any>(res);
   },
 
+  markCommentAsRead: async (id: number) => {
+    const res = await fetch(`${API_BASE}/comments/${id}/read`, {
+      method: 'PUT',
+      credentials: 'include'
+    });
+    return handleResponse<any>(res);
+  },
+
   deleteReview: async (id: number) => {
     const res = await fetch(`${API_BASE}/reviews/${id}`, {
       method: 'DELETE',
+      credentials: 'include'
+    });
+    return handleResponse<any>(res);
+  },
+
+  markReviewAsRead: async (id: number) => {
+    const res = await fetch(`${API_BASE}/reviews/${id}/read`, {
+      method: 'PUT',
       credentials: 'include'
     });
     return handleResponse<any>(res);

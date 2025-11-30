@@ -6,3 +6,6 @@
 [x] 6. Verify the project is working using the screenshot tool
 [x] 7. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool
 [x] 8. Fix notification popup behavior - clicking notification now marks as read instead of deleting content
+[x] 9. Apply mark-as-read functionality to Comments and Reviews pages
+[x] 10. Add markCommentAsRead and markReviewAsRead functions to API
+[x] 11. Update Notifications page with mark-as-read buttons for all notification types

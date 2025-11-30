@@ -16,7 +16,8 @@ import {
   Plus,
   Star,
   MessageSquare,
-  Loader2
+  Loader2,
+  Eye
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -48,7 +49,7 @@ export default function AdminComments() {
 
   const deleteCommentMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/comments/${id}`, { method: "DELETE" });
+      return apiRequest("DELETE", `/api/comments/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
@@ -56,13 +57,33 @@ export default function AdminComments() {
     }
   });
 
+  const markCommentAsReadMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("PUT", `/api/comments/${id}/read`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
+      toast({ title: "Comment marked as read" });
+    }
+  });
+
   const deleteReviewMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/reviews/${id}`, { method: "DELETE" });
+      return apiRequest("DELETE", `/api/reviews/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
       toast({ title: "Review deleted" });
+    }
+  });
+
+  const markReviewAsReadMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("PUT", `/api/reviews/${id}/read`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
+      toast({ title: "Review marked as read" });
     }
   });
 
@@ -166,7 +187,7 @@ export default function AdminComments() {
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-semibold">{comment.authorName}</span>
                               <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                                {comment.createdAt && formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                               </span>
                               <Badge variant={comment.status === 'Approved' ? 'default' : comment.status === 'Pending' ? 'secondary' : 'destructive'} className="text-xs">
                                 {comment.status}
@@ -181,16 +202,31 @@ export default function AdminComments() {
                             </p>
                           </div>
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-destructive"
-                          onClick={() => deleteCommentMutation.mutate(comment.id)}
-                          disabled={deleteCommentMutation.isPending}
-                          data-testid={`button-delete-comment-${comment.id}`}
-                        >
-                          <Trash className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          {!comment.read && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-primary"
+                              onClick={() => markCommentAsReadMutation.mutate(comment.id)}
+                              disabled={markCommentAsReadMutation.isPending}
+                              title="Mark as read"
+                              data-testid={`button-read-comment-${comment.id}`}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive"
+                            onClick={() => deleteCommentMutation.mutate(comment.id)}
+                            disabled={deleteCommentMutation.isPending}
+                            data-testid={`button-delete-comment-${comment.id}`}
+                          >
+                            <Trash className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -239,7 +275,7 @@ export default function AdminComments() {
                           Project: {getProjectTitle(review.projectId)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}
+                          {review.createdAt && formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}
                         </p>
                       </div>
                       <div className="flex">
@@ -257,16 +293,31 @@ export default function AdminComments() {
                         <Badge variant="default">
                           {review.status}
                         </Badge>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-destructive"
-                          onClick={() => deleteReviewMutation.mutate(review.id)}
-                          disabled={deleteReviewMutation.isPending}
-                          data-testid={`button-delete-review-${review.id}`}
-                        >
-                          <Trash className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          {!review.read && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-primary"
+                              onClick={() => markReviewAsReadMutation.mutate(review.id)}
+                              disabled={markReviewAsReadMutation.isPending}
+                              title="Mark as read"
+                              data-testid={`button-read-review-${review.id}`}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive"
+                            onClick={() => deleteReviewMutation.mutate(review.id)}
+                            disabled={deleteReviewMutation.isPending}
+                            data-testid={`button-delete-review-${review.id}`}
+                          >
+                            <Trash className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
