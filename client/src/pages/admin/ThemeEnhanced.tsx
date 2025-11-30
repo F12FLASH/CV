@@ -137,17 +137,15 @@ export default function AdminThemeEnhanced() {
   });
 
   useEffect(() => {
-    if (savedSettings?.theme) {
-      setTheme({ ...defaultTheme, ...savedSettings.theme });
+    if (savedSettings) {
+      setTheme({ ...defaultTheme, ...savedSettings });
     }
   }, [savedSettings]);
 
   const saveMutation = useMutation({
     mutationFn: async (settings: ThemeSettings) => {
-      return apiRequest('/api/settings/theme', {
-        method: 'PUT',
-        body: JSON.stringify({ value: settings }),
-      });
+      const res = await apiRequest('PUT', '/api/settings/theme', settings);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
@@ -843,7 +841,7 @@ export default function AdminThemeEnhanced() {
               </CardContent>
             </Card>
 
-            <ThemeComparison />
+            <ThemeComparison currentTheme={theme} />
 
             <Card>
               <CardHeader>
