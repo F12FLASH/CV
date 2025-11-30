@@ -72,19 +72,22 @@ export default function AdminSettingsEnhanced() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Site Title</Label>
+                  <Label>Site Title (Homepage & Admin)</Label>
                   <Input 
                     value={settings.siteTitle} 
                     onChange={(e) => updateSettings({ siteTitle: e.target.value })}
-                    placeholder="Enter your site title"
+                    placeholder="e.g., Loi Developer - Full-stack Creative"
+                    data-testid="input-site-title"
                   />
+                  <p className="text-xs text-muted-foreground">Appears in browser tab and header</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Tagline</Label>
                   <Input 
                     value={settings.tagline}
                     onChange={(e) => updateSettings({ tagline: e.target.value })}
-                    placeholder="Enter your tagline"
+                    placeholder="e.g., Building digital experiences with code."
+                    data-testid="input-tagline"
                   />
                 </div>
                 <div className="space-y-2">
@@ -93,7 +96,211 @@ export default function AdminSettingsEnhanced() {
                     type="email" 
                     value={settings.contactEmail}
                     onChange={(e) => updateSettings({ contactEmail: e.target.value })}
-                    placeholder="Enter your contact email"
+                    placeholder="e.g., hello@example.com"
+                    data-testid="input-contact-email"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Hero Section</CardTitle>
+                <CardDescription>Main heading and call-to-action on homepage.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Hero Title</Label>
+                  <Input 
+                    value={settings.heroTitle}
+                    onChange={(e) => updateSettings({ heroTitle: e.target.value })}
+                    placeholder="e.g., Hello, I'm Loi Developer"
+                    data-testid="input-hero-title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hero Subtitle</Label>
+                  <Textarea 
+                    value={settings.heroSubtitle}
+                    onChange={(e) => updateSettings({ heroSubtitle: e.target.value })}
+                    placeholder="e.g., Full-stack Developer | UI/UX Enthusiast"
+                    rows={2}
+                    data-testid="input-hero-subtitle"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CTA Button Text</Label>
+                  <Input 
+                    value={settings.heroCTA}
+                    onChange={(e) => updateSettings({ heroCTA: e.target.value })}
+                    placeholder="e.g., View My Work"
+                    data-testid="input-hero-cta"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>About Me Section</CardTitle>
+                <CardDescription>Information about yourself.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Section Title</Label>
+                  <Input 
+                    value={settings.aboutTitle}
+                    onChange={(e) => updateSettings({ aboutTitle: e.target.value })}
+                    placeholder="e.g., About Me"
+                    data-testid="input-about-title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea 
+                    value={settings.aboutDescription}
+                    onChange={(e) => updateSettings({ aboutDescription: e.target.value })}
+                    placeholder="Write about yourself..."
+                    rows={4}
+                    data-testid="input-about-description"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Section</CardTitle>
+                <CardDescription>Contact form and information display.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Section Title</Label>
+                  <Input 
+                    value={settings.contactTitle}
+                    onChange={(e) => updateSettings({ contactTitle: e.target.value })}
+                    placeholder="e.g., Let's Talk"
+                    data-testid="input-contact-title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Section Subtitle</Label>
+                  <Textarea 
+                    value={settings.contactSubtitle}
+                    onChange={(e) => updateSettings({ contactSubtitle: e.target.value })}
+                    placeholder="e.g., Have a project in mind?"
+                    rows={2}
+                    data-testid="input-contact-subtitle"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Phone Number</Label>
+                    <Input 
+                      value={settings.contactPhone}
+                      onChange={(e) => updateSettings({ contactPhone: e.target.value })}
+                      placeholder="e.g., +84 123 456 789"
+                      data-testid="input-contact-phone"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Address</Label>
+                    <Input 
+                      value={settings.contactAddress}
+                      onChange={(e) => updateSettings({ contactAddress: e.target.value })}
+                      placeholder="e.g., Ho Chi Minh City, Vietnam"
+                      data-testid="input-contact-address"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Social Media Links (Follow Me)</CardTitle>
+                <CardDescription>Add your social media profiles.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <Label>Facebook URL</Label>
+                  <Input 
+                    value={settings.socialFacebook}
+                    onChange={(e) => updateSettings({ socialFacebook: e.target.value })}
+                    placeholder="https://facebook.com/username"
+                    data-testid="input-social-facebook"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Twitter/X URL</Label>
+                  <Input 
+                    value={settings.socialTwitter}
+                    onChange={(e) => updateSettings({ socialTwitter: e.target.value })}
+                    placeholder="https://twitter.com/username"
+                    data-testid="input-social-twitter"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Instagram URL</Label>
+                  <Input 
+                    value={settings.socialInstagram}
+                    onChange={(e) => updateSettings({ socialInstagram: e.target.value })}
+                    placeholder="https://instagram.com/username"
+                    data-testid="input-social-instagram"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>LinkedIn URL</Label>
+                  <Input 
+                    value={settings.socialLinkedin}
+                    onChange={(e) => updateSettings({ socialLinkedin: e.target.value })}
+                    placeholder="https://linkedin.com/in/username"
+                    data-testid="input-social-linkedin"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>GitHub URL</Label>
+                  <Input 
+                    value={settings.socialGithub}
+                    onChange={(e) => updateSettings({ socialGithub: e.target.value })}
+                    placeholder="https://github.com/username"
+                    data-testid="input-social-github"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>YouTube URL</Label>
+                  <Input 
+                    value={settings.socialYoutube}
+                    onChange={(e) => updateSettings({ socialYoutube: e.target.value })}
+                    placeholder="https://youtube.com/@username"
+                    data-testid="input-social-youtube"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Footer</CardTitle>
+                <CardDescription>Footer content and copyright information.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Footer Text</Label>
+                  <Input 
+                    value={settings.footerText}
+                    onChange={(e) => updateSettings({ footerText: e.target.value })}
+                    placeholder="e.g., Crafted with love & countless cups of coffee"
+                    data-testid="input-footer-text"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Copyright Notice</Label>
+                  <Input 
+                    value={settings.footerCopyright}
+                    onChange={(e) => updateSettings({ footerCopyright: e.target.value })}
+                    placeholder="e.g., 2024 Loi Developer. All rights reserved."
+                    data-testid="input-footer-copyright"
                   />
                 </div>
               </CardContent>
@@ -112,6 +319,7 @@ export default function AdminSettingsEnhanced() {
                 <Switch 
                   checked={settings.maintenanceMode}
                   onCheckedChange={(checked) => updateSettings({ maintenanceMode: checked })}
+                  data-testid="toggle-maintenance-mode"
                 />
               </CardContent>
             </Card>

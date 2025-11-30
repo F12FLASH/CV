@@ -6,6 +6,24 @@ export interface SiteSettings {
   tagline: string;
   contactEmail: string;
   maintenanceMode: boolean;
+  heroTitle: string;
+  heroSubtitle: string;
+  heroCTA: string;
+  aboutTitle: string;
+  aboutDescription: string;
+  aboutImage: string;
+  contactTitle: string;
+  contactSubtitle: string;
+  contactPhone: string;
+  contactAddress: string;
+  socialFacebook: string;
+  socialTwitter: string;
+  socialInstagram: string;
+  socialLinkedin: string;
+  socialGithub: string;
+  socialYoutube: string;
+  footerText: string;
+  footerCopyright: string;
 }
 
 interface SiteContextType {
@@ -21,6 +39,24 @@ const defaultSettings: SiteSettings = {
   tagline: "Building digital experiences with code.",
   contactEmail: "loideveloper@example.com",
   maintenanceMode: false,
+  heroTitle: "Hello, I'm Loi Developer",
+  heroSubtitle: "Full-stack Developer | UI/UX Enthusiast | Creative Thinker",
+  heroCTA: "View My Work",
+  aboutTitle: "About Me",
+  aboutDescription: "I'm a passionate full-stack developer with expertise in building modern web applications.",
+  aboutImage: "",
+  contactTitle: "Let's Talk",
+  contactSubtitle: "Have a project in mind? Contact me!",
+  contactPhone: "+84 123 456 789",
+  contactAddress: "Ho Chi Minh City, Vietnam",
+  socialFacebook: "",
+  socialTwitter: "",
+  socialInstagram: "",
+  socialLinkedin: "",
+  socialGithub: "",
+  socialYoutube: "",
+  footerText: "Crafted with love & countless cups of coffee",
+  footerCopyright: "2024 Loi Developer. All rights reserved.",
 };
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -39,6 +75,24 @@ export function SiteProvider({ children }: { children: ReactNode }) {
           tagline: data.tagline || defaultSettings.tagline,
           contactEmail: data.contactEmail || defaultSettings.contactEmail,
           maintenanceMode: data.maintenanceMode ?? defaultSettings.maintenanceMode,
+          heroTitle: data.heroTitle || defaultSettings.heroTitle,
+          heroSubtitle: data.heroSubtitle || defaultSettings.heroSubtitle,
+          heroCTA: data.heroCTA || defaultSettings.heroCTA,
+          aboutTitle: data.aboutTitle || defaultSettings.aboutTitle,
+          aboutDescription: data.aboutDescription || defaultSettings.aboutDescription,
+          aboutImage: data.aboutImage || defaultSettings.aboutImage,
+          contactTitle: data.contactTitle || defaultSettings.contactTitle,
+          contactSubtitle: data.contactSubtitle || defaultSettings.contactSubtitle,
+          contactPhone: data.contactPhone || defaultSettings.contactPhone,
+          contactAddress: data.contactAddress || defaultSettings.contactAddress,
+          socialFacebook: data.socialFacebook || defaultSettings.socialFacebook,
+          socialTwitter: data.socialTwitter || defaultSettings.socialTwitter,
+          socialInstagram: data.socialInstagram || defaultSettings.socialInstagram,
+          socialLinkedin: data.socialLinkedin || defaultSettings.socialLinkedin,
+          socialGithub: data.socialGithub || defaultSettings.socialGithub,
+          socialYoutube: data.socialYoutube || defaultSettings.socialYoutube,
+          footerText: data.footerText || defaultSettings.footerText,
+          footerCopyright: data.footerCopyright || defaultSettings.footerCopyright,
         });
       }
     } catch (error) {
