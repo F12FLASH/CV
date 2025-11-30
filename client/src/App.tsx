@@ -12,6 +12,10 @@ import NotFound from "@/pages/not-found";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminProjects from "@/pages/admin/Projects";
 import AdminInbox from "@/pages/admin/Inbox";
+import AdminNewsletter from "@/pages/admin/Newsletter";
+import AdminNotifications from "@/pages/admin/Notifications";
+import AdminTheme from "@/pages/admin/Theme";
+import AdminSocial from "@/pages/admin/Social";
 import AdminMedia from "@/pages/admin/Media";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminLogin from "@/pages/admin/Login";
@@ -24,9 +28,7 @@ import AdminComments from "@/pages/admin/Comments";
 import AdminFAQs from "@/pages/admin/FAQs";
 import AdminTools from "@/pages/admin/Tools";
 import AdminSkills from "@/pages/admin/Skills";
-import AdminNewsletter from "@/pages/admin/Newsletter";
-import AdminTheme from "@/pages/admin/Theme";
-import AdminSocial from "@/pages/admin/Social";
+import AdminThemeEnhanced from "@/pages/admin/ThemeEnhanced";
 import AdminSystem from "@/pages/admin/System";
 import AdminFileManager from "@/pages/admin/FileManager";
 import AdminActivityLog from "@/pages/admin/ActivityLog";
@@ -37,7 +39,6 @@ import AdminProjectsEnhanced from "@/pages/admin/ProjectsEnhanced";
 import AdminServicesEnhanced from "@/pages/admin/ServicesEnhanced";
 import AdminSettingsEnhanced from "@/pages/admin/SettingsEnhanced";
 import AdminSecurityEnhanced from "@/pages/admin/SecurityEnhanced";
-import AdminThemeEnhanced from "@/pages/admin/ThemeEnhanced";
 import AdminTestimonials from "@/pages/admin/Testimonials";
 import AdminEmailTemplates from "@/pages/admin/EmailTemplates";
 import AdminCache from "@/pages/admin/Cache";
@@ -62,6 +63,7 @@ function Router() {
       <Route path="/admin/faqs" component={AdminFAQs} />
       <Route path="/admin/skills" component={AdminSkills} />
       <Route path="/admin/newsletter" component={AdminNewsletter} />
+      <Route path="/admin/notifications" component={AdminNotifications} />
       <Route path="/admin/theme" component={AdminThemeEnhanced} />
       <Route path="/admin/social" component={AdminSocial} />
       <Route path="/admin/system" component={AdminSystem} />
