@@ -1,0 +1,92 @@
+1. Settings Page - Cần thêm:
+General Tab:
+✅ Site Information (đã có)
+✅ Maintenance Mode (đã có)
+🔧 Timezone & Language - Thiết lập múi giờ và ngôn ngữ mặc định
+🔧 Date/Time Format - Định dạng hiển thị ngày giờ
+🔧 Logo Upload - Tải lên logo site
+🔧 Favicon Settings - Quản lý favicon
+SEO Tab:
+✅ Meta Description (đã có)
+✅ Google Analytics (đã có)
+🔧 Open Graph Tags - Thiết lập preview khi share social
+🔧 Twitter Card Settings - Tùy chỉnh Twitter preview
+🔧 Robots.txt Editor - Chỉnh sửa robots.txt
+🔧 Schema Markup - Structured data cho SEO
+Security Tab:
+✅ 2FA (đã có)
+✅ Login Notification (đã có)
+🔧 Session Timeout - Thời gian timeout phiên đăng nhập
+🔧 Backup Schedule - Lịch backup tự động
+🔧 API Rate Limiting - Giới hạn request API
+Thêm Tabs mới:
+🔧 Email Settings - SMTP configuration, email templates
+🔧 Storage Settings - Cloud storage config (AWS S3, Cloudinary)
+🔧 Performance - Cache settings, CDN configuration
+🔧 Integrations - Connect third-party services
+2. Security Center - Cần thêm:
+Dashboard Cards:
+✅ System Status (đã có)
+✅ SSL Certificate (đã có)
+✅ Warnings (đã có)
+🔧 Failed Login Counter - Số lần đăng nhập thất bại 24h
+🔧 Active Sessions - Số phiên đăng nhập đang active
+🔧 Last Security Scan - Lần quét bảo mật gần nhất
+Authentication:
+✅ 2FA Toggle (đã có)
+✅ Password Expiration (đã có)
+🔧 Biometric Login - Touch ID/Face ID support
+🔧 Trusted Devices - Danh sách thiết bị đáng tin cậy
+🔧 Login History Export - Xuất lịch sử đăng nhập
+Activity Log:
+✅ Recent Activity (đã có)
+🔧 Filter by Action Type - Lọc theo loại hành động
+🔧 Export Logs - Xuất logs CSV/JSON
+🔧 Suspicious Activity Alert - Cảnh báo hoạt động đáng ngờ
+Thêm Sections:
+🔧 Firewall Rules - Quản lý firewall, whitelist/blacklist IPs
+🔧 Backup & Recovery - Tạo/khôi phục backup
+🔧 Security Audit Log - Nhật ký kiểm toán chi tiết
+🔧 Vulnerability Scanner - Quét lỗ hổng bảo mật
+3. Theme Customization - Cần thêm:
+Color Scheme:
+✅ Primary Color Picker (đã có)
+✅ Dark Mode Toggle (đã có)
+🔧 Secondary/Accent Colors - Màu phụ, màu nhấn
+🔧 Gradient Presets - Bộ gradient có sẵn
+🔧 Custom CSS Variables - Tùy chỉnh biến CSS
+🔧 Color Contrast Checker - Kiểm tra độ tương phản
+Typography:
+✅ Heading Font (đã có)
+✅ Body Font (đã có)
+🔧 Font Size Scale - Tỷ lệ kích thước font
+🔧 Line Height - Chiều cao dòng
+🔧 Letter Spacing - Khoảng cách chữ
+🔧 Google Fonts Integration - Tích hợp Google Fonts
+Layout:
+✅ Container Width (đã có)
+✅ Sticky Header (đã có)
+🔧 Border Radius - Bo góc toàn cục
+🔧 Spacing Scale - Tỷ lệ khoảng cách (padding/margin)
+🔧 Animation Speed - Tốc độ animation
+🔧 Shadow Presets - Bộ shadow có sẵn
+Components:
+🔧 Button Styles - Tùy chỉnh nút (rounded, square, etc.)
+🔧 Input Styles - Kiểu input field
+🔧 Card Styles - Kiểu card/panel
+Preview:
+✅ Desktop/Mobile Toggle (đã có)
+✅ Live Preview (đã có)
+🔧 Tablet View - Xem preview tablet
+🔧 Component Library Preview - Xem tất cả components
+🔧 Before/After Comparison - So sánh trước/sau
+Advanced:
+🔧 Export Theme - Xuất theme JSON
+🔧 Import Theme - Nhập theme từ file
+🔧 Theme Presets - Bộ theme có sẵn (Modern, Classic, Minimal)
+🔧 Custom CSS Editor - Editor CSS tùy chỉnh
+🔧 Reset to Default - Khôi phục mặc định
+Đề xuất ưu tiên implement:
+Settings: Email Settings + Storage Settings (quan trọng cho production)
+Security: Firewall Rules + Backup Management
+Theme: Export/Import Theme + Theme Presets

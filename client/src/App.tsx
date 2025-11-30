@@ -34,6 +34,9 @@ import AdminExportImport from "@/pages/admin/ExportImport";
 import AdminPostsEnhanced from "@/pages/admin/PostsEnhanced";
 import AdminProjectsEnhanced from "@/pages/admin/ProjectsEnhanced";
 import AdminServicesEnhanced from "@/pages/admin/ServicesEnhanced";
+import AdminSettingsEnhanced from "@/pages/admin/SettingsEnhanced";
+import AdminSecurityEnhanced from "@/pages/admin/SecurityEnhanced";
+import AdminThemeEnhanced from "@/pages/admin/ThemeEnhanced";
 import { ThemeProvider } from "next-themes";
 import { lazy } from "react";
 
@@ -53,7 +56,7 @@ function Router() {
       <Route path="/admin/faqs" component={AdminFAQs} />
       <Route path="/admin/skills" component={AdminSkills} />
       <Route path="/admin/newsletter" component={AdminNewsletter} />
-      <Route path="/admin/theme" component={AdminTheme} />
+      <Route path="/admin/theme" component={AdminThemeEnhanced} />
       <Route path="/admin/social" component={AdminSocial} />
       <Route path="/admin/system" component={AdminSystem} />
       <Route path="/admin/media" component={lazy(() => import("@/pages/admin/Media"))} />
@@ -66,8 +69,8 @@ function Router() {
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
       <Route path="/admin/editor" component={AdminEditor} />
-      <Route path="/admin/security" component={AdminSecurity} />
-      <Route path="/admin/settings" component={AdminSettings} />
+      <Route path="/admin/security" component={AdminSecurityEnhanced} />
+      <Route path="/admin/settings" component={AdminSettingsEnhanced} />
       <Route path="/admin/tools" component={AdminTools} />
 
       {/* Admin Fallback */}
