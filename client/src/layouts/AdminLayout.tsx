@@ -32,7 +32,7 @@ import {
   Moon,
   Sun,
   Inbox,
-  Brackets
+  Code2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -84,7 +84,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { icon: GitBranch, label: "Roles", href: "/admin/roles" },
     { icon: Key, label: "API Keys", href: "/admin/api-keys" },
     { icon: Download, label: "Export/Import", href: "/admin/export-import" },
-    { icon: Brackets, label: "Code Editor", href: "/admin/editor" },
+    { icon: Code2, label: "Code Editor", href: "/admin/editor" },
     { icon: Users, label: "Users", href: "/admin/users" },
     { icon: BarChart, label: "Analytics", href: "/admin/analytics" },
     { icon: Shield, label: "Security", href: "/admin/security" },
