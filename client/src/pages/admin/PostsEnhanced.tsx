@@ -516,24 +516,54 @@ export default function AdminPostsEnhanced() {
 
             <div className="space-y-2">
               <Label htmlFor="image">Featured Image</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="image"
-                  placeholder="Image URL (e.g., /images/blog/bg-1.png)"
-                  value={formData.featuredImage || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, featuredImage: e.target.value || null }))
-                  }
-                  data-testid="input-post-image"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setFormData((prev) => ({ ...prev, featuredImage: null }))}
-                  data-testid="button-clear-image"
-                >
-                  Clear
-                </Button>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    id="image"
+                    placeholder="Image URL (e.g., /images/blog/bg-1.png or https://...)"
+                    value={formData.featuredImage || ''}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, featuredImage: e.target.value || null }))
+                    }
+                    data-testid="input-post-image"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setFormData((prev) => ({ ...prev, featuredImage: null }))}
+                    data-testid="button-clear-image"
+                  >
+                    Clear
+                  </Button>
+                </div>
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const result = event.target?.result as string;
+                          setFormData((prev) => ({ ...prev, featuredImage: result }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    data-testid="input-file-upload"
+                    className="block w-full text-sm text-muted-foreground
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-md file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-primary file:text-primary-foreground
+                      hover:file:bg-primary/90
+                      file:cursor-pointer cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Hỗ trợ tải ảnh từ thiết bị (JPG, PNG, GIF, WebP, v.v.)
+                  </p>
+                </div>
               </div>
               {formData.featuredImage && (
                 <div className="mt-2 border border-border rounded-md overflow-hidden">
@@ -541,11 +571,15 @@ export default function AdminPostsEnhanced() {
                     src={formData.featuredImage}
                     alt="Featured preview"
                     className="w-full h-40 object-cover"
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      (e.target as HTMLImageElement).src = '/images/blog/bg-1.png';
+                    }}
                   />
                 </div>
               )}
               <p className="text-xs text-muted-foreground">
-                Available images: /images/blog/bg-1.png, /images/blog/bg-2.png, /images/blog/bg-3.png
+                Hỗ trợ: Tải từ thiết bị hoặc dán link ảnh. Ảnh mặc định: /images/blog/bg-1.png, bg-2.png, bg-3.png
               </p>
             </div>
 
