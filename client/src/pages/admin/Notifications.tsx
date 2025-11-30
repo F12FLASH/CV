@@ -164,13 +164,29 @@ export default function AdminNotifications() {
   });
 
   const handleMarkAllAsRead = async () => {
+    const unreadMessages = messages.filter(m => !m.read);
+    const unreadComments = comments.filter((c: any) => !c.read);
+    const unreadReviews = reviews.filter((r: any) => !r.read);
+    const totalUnread = unreadMessages.length + unreadComments.length + unreadReviews.length;
+    
+    if (totalUnread === 0) {
+      toast({ title: "Info", description: "All notifications are already read" });
+      return;
+    }
+    
     try {
-      for (const msg of messages) {
+      for (const msg of unreadMessages) {
         await markMessageReadMutation.mutateAsync(msg.id);
       }
-      toast({ title: "Success", description: `Marked all ${messages.length} messages as read` });
+      for (const comment of unreadComments) {
+        await markCommentReadMutation.mutateAsync(comment.id);
+      }
+      for (const review of unreadReviews) {
+        await markReviewReadMutation.mutateAsync(review.id);
+      }
+      toast({ title: "Success", description: `Marked all ${totalUnread} notifications as read` });
     } catch (error) {
-      toast({ title: "Error", description: "Failed to mark messages as read", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to mark notifications as read", variant: "destructive" });
     }
   };
 
@@ -181,7 +197,7 @@ export default function AdminNotifications() {
       return;
     }
     
-    if (confirm(`Delete all ${total} notifications? (${messages.length} messages, ${comments.length} comments, ${reviews.length} reviews)`)) {
+    if (confirm(`Delete all ${total} notifications? (${messages.length} messages, ${comments.length} comments, ${reviews.length} reviews)\n\nThis will permanently delete all messages, comments, and reviews.`)) {
       try {
         for (const msg of messages) {
           await deleteMessageMutation.mutateAsync(msg.id);
@@ -219,21 +235,23 @@ export default function AdminNotifications() {
             <Button 
               variant="outline" 
               onClick={handleMarkAllAsRead}
-              disabled={messages.filter(m => !m.read).length === 0}
-              title="Mark all messages as read"
+              disabled={unreadCount === 0}
+              title="Mark all notifications as read"
+              data-testid="button-mark-all-read"
             >
               <Check className="w-4 h-4 mr-2" />
-              Mark Messages Read
+              Mark All Read
             </Button>
             <Button 
               variant="outline" 
               onClick={handleDeleteAll}
-              disabled={messages.length === 0}
+              disabled={allNotifications.length === 0}
               className="text-destructive hover:bg-destructive/10"
-              title="Delete all messages"
+              title="Delete all notifications"
+              data-testid="button-delete-all"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete Messages
+              Delete All
             </Button>
           </div>
         </div>

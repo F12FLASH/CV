@@ -191,10 +191,34 @@ async function seed() {
     console.log("Testimonials seeded");
 
     await db.insert(siteSettings).values([
+      // Site Information
       { key: "siteTitle", value: "Loi Developer - Full-stack Creative" },
       { key: "tagline", value: "Building digital experiences with code." },
       { key: "contactEmail", value: "loideveloper@example.com" },
-      { key: "maintenanceMode", value: false }
+      { key: "maintenanceMode", value: false },
+      // Hero Section
+      { key: "heroTitle", value: "Hello, I'm Loi Developer" },
+      { key: "heroSubtitle", value: "Full-stack Developer | UI/UX Enthusiast | Creative Thinker" },
+      { key: "heroCTA", value: "View My Work" },
+      // About Section  
+      { key: "aboutTitle", value: "About Me" },
+      { key: "aboutDescription", value: "I'm a passionate full-stack developer with expertise in building modern web applications. With years of experience in React, Node.js, and cloud technologies, I create digital experiences that combine beautiful design with robust functionality." },
+      { key: "aboutImage", value: "" },
+      // Contact Section
+      { key: "contactTitle", value: "Let's Talk" },
+      { key: "contactSubtitle", value: "Have a project in mind or just want to say hi? I'm always open to discussing new projects, creative ideas or opportunities to be part of your visions." },
+      { key: "contactPhone", value: "+84 123 456 789" },
+      { key: "contactAddress", value: "Ho Chi Minh City, Vietnam" },
+      // Social Links
+      { key: "socialFacebook", value: "" },
+      { key: "socialTwitter", value: "" },
+      { key: "socialInstagram", value: "" },
+      { key: "socialLinkedin", value: "" },
+      { key: "socialGithub", value: "" },
+      { key: "socialYoutube", value: "" },
+      // Footer
+      { key: "footerText", value: "Crafted with love & countless cups of coffee" },
+      { key: "footerCopyright", value: "2024 Loi Developer. All rights reserved." }
     ]);
     console.log("Site settings seeded");
 

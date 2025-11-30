@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Download, Terminal, Code2, Shield, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 import avatarImage from "@assets/generated_images/futuristic_3d_developer_avatar.png";
 
 function MatrixRain() {
@@ -77,15 +78,16 @@ function GlitchText({ children, className = "" }: { children: string; className?
   );
 }
 
-function TerminalTyping() {
+function TerminalTyping({ heroName }: { heroName: string }) {
   const [lines, setLines] = useState<string[]>([]);
   const [currentLine, setCurrentLine] = useState("");
   const [lineIndex, setLineIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
 
+  const username = heroName.toLowerCase().replace(/\s+/g, "_");
   const terminalLines = [
     "$ whoami",
-    "> nguyen_thanh_loi",
+    `> ${username}`,
     "$ cat skills.txt",
     "> React, Node.js, TypeScript, Python...",
     "$ ./run_portfolio.sh",
@@ -121,7 +123,7 @@ function TerminalTyping() {
       }, currentText.startsWith(">") ? 500 : 800);
       return () => clearTimeout(timeout);
     }
-  }, [lineIndex, charIndex, lines]);
+  }, [lineIndex, charIndex, lines, terminalLines]);
 
   return (
     <div className="font-mono text-sm">
@@ -192,6 +194,20 @@ function ScanLine() {
 export function Hero() {
   const [showCursor, setShowCursor] = useState(true);
 
+  const { data: settings } = useQuery<Record<string, any>>({
+    queryKey: ["/api/settings"],
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const heroTitle = settings?.heroTitle || "NGUYEN THANH LOI";
+  const heroSubtitle = settings?.heroSubtitle || "Full-stack Developer & Security Enthusiast";
+  const heroDescription = settings?.heroDescription || "Crafting secure & performant digital experiences with code";
+  const heroStatus = settings?.heroStatus || "SYSTEM ONLINE";
+
+  const nameParts = heroTitle.split(" ");
+  const firstName = nameParts[0] || "NGUYEN";
+  const lastName = nameParts.slice(1).join(" ") || "THANH LOI";
+
   useEffect(() => {
     const interval = setInterval(() => setShowCursor(prev => !prev), 530);
     return () => clearInterval(interval);
@@ -222,7 +238,7 @@ export function Hero() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-green-500/30 bg-green-500/10 mb-6"
           >
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-green-400 font-mono text-sm">SYSTEM ONLINE</span>
+            <span className="text-green-400 font-mono text-sm">{heroStatus}</span>
           </motion.div>
 
           <h2 className="text-xl md:text-2xl font-mono text-green-400 mb-4 flex items-center justify-center md:justify-start gap-2">
@@ -232,8 +248,8 @@ export function Hero() {
           </h2>
           
           <h1 className="text-5xl md:text-7xl font-heading font-extrabold mb-6 tracking-tight">
-            <GlitchText className="text-gradient block">NGUYEN</GlitchText>
-            <span className="text-foreground">THANH LOI</span>
+            <GlitchText className="text-gradient block">{firstName}</GlitchText>
+            <span className="text-foreground">{lastName}</span>
           </h1>
 
           <div className="text-xl md:text-2xl font-mono text-muted-foreground mb-8 h-10 flex items-center justify-center md:justify-start">
@@ -244,17 +260,15 @@ export function Hero() {
               transition={{ delay: 0.5 }}
               className="hacker-typewriter"
             >
-              <span className="text-cyan-400">Full-stack</span>
-              <span className="text-muted-foreground"> Developer & </span>
-              <span className="text-purple-400">Security</span>
-              <span className="text-muted-foreground"> Enthusiast</span>
+              <span className="text-cyan-400">{heroSubtitle.split(" & ")[0] || "Full-stack"}</span>
+              <span className="text-muted-foreground"> & </span>
+              <span className="text-purple-400">{heroSubtitle.split(" & ")[1] || "Security Enthusiast"}</span>
             </motion.span>
           </div>
 
           <p className="text-lg text-muted-foreground max-w-lg mx-auto md:mx-0 mb-10 leading-relaxed font-mono">
             <span className="text-green-400">/**</span><br/>
-            <span className="ml-4">* Crafting secure & performant</span><br/>
-            <span className="ml-4">* digital experiences with code</span><br/>
+            <span className="ml-4">* {heroDescription}</span><br/>
             <span className="text-green-400">*/</span>
           </p>
 
@@ -290,7 +304,7 @@ export function Hero() {
               </div>
 
               <div className="w-64 md:w-80 h-48 md:h-56">
-                <TerminalTyping />
+                <TerminalTyping heroName={heroTitle} />
               </div>
 
               <div className="mt-4 pt-4 border-t border-green-500/20">
@@ -304,7 +318,7 @@ export function Hero() {
                       />
                     </div>
                     <div>
-                      <p className="font-mono text-sm text-green-400">@loi_dev</p>
+                      <p className="font-mono text-sm text-green-400">@{heroTitle.toLowerCase().replace(/\s+/g, "_").slice(0, 10)}</p>
                       <p className="font-mono text-xs text-muted-foreground">status: coding...</p>
                     </div>
                   </div>

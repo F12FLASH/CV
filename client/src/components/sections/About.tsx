@@ -1,20 +1,40 @@
 import { motion } from "framer-motion";
 import { Code, Music, Gamepad, Camera, Plane } from "lucide-react";
-import avatarImage from "@assets/generated_images/futuristic_3d_developer_avatar.png"; // Using the same avatar for now or a placeholder
+import { useQuery } from "@tanstack/react-query";
+import avatarImage from "@assets/generated_images/futuristic_3d_developer_avatar.png";
 
 export function About() {
+  const { data: settings } = useQuery<Record<string, any>>({
+    queryKey: ["/api/settings"],
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const aboutTitle = settings?.aboutTitle || "About Me";
+  const aboutSubtitle = settings?.aboutSubtitle || "Full-stack Developer based in Vietnam";
+  const aboutDescription = settings?.aboutDescription || "I started my coding journey with a curiosity for how things work on the web. Now, I specialize in building modern, scalable, and user-friendly applications using the latest technologies.";
+  const aboutDescription2 = settings?.aboutDescription2 || "My philosophy is simple: Code with passion, build with purpose. Whether it's a complex backend system or a pixel-perfect frontend interface, I strive for excellence in every line of code.";
+  const aboutName = settings?.aboutName || "Nguyen Thanh Loi";
+  const aboutEmail = settings?.aboutEmail || settings?.contactEmail || "loideveloper@example.com";
+  const aboutLocation = settings?.aboutLocation || "Ho Chi Minh City";
+  const aboutFreelance = settings?.aboutFreelance || "Available";
+
   return (
     <section id="about" className="py-24 bg-background relative overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center mb-16">
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-4">
-            About <span className="text-primary">Me</span>
+            {aboutTitle.includes(" ") ? (
+              <>
+                {aboutTitle.split(" ").slice(0, -1).join(" ")} <span className="text-primary">{aboutTitle.split(" ").slice(-1)}</span>
+              </>
+            ) : (
+              <>About <span className="text-primary">Me</span></>
+            )}
           </h2>
           <div className="w-20 h-1 bg-primary rounded-full" />
         </div>
 
         <div className="grid md:grid-cols-2 gap-16 items-center">
-          {/* Left: Image with Parallax feel */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -34,7 +54,6 @@ export function About() {
             </div>
           </motion.div>
 
-          {/* Right: Content */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -42,26 +61,28 @@ export function About() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <h3 className="text-2xl font-bold mb-6 text-foreground">
-              Full-stack Developer based in Vietnam 🇻🇳
+              {aboutSubtitle}
             </h3>
             <div className="space-y-4 text-muted-foreground text-lg mb-8">
+              <p>{aboutDescription}</p>
               <p>
-                I started my coding journey with a curiosity for how things work on the web. 
-                Now, I specialize in building modern, scalable, and user-friendly applications using the latest technologies.
-              </p>
-              <p>
-                My philosophy is simple: <span className="text-primary font-semibold">Code with passion, build with purpose.</span>
-                Whether it's a complex backend system or a pixel-perfect frontend interface, I strive for excellence in every line of code.
+                {aboutDescription2.includes("Code with passion") ? (
+                  <>
+                    My philosophy is simple: <span className="text-primary font-semibold">Code with passion, build with purpose.</span>
+                    {aboutDescription2.split("Code with passion, build with purpose.")[1] || " Whether it's a complex backend system or a pixel-perfect frontend interface, I strive for excellence in every line of code."}
+                  </>
+                ) : (
+                  aboutDescription2
+                )}
               </p>
             </div>
 
-            {/* Personal Info Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
               {[
-                { label: "Name", value: "Nguyen Thanh Loi" },
-                { label: "Email", value: "loideveloper@example.com" },
-                { label: "From", value: "Ho Chi Minh City" },
-                { label: "Freelance", value: "Available" },
+                { label: "Name", value: aboutName },
+                { label: "Email", value: aboutEmail },
+                { label: "From", value: aboutLocation },
+                { label: "Freelance", value: aboutFreelance },
               ].map((item) => (
                 <div key={item.label} className="flex flex-col">
                   <span className="text-sm text-muted-foreground font-mono">{item.label}:</span>
@@ -70,7 +91,6 @@ export function About() {
               ))}
             </div>
 
-            {/* Interests */}
             <div>
               <h4 className="font-bold mb-4 text-foreground">My Interests</h4>
               <div className="flex flex-wrap gap-4">
