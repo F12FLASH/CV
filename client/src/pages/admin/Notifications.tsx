@@ -190,27 +190,27 @@ export default function AdminNotifications() {
     }
   };
 
-  const handleDeleteAll = async () => {
-    const total = messages.length + comments.length + reviews.length;
+  const handleClearAll = async () => {
+    const total = allNotifications.length;
     if (total === 0) {
-      toast({ title: "Info", description: "No notifications to delete" });
+      toast({ title: "Info", description: "No notifications to clear" });
       return;
     }
     
-    if (confirm(`Delete all ${total} notifications? (${messages.length} messages, ${comments.length} comments, ${reviews.length} reviews)\n\nThis will permanently delete all messages, comments, and reviews.`)) {
+    if (confirm(`Clear all ${total} notifications?\n\nThis will mark all notifications as read. Your messages, comments, and reviews will NOT be deleted.`)) {
       try {
-        for (const msg of messages) {
-          await deleteMessageMutation.mutateAsync(msg.id);
+        for (const msg of messages.filter(m => !m.read)) {
+          await markMessageReadMutation.mutateAsync(msg.id);
         }
-        for (const comment of comments) {
-          await deleteCommentMutation.mutateAsync(comment.id);
+        for (const comment of comments.filter((c: any) => !c.read)) {
+          await markCommentReadMutation.mutateAsync(comment.id);
         }
-        for (const review of reviews) {
-          await deleteReviewMutation.mutateAsync(review.id);
+        for (const review of reviews.filter((r: any) => !r.read)) {
+          await markReviewReadMutation.mutateAsync(review.id);
         }
-        toast({ title: "Success", description: `Deleted all ${total} notifications` });
+        toast({ title: "Success", description: `Cleared all ${total} notifications (marked as read)` });
       } catch (error) {
-        toast({ title: "Error", description: "Failed to delete notifications", variant: "destructive" });
+        toast({ title: "Error", description: "Failed to clear notifications", variant: "destructive" });
       }
     }
   };
@@ -244,14 +244,13 @@ export default function AdminNotifications() {
             </Button>
             <Button 
               variant="outline" 
-              onClick={handleDeleteAll}
+              onClick={handleClearAll}
               disabled={allNotifications.length === 0}
-              className="text-destructive hover:bg-destructive/10"
-              title="Delete all notifications"
-              data-testid="button-delete-all"
+              title="Clear all notifications (mark as read)"
+              data-testid="button-clear-all"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete All
+              Clear All
             </Button>
           </div>
         </div>

@@ -871,6 +871,27 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/media", requireAuth, async (req, res) => {
+    try {
+      const { filename, originalName, mimeType, size, url, alt } = req.body;
+      if (!filename || !originalName || !mimeType || !url) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      const mediaItem = await storage.createMedia({
+        filename,
+        originalName,
+        mimeType,
+        size: size || 0,
+        url,
+        alt: alt || null,
+      });
+      res.status(201).json(mediaItem);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/media/:id", requireAuth, async (req, res) => {
     try {
       const mediaItem = await storage.getMedia(parseInt(req.params.id));
