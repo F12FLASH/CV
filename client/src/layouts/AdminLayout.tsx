@@ -250,6 +250,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return null;
   }
 
+  // Error fallback
+  if (!children) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading content...</p>
+        </div>
+      </div>
+    );
+  }
+
   const toggleMenu = (id: string) => {
     setExpandedMenus(prev => 
       prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]

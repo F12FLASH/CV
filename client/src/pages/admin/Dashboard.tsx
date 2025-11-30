@@ -53,6 +53,12 @@ const serverStats = [
   { name: "Storage", value: 25 },
 ];
 
+const notifications = [
+  { id: 1, message: "System backup completed successfully", type: "success", date: "2 hours ago" },
+  { id: 2, message: "Security update available", type: "security", date: "1 day ago" },
+  { id: 3, message: "New comment on your post", type: "update", date: "3 days ago" },
+];
+
 export default function AdminDashboard() {
   const { activityLogs, posts, projects, messages } = useMockData();
   const { data: comments = [] } = useQuery<any[]>({
