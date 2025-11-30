@@ -441,10 +441,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                           onClick={() => {
                             if (notif.type === 'message') {
                               deleteMessageMutation.mutate(notif.originalId);
+                              setLocation("/admin/inbox");
                             } else if (notif.type === 'comment') {
                               deleteCommentMutation.mutate(notif.originalId);
+                              setLocation("/admin/comments");
                             } else {
                               deleteReviewMutation.mutate(notif.originalId);
+                              setLocation("/admin/comments");
                             }
                           }}
                         >
