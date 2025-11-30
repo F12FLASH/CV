@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMockData } from "@/context/MockContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface WebSocketMessage {
   type: string;
@@ -14,6 +15,7 @@ export function useWebSocket() {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isClosingRef = useRef(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { isAuthenticated, refetchMessages } = useMockData();
 
   const playNotificationSound = useCallback(() => {
@@ -69,6 +71,8 @@ export function useWebSocket() {
               description: msgText || "New comment received",
               duration: 5000,
             });
+
+            queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
           }
           
           const isNewReview = message.type === "NEW_REVIEW" || 
@@ -86,6 +90,8 @@ export function useWebSocket() {
               description: msgText || "New review received",
               duration: 5000,
             });
+
+            queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
           }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
@@ -103,7 +109,7 @@ export function useWebSocket() {
       };
     } catch (error) {
     }
-  }, [isAuthenticated, playNotificationSound, toast, refetchMessages]);
+  }, [isAuthenticated, playNotificationSound, toast, refetchMessages, queryClient]);
 
   const disconnect = useCallback(() => {
     isClosingRef.current = true;

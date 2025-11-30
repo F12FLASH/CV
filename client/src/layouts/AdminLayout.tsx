@@ -85,6 +85,55 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const unreadReviews = reviews.filter(r => !r.read).length;
   const unreadCount = unreadMessages + unreadComments + unreadReviews;
 
+  type NotificationItem = {
+    id: string;
+    type: 'message' | 'comment' | 'review';
+    sender: string;
+    content: string;
+    label: string;
+    read: boolean;
+    createdAt: Date | null;
+    originalId: number;
+    extra?: string;
+  };
+
+  const allNotifications: NotificationItem[] = [
+    ...messages.map(m => ({
+      id: `msg-${m.id}`,
+      type: 'message' as const,
+      sender: m.sender || 'Unknown',
+      content: m.message || 'No content',
+      label: 'Message',
+      read: m.read,
+      createdAt: m.createdAt ? new Date(m.createdAt) : null,
+      originalId: m.id,
+    })),
+    ...comments.map(c => ({
+      id: `comment-${c.id}`,
+      type: 'comment' as const,
+      sender: c.authorName,
+      content: c.content,
+      label: 'New comment',
+      read: c.read,
+      createdAt: c.createdAt ? new Date(c.createdAt) : null,
+      originalId: c.id,
+    })),
+    ...reviews.map(r => ({
+      id: `review-${r.id}`,
+      type: 'review' as const,
+      sender: r.authorName,
+      content: r.content,
+      label: `${r.rating}-star review`,
+      read: r.read,
+      createdAt: r.createdAt ? new Date(r.createdAt) : null,
+      originalId: r.id,
+    })),
+  ].sort((a, b) => {
+    const dateA = a.createdAt ? a.createdAt.getTime() : 0;
+    const dateB = b.createdAt ? b.createdAt.getTime() : 0;
+    return dateB - dateA;
+  });
+
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
     queryFn: api.getCurrentUser,
@@ -328,92 +377,42 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <ScrollArea className="h-[300px]">
-                  {messages.length === 0 && comments.length === 0 && reviews.length === 0 ? (
+                  {allNotifications.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground">
                       <Bell className="mx-auto h-8 w-8 mb-2 opacity-50" />
                       <p className="text-sm">No notifications yet</p>
                     </div>
                   ) : (
                     <>
-                      {messages.slice(0, 5).map((msg) => (
+                      {allNotifications.slice(0, 10).map((notif) => (
                         <DropdownMenuItem 
-                          key={`msg-${msg.id}`} 
-                          className={`flex flex-col items-start p-3 cursor-pointer ${!msg.read ? 'bg-primary/5' : ''}`}
+                          key={notif.id} 
+                          className={`flex flex-col items-start p-3 cursor-pointer ${!notif.read ? 'bg-primary/5' : ''}`}
                           onClick={() => {
-                            markAsRead(msg.id);
-                            setLocation("/admin/inbox");
+                            if (notif.type === 'message') {
+                              markAsRead(notif.originalId);
+                              setLocation("/admin/inbox");
+                            } else {
+                              setLocation("/admin/comments");
+                            }
                           }}
                         >
                           <div className="flex items-start gap-3 w-full">
-                            <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!msg.read ? 'bg-primary' : 'bg-transparent'}`} />
+                            <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!notif.read ? 'bg-primary' : 'bg-transparent'}`} />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
-                                <p className="font-medium text-sm truncate">{msg.sender || 'Unknown'}</p>
-                                {msg.createdAt && (
+                                <p className="font-medium text-sm truncate">{notif.sender}</p>
+                                {notif.createdAt && (
                                   <span className="text-xs text-muted-foreground flex-shrink-0">
-                                    {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                                    {formatDistanceToNow(notif.createdAt, { addSuffix: true })}
                                   </span>
                                 )}
                               </div>
                               <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                Message
+                                {notif.label}
                               </p>
                               <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
-                                {msg.message ? `${msg.message.substring(0, 50)}...` : 'No content'}
-                              </p>
-                            </div>
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
-                      {comments.slice(0, 3).map((comment) => (
-                        <DropdownMenuItem 
-                          key={`comment-${comment.id}`} 
-                          className={`flex flex-col items-start p-3 cursor-pointer ${!comment.read ? 'bg-primary/5' : ''}`}
-                          onClick={() => setLocation("/admin/comments")}
-                        >
-                          <div className="flex items-start gap-3 w-full">
-                            <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!comment.read ? 'bg-primary' : 'bg-transparent'}`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="font-medium text-sm truncate">{comment.authorName}</p>
-                                {comment.createdAt && (
-                                  <span className="text-xs text-muted-foreground flex-shrink-0">
-                                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                New comment
-                              </p>
-                              <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
-                                {comment.content.substring(0, 50)}...
-                              </p>
-                            </div>
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
-                      {reviews.slice(0, 2).map((review) => (
-                        <DropdownMenuItem 
-                          key={`review-${review.id}`} 
-                          className={`flex flex-col items-start p-3 cursor-pointer ${!review.read ? 'bg-primary/5' : ''}`}
-                          onClick={() => setLocation("/admin/comments")}
-                        >
-                          <div className="flex items-start gap-3 w-full">
-                            <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!review.read ? 'bg-primary' : 'bg-transparent'}`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="font-medium text-sm truncate">{review.authorName}</p>
-                                {review.createdAt && (
-                                  <span className="text-xs text-muted-foreground flex-shrink-0">
-                                    {formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                {review.rating}-star review
-                              </p>
-                              <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
-                                {review.content.substring(0, 50)}...
+                                {notif.content.length > 50 ? `${notif.content.substring(0, 50)}...` : notif.content}
                               </p>
                             </div>
                           </div>
