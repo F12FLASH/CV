@@ -46,8 +46,16 @@ export default function AdminProfile() {
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => api.updateProfile(data),
-    onSuccess: () => {
+    onSuccess: (response: any) => {
+      queryClient.setQueryData(["currentUser"], response);
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      setFormData({
+        name: response.name || "",
+        email: response.email || "",
+        username: response.username || "",
+        avatar: response.avatar || "",
+      });
+      setAvatarPreview(response.avatar || "/avatars/01.png");
       setIsEditing(false);
       toast({
         title: "Profile Updated",
