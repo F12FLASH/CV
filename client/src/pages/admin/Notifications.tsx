@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { useMockData } from "@/context/MockContext";
-import { Bell, Mail, MessageSquare, CheckCircle, Trash2, AlertCircle, Search, Filter, Check, X } from "lucide-react";
+import { Bell, Mail, MessageSquare, CheckCircle, Trash2, AlertCircle, Search, Filter, Check, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +17,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+type NotificationItem = {
+  id: string;
+  type: 'message' | 'comment' | 'review';
+  sender: string;
+  content: string;
+  subject?: string;
+  read: boolean;
+  createdAt: Date | null;
+  originalId: number;
+  rating?: number;
+};
+
 export default function AdminNotifications() {
-  const { messages, markAsRead, deleteMessage } = useMockData();
+  const { messages, markAsRead, deleteMessage, isAuthenticated } = useMockData();
   const [emailNotif, setEmailNotif] = useState(true);
   const [commentAlerts, setCommentAlerts] = useState(true);
   const [systemUpdates, setSystemUpdates] = useState(true);
@@ -26,14 +39,53 @@ export default function AdminNotifications() {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterRead, setFilterRead] = useState<string>("all");
 
-  const getMessageType = (subject: string | null): string => {
-    if (!subject) return "system";
-    const subjectLower = subject.toLowerCase();
-    if (subjectLower.includes("comment")) return "comment";
-    if (subjectLower.includes("contact") || subjectLower.includes("message")) return "message";
-    if (subjectLower.includes("newsletter") || subjectLower.includes("subscriber")) return "email";
-    return "system";
-  };
+  const { data: comments = [] } = useQuery<any[]>({
+    queryKey: ['/api/comments'],
+    enabled: isAuthenticated,
+  });
+
+  const { data: reviews = [] } = useQuery<any[]>({
+    queryKey: ['/api/reviews'],
+    enabled: isAuthenticated,
+  });
+
+  const allNotifications: NotificationItem[] = [
+    ...messages.map(m => ({
+      id: `msg-${m.id}`,
+      type: 'message' as const,
+      sender: m.sender || 'Unknown',
+      content: m.message || '',
+      subject: m.subject || undefined,
+      read: m.read,
+      createdAt: m.createdAt ? new Date(m.createdAt) : null,
+      originalId: m.id,
+    })),
+    ...comments.map((c: any) => ({
+      id: `comment-${c.id}`,
+      type: 'comment' as const,
+      sender: c.authorName || 'Unknown',
+      content: c.content || '',
+      subject: 'New comment',
+      read: c.read || false,
+      createdAt: c.createdAt ? new Date(c.createdAt) : null,
+      originalId: c.id,
+    })),
+    ...reviews.map((r: any) => ({
+      id: `review-${r.id}`,
+      type: 'review' as const,
+      sender: r.authorName || 'Unknown',
+      content: r.content || '',
+      subject: `${r.rating || 5}-star review`,
+      read: r.read || false,
+      createdAt: r.createdAt ? new Date(r.createdAt) : null,
+      originalId: r.id,
+      rating: r.rating,
+    })),
+  ].sort((a, b) => {
+    const dateA = a.createdAt ? a.createdAt.getTime() : 0;
+    const dateB = b.createdAt ? b.createdAt.getTime() : 0;
+    return dateB - dateA;
+  });
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -41,8 +93,8 @@ export default function AdminNotifications() {
         return <MessageSquare className="w-4 h-4" />;
       case "message":
         return <Mail className="w-4 h-4" />;
-      case "email":
-        return <Mail className="w-4 h-4" />;
+      case "review":
+        return <Star className="w-4 h-4" />;
       default:
         return <Bell className="w-4 h-4" />;
     }
@@ -54,27 +106,25 @@ export default function AdminNotifications() {
         return "bg-blue-500/10 text-blue-500 border-blue-500/20";
       case "message":
         return "bg-green-500/10 text-green-500 border-green-500/20";
-      case "email":
-        return "bg-purple-500/10 text-purple-500 border-purple-500/20";
+      case "review":
+        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
       default:
         return "bg-muted text-muted-foreground border-border";
     }
   };
 
-  const unreadCount = messages.filter(m => !m.read).length;
+  const unreadCount = allNotifications.filter(n => !n.read).length;
 
-  // Filter messages
-  const filteredMessages = messages.filter(msg => {
-    const msgType = getMessageType(msg.subject);
+  const filteredNotifications = allNotifications.filter(notif => {
     const matchesSearch = searchQuery === "" || 
-      msg.sender?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      msg.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      msg.message?.toLowerCase().includes(searchQuery.toLowerCase());
+      notif.sender?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      notif.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      notif.content?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesType = filterType === "all" || msgType === filterType;
+    const matchesType = filterType === "all" || notif.type === filterType;
     const matchesRead = filterRead === "all" || 
-      (filterRead === "unread" && !msg.read) ||
-      (filterRead === "read" && msg.read);
+      (filterRead === "unread" && !notif.read) ||
+      (filterRead === "read" && notif.read);
 
     return matchesSearch && matchesType && matchesRead;
   });
@@ -88,7 +138,7 @@ export default function AdminNotifications() {
   };
 
   const handleDeleteAll = () => {
-    if (confirm("Are you sure you want to delete all notifications?")) {
+    if (confirm("Are you sure you want to delete all message notifications?")) {
       messages.forEach(msg => deleteMessage(msg.id));
     }
   };
@@ -113,19 +163,21 @@ export default function AdminNotifications() {
             <Button 
               variant="outline" 
               onClick={handleMarkAllAsRead}
-              disabled={unreadCount === 0}
+              disabled={messages.filter(m => !m.read).length === 0}
+              title="Mark all messages as read"
             >
               <Check className="w-4 h-4 mr-2" />
-              Mark All as Read
+              Mark Messages Read
             </Button>
             <Button 
               variant="outline" 
               onClick={handleDeleteAll}
               disabled={messages.length === 0}
               className="text-destructive hover:bg-destructive/10"
+              title="Delete all messages"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete All
+              Delete Messages
             </Button>
           </div>
         </div>
@@ -161,11 +213,8 @@ export default function AdminNotifications() {
                   <DropdownMenuItem onClick={() => setFilterType("comment")}>
                     Comments
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFilterType("email")}>
-                    Email
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFilterType("system")}>
-                    System
+                  <DropdownMenuItem onClick={() => setFilterType("review")}>
+                    Reviews
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -198,16 +247,16 @@ export default function AdminNotifications() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>All Notifications ({filteredMessages.length})</span>
-                  {filteredMessages.length > 0 && (
+                  <span>All Notifications ({filteredNotifications.length})</span>
+                  {filteredNotifications.length > 0 && (
                     <Badge variant="secondary">
-                      {filteredMessages.filter(m => !m.read).length} unread
+                      {filteredNotifications.filter(n => !n.read).length} unread
                     </Badge>
                   )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
-                {filteredMessages.length === 0 ? (
+                {filteredNotifications.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
                     <p className="text-lg font-medium">No notifications found</p>
@@ -218,59 +267,58 @@ export default function AdminNotifications() {
                     </p>
                   </div>
                 ) : (
-                  filteredMessages.map((msg) => {
-                    const msgType = getMessageType(msg.subject);
-                    return (
-                      <div
-                        key={msg.id}
-                        className={`flex items-start gap-4 p-4 rounded-lg border transition-all ${
-                          !msg.read
-                            ? "bg-primary/5 border-primary/20 shadow-sm"
-                            : "border-border hover:bg-muted/50"
-                        }`}
-                      >
-                        <div className={`p-2.5 rounded-full border ${getTypeColor(msgType)}`}>
-                          {getTypeIcon(msgType)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm truncate">
-                                {msg.sender || "Unknown"}
-                              </p>
-                              {!msg.read && (
-                                <Badge variant="default" className="h-5 px-1.5 text-xs">
-                                  New
-                                </Badge>
-                              )}
-                            </div>
-                            {msg.createdAt && (
-                              <span className="text-xs text-muted-foreground flex-shrink-0">
-                                {formatDistanceToNow(new Date(msg.createdAt), {
-                                  addSuffix: true,
-                                })}
-                              </span>
+                  filteredNotifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={`flex items-start gap-4 p-4 rounded-lg border transition-all ${
+                        !notif.read
+                          ? "bg-primary/5 border-primary/20 shadow-sm"
+                          : "border-border hover:bg-muted/50"
+                      }`}
+                    >
+                      <div className={`p-2.5 rounded-full border ${getTypeColor(notif.type)}`}>
+                        {getTypeIcon(notif.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm truncate">
+                              {notif.sender}
+                            </p>
+                            {!notif.read && (
+                              <Badge variant="default" className="h-5 px-1.5 text-xs">
+                                New
+                              </Badge>
                             )}
                           </div>
-                          <p className="text-sm font-medium truncate mb-1">
-                            {msg.subject || "No subject"}
-                          </p>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {msg.message || "No message content"}
-                          </p>
-                        </div>
-                        <div className="flex gap-1 flex-shrink-0">
-                          {!msg.read && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                              title="Mark as read"
-                              onClick={() => markAsRead(msg.id)}
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </Button>
+                          {notif.createdAt && (
+                            <span className="text-xs text-muted-foreground flex-shrink-0">
+                              {formatDistanceToNow(notif.createdAt, {
+                                addSuffix: true,
+                              })}
+                            </span>
                           )}
+                        </div>
+                        <p className="text-sm font-medium truncate mb-1">
+                          {notif.subject || "No subject"}
+                        </p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {notif.content || "No content"}
+                        </p>
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        {notif.type === 'message' && !notif.read && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                            title="Mark as read"
+                            onClick={() => markAsRead(notif.originalId)}
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {notif.type === 'message' && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -278,16 +326,16 @@ export default function AdminNotifications() {
                             title="Delete"
                             onClick={() => {
                               if (confirm("Delete this notification?")) {
-                                deleteMessage(msg.id);
+                                deleteMessage(notif.originalId);
                               }
                             }}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
-                        </div>
+                        )}
                       </div>
-                    );
-                  })
+                    </div>
+                  ))
                 )}
               </CardContent>
             </Card>
@@ -306,26 +354,31 @@ export default function AdminNotifications() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/10">
                   <div>
-                    <p className="text-xs text-muted-foreground">Unread Messages</p>
+                    <p className="text-xs text-muted-foreground">Unread Total</p>
                     <p className="text-2xl font-bold text-primary">{unreadCount}</p>
                   </div>
                   <Bell className="w-8 h-8 text-primary/50" />
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
                   <div>
-                    <p className="text-xs text-muted-foreground">Total Messages</p>
+                    <p className="text-xs text-muted-foreground">Messages</p>
                     <p className="text-2xl font-bold">{messages.length}</p>
                   </div>
                   <Mail className="w-8 h-8 text-muted-foreground/50" />
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
                   <div>
-                    <p className="text-xs text-muted-foreground">Read Messages</p>
-                    <p className="text-2xl font-bold">
-                      {messages.length - unreadCount}
-                    </p>
+                    <p className="text-xs text-muted-foreground">Comments</p>
+                    <p className="text-2xl font-bold">{comments.length}</p>
                   </div>
-                  <CheckCircle className="w-8 h-8 text-muted-foreground/50" />
+                  <MessageSquare className="w-8 h-8 text-muted-foreground/50" />
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Reviews</p>
+                    <p className="text-2xl font-bold">{reviews.length}</p>
+                  </div>
+                  <Star className="w-8 h-8 text-muted-foreground/50" />
                 </div>
               </CardContent>
             </Card>
