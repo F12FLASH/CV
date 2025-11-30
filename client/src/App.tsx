@@ -26,6 +26,11 @@ import AdminNewsletter from "@/pages/admin/Newsletter";
 import AdminTheme from "@/pages/admin/Theme";
 import AdminSocial from "@/pages/admin/Social";
 import AdminSystem from "@/pages/admin/System";
+import AdminFileManager from "@/pages/admin/FileManager";
+import AdminActivityLog from "@/pages/admin/ActivityLog";
+import AdminRoles from "@/pages/admin/Roles";
+import AdminAPIKeys from "@/pages/admin/APIKeys";
+import AdminExportImport from "@/pages/admin/ExportImport";
 
 function Router() {
   return (
@@ -45,8 +50,12 @@ function Router() {
       <Route path="/admin/theme" component={AdminTheme} />
       <Route path="/admin/social" component={AdminSocial} />
       <Route path="/admin/system" component={AdminSystem} />
+      <Route path="/admin/media" component={AdminFileManager} />
+      <Route path="/admin/activity" component={AdminActivityLog} />
+      <Route path="/admin/roles" component={AdminRoles} />
+      <Route path="/admin/api-keys" component={AdminAPIKeys} />
+      <Route path="/admin/export-import" component={AdminExportImport} />
       <Route path="/admin/inbox" component={AdminInbox} />
-      <Route path="/admin/media" component={AdminMedia} />
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
       <Route path="/admin/editor" component={AdminEditor} />

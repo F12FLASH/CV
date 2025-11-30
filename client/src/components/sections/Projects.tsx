@@ -15,7 +15,8 @@ const categories = [
 
 export function Projects() {
   const [filter, setFilter] = useState("all");
-  const { projects } = useMockData();
+  const mockData = useMockData();
+  const projects = mockData?.projects || [];
   // Using 'any' temporarily here to avoid complex type matching with the specific strict structure if there's a mismatch, 
   // but in a real app we'd align the types perfectly. The MockData project type is what we want.
   const [selectedProject, setSelectedProject] = useState<any | null>(null);

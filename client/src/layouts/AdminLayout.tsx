@@ -23,7 +23,11 @@ import {
   Palette,
   Share2,
   Database,
-  Layers
+  Layers,
+  Key,
+  GitBranch,
+  Clock,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -67,7 +71,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { icon: Palette, label: "Theme", href: "/admin/theme" },
     { icon: Share2, label: "Social", href: "/admin/social" },
     { icon: Database, label: "System", href: "/admin/system" },
-    { icon: ImageIcon, label: "Media", href: "/admin/media" },
+    { icon: ImageIcon, label: "Files", href: "/admin/media" },
+    { icon: Clock, label: "Activity", href: "/admin/activity" },
+    { icon: GitBranch, label: "Roles", href: "/admin/roles" },
+    { icon: Key, label: "API Keys", href: "/admin/api-keys" },
+    { icon: Download, label: "Export/Import", href: "/admin/export-import" },
     { icon: Users, label: "Users", href: "/admin/users" },
     { icon: BarChart, label: "Analytics", href: "/admin/analytics" },
     { icon: Shield, label: "Security", href: "/admin/security" },
