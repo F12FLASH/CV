@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, Plus, Edit, Trash, Search, AlertCircle, Loader2 } from "lucide-react";
+import { Star, Plus, Edit, Trash, Search, AlertCircle, Loader2, Upload, X } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -26,6 +26,7 @@ export default function AdminTestimonials() {
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const { data: testimonials = [], isLoading } = useQuery({
     queryKey: ["/api/testimonials"],
@@ -93,6 +94,24 @@ export default function AdminTestimonials() {
     },
   });
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ description: "Please select an image file", variant: "destructive" });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      form.setValue("avatar", base64);
+      setAvatarPreview(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleOpenDialog = (testimonial?: Testimonial) => {
     if (testimonial) {
       setEditingId(testimonial.id);
@@ -105,11 +124,18 @@ export default function AdminTestimonials() {
         avatar: testimonial.avatar || "",
         active: testimonial.active !== false,
       });
+      setAvatarPreview(testimonial.avatar || null);
     } else {
       setEditingId(null);
       form.reset();
+      setAvatarPreview(null);
     }
     setIsOpen(true);
+  };
+
+  const handleClearAvatar = () => {
+    form.setValue("avatar", "");
+    setAvatarPreview(null);
   };
 
   const onSubmit = (data: TestimonialFormData) => {
@@ -246,7 +272,10 @@ export default function AdminTestimonials() {
       </div>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) setAvatarPreview(null);
+      }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Testimonial" : "Add New Testimonial"}</DialogTitle>
@@ -371,10 +400,57 @@ export default function AdminTestimonials() {
                 name="avatar"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Avatar URL (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://example.com/avatar.jpg" {...field} value={field.value ?? ""} data-testid="input-testimonial-avatar" />
-                    </FormControl>
+                    <FormLabel>Avatar Image (Optional)</FormLabel>
+                    
+                    {/* Avatar Preview */}
+                    {avatarPreview && (
+                      <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-border">
+                        <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={handleClearAvatar}
+                          className="absolute top-1 right-1 bg-destructive/90 text-white p-1 rounded hover:bg-destructive"
+                          data-testid="button-clear-avatar"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      {/* File Upload */}
+                      <div>
+                        <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
+                          <Upload className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Click to upload image</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarUpload}
+                            className="hidden"
+                            data-testid="input-upload-avatar"
+                          />
+                        </label>
+                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF, WebP (Max 5MB)</p>
+                      </div>
+
+                      {/* URL Input */}
+                      <div>
+                        <label className="text-sm text-muted-foreground mb-2 block">Or paste image URL</label>
+                        <Input
+                          placeholder="https://example.com/avatar.jpg"
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            if (e.target.value && !e.target.value.includes("data:")) {
+                              setAvatarPreview(e.target.value);
+                            }
+                          }}
+                          data-testid="input-testimonial-avatar-url"
+                        />
+                      </div>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
