@@ -11,9 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   Save, Upload, Mail, Database, Zap, Key, Plug, Bell, Webhook, Code2, 
   FileText, AlertCircle, CheckCircle, Clock, Globe, DollarSign, Hash, Languages,
-  HardDrive, RefreshCw, Download, Trash2, Terminal, Bug, Gauge, Server
+  HardDrive, RefreshCw, Download, Trash2, Terminal, Bug, Gauge, Server, X, ImageIcon
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { SettingsPerformance } from "./SettingsPerformance";
 import { SettingsIntegrations } from "./SettingsIntegrations";
 import { useSiteSettings } from "@/context/SiteContext";
@@ -22,8 +22,35 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 export default function AdminSettingsEnhanced() {
   const [logoFile, setLogoFile] = useState<string | null>(null);
+  const [profileImageUploading, setProfileImageUploading] = useState(false);
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
   const { settings, updateSettings, saveSettings, isSaving } = useSiteSettings();
   const { toast } = useToast();
+
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Error", description: "Please select an image file", variant: "destructive" });
+      return;
+    }
+
+    setProfileImageUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = event.target?.result as string;
+        updateSettings({ aboutImage: base64 });
+        toast({ title: "Success", description: "Image uploaded successfully" });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
+    } finally {
+      setProfileImageUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     await saveSettings();
@@ -188,14 +215,63 @@ export default function AdminSettingsEnhanced() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Profile Image URL</Label>
-                  <Input 
-                    value={settings.aboutImage}
-                    onChange={(e) => updateSettings({ aboutImage: e.target.value })}
-                    placeholder="e.g., /uploads/profile.jpg"
-                    data-testid="input-about-image"
-                  />
-                  <p className="text-xs text-muted-foreground">Upload via FileManager and paste the URL here</p>
+                  <Label>Profile Image</Label>
+                  <div className="flex flex-col gap-3">
+                    {settings.aboutImage && (
+                      <div className="relative w-full max-w-xs">
+                        <img 
+                          src={settings.aboutImage} 
+                          alt="Profile preview" 
+                          className="w-full h-64 object-cover rounded-lg border border-border"
+                        />
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="absolute top-2 right-2"
+                          onClick={() => updateSettings({ aboutImage: "" })}
+                          data-testid="button-remove-profile-image"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                    {!settings.aboutImage && (
+                      <div className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-muted/50 transition-colors">
+                        <ImageIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground mb-3">No image selected</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => profileImageInputRef.current?.click()}
+                      disabled={profileImageUploading}
+                      data-testid="button-upload-profile-image"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Image
+                    </Button>
+                    <input
+                      ref={profileImageInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleProfileImageUpload}
+                      data-testid="input-profile-image-file"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">Or paste image URL</Label>
+                    <Input 
+                      value={settings.aboutImage}
+                      onChange={(e) => updateSettings({ aboutImage: e.target.value })}
+                      placeholder="e.g., https://example.com/image.jpg or /uploads/profile.jpg"
+                      data-testid="input-about-image-url"
+                    />
+                    <p className="text-xs text-muted-foreground">Supports any image format (JPG, PNG, GIF, WebP, etc.)</p>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
