@@ -1,4 +1,4 @@
-THIẾT KẾ HỆ THỐNG QUẢN TRỊ ADMIN
+THIẾT KẾ HỆ THỐNG QUẢN TRỊ ADMIN CHO ĐẦY ĐỦ CÁC CHỨC NĂNG VÀ HIỂN THỊ
 
 I. BẢNG ĐIỀU KHIỂN (DASHBOARD) - "Trung Tâm Kiểm Soát"
 

@@ -17,6 +17,8 @@ import AdminUsers from "@/pages/admin/Users";
 import AdminAnalytics from "@/pages/admin/Analytics";
 import AdminEditor from "@/pages/admin/Editor";
 import AdminSecurity from "@/pages/admin/Security";
+import AdminServices from "@/pages/admin/Services";
+import AdminComments from "@/pages/admin/Comments";
 
 function Router() {
   return (
@@ -28,6 +30,9 @@ function Router() {
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/posts" component={AdminPosts} />
       <Route path="/admin/projects" component={AdminProjects} />
+      <Route path="/admin/services" component={AdminServices} />
+      <Route path="/admin/comments" component={AdminComments} />
+      <Route path="/admin/faqs" component={AdminComments} /> {/* Reusing Comments page for FAQs as they are in tabs */}
       <Route path="/admin/inbox" component={AdminInbox} />
       <Route path="/admin/media" component={AdminMedia} />
       <Route path="/admin/users" component={AdminUsers} />
