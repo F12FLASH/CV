@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExternalLink, Github, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useMockData } from "@/context/MockContext";
+import { api } from "@/lib/api";
 
 const useSafeMockData = () => {
   try {
@@ -13,19 +14,29 @@ const useSafeMockData = () => {
   }
 };
 
-const categories = [
-  { id: "all", label: "All" },
-  { id: "full-stack", label: "Full-stack" },
-  { id: "frontend", label: "Front-end" },
-  { id: "backend", label: "Back-end" },
-  { id: "mobile", label: "Mobile" },
-];
-
 export function Projects() {
   const [filter, setFilter] = useState("all");
+  const [categories, setCategories] = useState<Array<{ id: string; label: string }>>([
+    { id: "all", label: "All" }
+  ]);
   const mockData = useSafeMockData();
   const allProjects = mockData?.projects || [];
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await api.getCategories("project");
+        setCategories([
+          { id: "all", label: "All" },
+          ...cats.map((cat: any) => ({ id: cat.slug, label: cat.name }))
+        ]);
+      } catch (error) {
+        console.error("Failed to load categories:", error);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const featuredProjects = allProjects.filter(p => p.status === "Published" && p.featured === true);
 

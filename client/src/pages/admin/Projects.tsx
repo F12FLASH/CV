@@ -67,7 +67,7 @@ type ProjectFormData = {
   featured: boolean;
 };
 
-const defaultFormData: ProjectFormData = {
+const getDefaultFormData = (): ProjectFormData => ({
   title: "",
   category: "full-stack",
   image: "",
@@ -77,30 +77,33 @@ const defaultFormData: ProjectFormData = {
   github: "",
   status: "Draft",
   featured: false,
-};
-
-const categories = [
-  { value: "full-stack", label: "Full-stack" },
-  { value: "frontend", label: "Frontend" },
-  { value: "backend", label: "Backend" },
-  { value: "mobile", label: "Mobile" },
-  { value: "design", label: "Design" },
-];
+});
 
 export default function AdminProjects() {
   const { toast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [formData, setFormData] = useState<ProjectFormData>(defaultFormData);
+  const [formData, setFormData] = useState<ProjectFormData>(getDefaultFormData());
   const [techInput, setTechInput] = useState("");
 
-  // Load projects from API
+  // Load projects and categories from API
   useEffect(() => {
     loadProjects();
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const data = await api.getCategories("project");
+      setCategories(data.map((cat: any) => ({ value: cat.slug, label: cat.name })));
+    } catch (error: any) {
+      console.error("Failed to load categories:", error);
+    }
+  };
 
   const loadProjects = async () => {
     try {
@@ -152,7 +155,7 @@ export default function AdminProjects() {
 
   const openAddDialog = () => {
     setEditingProject(null);
-    setFormData(defaultFormData);
+    setFormData(getDefaultFormData());
     setTechInput("");
     setIsDialogOpen(true);
   };
