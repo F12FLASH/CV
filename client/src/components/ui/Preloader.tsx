@@ -3,6 +3,10 @@ import { motion } from "framer-motion";
 
 export function Preloader({ onComplete }: { onComplete: () => void }) {
   const [progress, setProgress] = useState(0);
+  const [textIndex, setTextIndex] = useState(0);
+  
+  const text = "Loi Developer - Full-stack - Creative Coder ";
+  const characters = text.split("");
 
   useEffect(() => {
     // Faster preloader for better UX
@@ -12,85 +16,87 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
           clearInterval(interval);
           return 100;
         }
-        return prev + 2; // Increased increment speed
+        return prev + 1; // Smooth increment
       });
-    }, 20);
+    }, 30);
 
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (progress === 100) {
-      setTimeout(onComplete, 800);
+      setTimeout(onComplete, 1000);
     }
   }, [progress, onComplete]);
 
   return (
     <motion.div
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0, filter: "blur(20px)" }}
+      exit={{ opacity: 0, filter: "blur(10px)" }}
       transition={{ duration: 0.8, ease: "easeInOut" }}
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black text-white overflow-hidden"
     >
-      {/* 3D Text Spiral Effect Simulation - Enhanced */}
-      <div className="relative w-full h-full flex items-center justify-center perspective-1000 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background to-background">
-        <div className="absolute inset-0 opacity-20">
-           <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-           <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-           <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-        </div>
-
-        <div className="relative z-10 flex flex-col items-center">
-           {[...Array(3)].map((_, i) => (
-            <motion.div
-              key={i}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{
-                rotateZ: [0, 360],
-                scale: [1, 1.5, 1],
-                opacity: [0.5, 0.2, 0.5],
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: "linear",
-                delay: i * 1,
-              }}
-              className={`absolute w-[300px] h-[300px] md:w-[500px] md:h-[500px] rounded-full border border-primary/30`}
-              style={{
-                borderStyle: i % 2 === 0 ? "solid" : "dashed",
-                borderWidth: "1px"
-              }}
-            />
-          ))}
-          
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-center space-y-2 backdrop-blur-sm p-8 rounded-full bg-black/30 border border-white/5"
-          >
-             <h1 className="text-4xl md:text-6xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/50">
-                LOI
-             </h1>
-             <div className="text-xs md:text-sm font-mono text-primary tracking-[0.5em] uppercase">
-                Developer
-             </div>
-          </motion.div>
+      {/* 3D Text Spiral Effect */}
+      <div className="relative w-full h-full flex items-center justify-center perspective-1000">
+        <div className="relative w-[600px] h-[600px] flex items-center justify-center">
+           <motion.div 
+             className="absolute inset-0 flex items-center justify-center"
+             animate={{ rotate: 360 }}
+             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+           >
+             {characters.map((char, i) => {
+               const angle = (i / characters.length) * 360;
+               const radius = 120 + (i * 2); // Spiral out
+               return (
+                 <motion.span
+                   key={i}
+                   className="absolute text-2xl font-bold font-mono text-primary/80 uppercase tracking-widest"
+                   style={{
+                     transform: `rotate(${angle}deg) translate(${radius}px) rotate(90deg)`,
+                     transformOrigin: "center center",
+                   }}
+                   animate={{
+                     opacity: [0.2, 1, 0.2],
+                     scale: [0.8, 1.2, 0.8],
+                     color: ["#7c3aed", "#ffffff", "#7c3aed"]
+                   }}
+                   transition={{
+                     duration: 3,
+                     repeat: Infinity,
+                     delay: i * 0.05,
+                   }}
+                 >
+                   {char}
+                 </motion.span>
+               );
+             })}
+           </motion.div>
+           
+           {/* Center pulsing text */}
+           <motion.div
+             initial={{ opacity: 0, scale: 0.5 }}
+             animate={{ opacity: 1, scale: 1 }}
+             transition={{ duration: 1, delay: 0.5 }}
+             className="absolute z-10 text-center"
+           >
+              <h1 className="text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white via-primary to-white animate-gradient-x">
+                 LOI
+              </h1>
+           </motion.div>
         </div>
       </div>
 
-      {/* Progress Bar - Enhanced */}
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-white/5 overflow-hidden">
+      {/* Progress Bar */}
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-white/5">
         <motion.div
-          className="h-full bg-gradient-to-r from-primary via-purple-500 to-secondary shadow-[0_0_20px_rgba(124,58,237,0.8)]"
+          className="h-full bg-gradient-to-r from-primary via-purple-400 to-white shadow-[0_0_15px_rgba(124,58,237,1)]"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
         />
       </div>
       
-      <div className="absolute bottom-8 right-8 font-mono text-4xl font-bold text-white/10 select-none">
-        {progress < 10 ? `0${progress}` : progress}
+      <div className="absolute bottom-8 right-8 font-mono text-2xl font-bold text-white/20">
+        {progress}%
       </div>
     </motion.div>
   );

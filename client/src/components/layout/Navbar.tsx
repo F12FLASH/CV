@@ -68,11 +68,12 @@ export function Navbar() {
             <button
               key={link.name}
               onClick={() => scrollToSection(link.href)}
-              className={`relative text-sm font-medium transition-colors hover:text-primary ${
-                activeSection === link.href.replace("#", "") ? "text-primary" : "text-foreground/80"
+              className={`group relative text-sm font-medium transition-colors ${
+                activeSection === link.href.replace("#", "") ? "text-primary" : "text-foreground/80 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-primary hover:to-secondary"
               }`}
             >
               {link.name}
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all duration-300 group-hover:w-full" />
               {activeSection === link.href.replace("#", "") && (
                 <motion.div
                   layoutId="activeSection"
@@ -93,9 +94,12 @@ export function Navbar() {
           </button>
           <Button
             variant="outline"
-            className="hidden lg:flex gap-2 border-primary text-primary hover:bg-primary hover:text-white transition-all"
+            className="hidden lg:flex gap-2 border-primary text-primary relative overflow-hidden group transition-all hover:text-white hover:border-transparent"
           >
-            <Download size={16} /> Resume
+            <span className="absolute inset-0 bg-gradient-to-r from-primary to-secondary translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300 ease-out" />
+            <span className="relative z-10 flex items-center gap-2">
+                <Download size={16} /> Resume
+            </span>
           </Button>
         </div>
 

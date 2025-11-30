@@ -81,15 +81,16 @@ export function About() {
                   { icon: Camera, label: "Photo" },
                   { icon: Plane, label: "Travel" },
                 ].map((interest, i) => (
-                  <div
+                  <motion.div
                     key={i}
-                    className="group relative p-3 bg-card border border-border rounded-xl hover:border-primary transition-colors cursor-default"
+                    whileHover={{ y: -5 }}
+                    className="group relative p-3 bg-card border border-border rounded-xl hover:border-primary transition-colors cursor-default shadow-sm hover:shadow-md"
                   >
                     <interest.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-primary text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-primary text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none transform translate-y-2 group-hover:translate-y-0 duration-200">
                       {interest.label}
                     </span>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
