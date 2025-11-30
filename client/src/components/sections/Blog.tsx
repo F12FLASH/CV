@@ -9,6 +9,13 @@ import { Link } from "wouter";
 export function Blog() {
   const { posts } = useMockData();
   const publishedPosts = posts.filter(p => p.status === "Published").slice(0, 3);
+  
+  // Array of background images to rotate
+  const bgImages = [
+    '/images/blog/bg-1.png',
+    '/images/blog/bg-2.png',
+    '/images/blog/bg-3.png',
+  ];
 
   return (
     <section id="blog" className="py-20 bg-muted/30">
@@ -37,8 +44,11 @@ export function Blog() {
               transition={{ delay: index * 0.1 }}
             >
               <Card className="group hover:border-primary/50 transition-all hover:-translate-y-2 duration-300 h-full">
-                <div className="h-48 bg-gradient-to-br from-primary/20 to-secondary/20 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
+                <div 
+                  className="h-48 relative overflow-hidden bg-cover bg-center bg-no-repeat"
+                  style={{ backgroundImage: `url('${bgImages[index % bgImages.length]}')` }}
+                >
+                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors" />
                 </div>
                 <CardHeader>
                   <div className="flex gap-2 mb-3">
