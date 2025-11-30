@@ -276,13 +276,14 @@ export default function AdminTestimonials() {
         setIsOpen(open);
         if (!open) setAvatarPreview(null);
       }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Testimonial" : "Add New Testimonial"}</DialogTitle>
           </DialogHeader>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="flex-1 overflow-y-auto pr-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -456,26 +457,29 @@ export default function AdminTestimonials() {
                 )}
               />
 
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setIsOpen(false)} type="button">
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  data-testid="button-submit-testimonial"
-                >
-                  {createMutation.isPending || updateMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...
-                    </>
-                  ) : (
-                    <>{editingId ? "Update" : "Add"} Testimonial</>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
+              </form>
+            </Form>
+          </div>
+
+          <div className="flex gap-2 justify-end pt-4 border-t border-border mt-6">
+            <Button variant="outline" onClick={() => setIsOpen(false)} type="button">
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={createMutation.isPending || updateMutation.isPending}
+              data-testid="button-submit-testimonial"
+              onClick={() => form.handleSubmit(onSubmit)()}
+            >
+              {createMutation.isPending || updateMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...
+                </>
+              ) : (
+                <>{editingId ? "Update" : "Add"} Testimonial</>
+              )}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </AdminLayout>
