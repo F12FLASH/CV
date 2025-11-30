@@ -19,7 +19,11 @@ import {
   MessageSquare,
   HelpCircle,
   ShoppingBag,
-  Wrench
+  Wrench,
+  Palette,
+  Share2,
+  Database,
+  Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -58,13 +62,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { icon: Briefcase, label: "Projects", href: "/admin/projects" },
     { icon: ShoppingBag, label: "Services", href: "/admin/services" },
     { icon: MessageSquare, label: "Comments", href: "/admin/comments" },
-    { icon: HelpCircle, label: "FAQs", href: "/admin/faqs" },
-    { icon: Mail, label: "Inbox", href: "/admin/inbox" },
+    { icon: Code, label: "Skills", href: "/admin/skills" },
+    { icon: Mail, label: "Newsletter", href: "/admin/newsletter" },
+    { icon: Palette, label: "Theme", href: "/admin/theme" },
+    { icon: Share2, label: "Social", href: "/admin/social" },
+    { icon: Database, label: "System", href: "/admin/system" },
     { icon: ImageIcon, label: "Media", href: "/admin/media" },
     { icon: Users, label: "Users", href: "/admin/users" },
-    { icon: Wrench, label: "Tools", href: "/admin/tools" },
     { icon: BarChart, label: "Analytics", href: "/admin/analytics" },
-    { icon: Code, label: "Code Editor", href: "/admin/editor" },
     { icon: Shield, label: "Security", href: "/admin/security" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
