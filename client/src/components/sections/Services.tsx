@@ -47,6 +47,25 @@ export function Services() {
 
   const services = servicesData.length > 0 ? servicesData : defaultServices;
 
+  const handleContactClick = (service: any) => {
+    // Pre-fill contact form data
+    const subject = `${service.title} - ${service.description}`;
+    const message = `${service.price}\n${(service.features || []).join('\n')}`;
+    
+    sessionStorage.setItem('contactFormData', JSON.stringify({
+      subject,
+      message
+    }));
+    
+    // Scroll to contact section
+    setTimeout(() => {
+      const contactSection = document.getElementById('contact');
+      if (contactSection) {
+        contactSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   return (
     <section id="services" className="py-24 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -86,7 +105,13 @@ export function Services() {
                       </li>
                     ))}
                   </ul>
-                  <Button className="w-full mt-auto">Learn More</Button>
+                  <Button 
+                    className="w-full mt-auto"
+                    onClick={() => handleContactClick(service)}
+                    data-testid="button-contact-service"
+                  >
+                    Contact
+                  </Button>
                 </CardContent>
               </Card>
             );

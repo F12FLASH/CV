@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, MapPin, Phone, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -94,6 +94,25 @@ export function Contact() {
     subject: "",
     message: ""
   });
+
+  // Pre-fill form with service data if available
+  useEffect(() => {
+    const prefillData = sessionStorage.getItem('contactFormData');
+    if (prefillData) {
+      try {
+        const data = JSON.parse(prefillData);
+        setFormData(prev => ({
+          ...prev,
+          subject: data.subject || "",
+          message: data.message || ""
+        }));
+        // Clear the sessionStorage after using it
+        sessionStorage.removeItem('contactFormData');
+      } catch (error) {
+        console.error('Failed to parse prefill data:', error);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
