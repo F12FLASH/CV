@@ -43,6 +43,22 @@ Preferred communication style: Simple, everyday language.
 - Admin dashboard with multiple management interfaces (projects, posts, users, media, analytics, etc.)
 
 **Recent Updates (Nov 30, 2025):**
+- Implemented expandable admin menu with submenus for Posts and Projects
+  - Posts submenu: Posts + Post Categories
+  - Projects submenu: Projects + Project Categories
+  - Chevron icons rotate on expand/collapse
+- Created full-featured category management pages
+  - `/admin/posts/categories` - Manage blog post categories
+  - `/admin/projects/categories` - Manage project categories
+  - Both pages include: Create, Read, Update, Delete (CRUD) operations
+  - Auto-slug generation from category names
+  - Category descriptions with optional text
+  - Professional dialogs for add/edit operations
+  - Confirmation dialogs for deletion
+  - Real-time form validation
+  - Toast notifications for all actions
+  - Loading states and error handling
+- Fixed TipTap editor character count extension issue
 - Fixed TypeScript errors in Posts.tsx (added missing required fields: slug, content, excerpt, featuredImage, tags, publishedAt)
 - Enhanced featured image functionality:
   - File upload from device (auto-converts to base64 data URL)

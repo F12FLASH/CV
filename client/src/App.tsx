@@ -44,6 +44,8 @@ import AdminTestimonials from "@/pages/admin/Testimonials";
 import AdminEmailTemplates from "@/pages/admin/EmailTemplates";
 import AdminCache from "@/pages/admin/Cache";
 import AdminLanguageManager from "@/pages/admin/LanguageManager";
+import AdminPostCategories from "@/pages/admin/PostCategories";
+import AdminProjectCategories from "@/pages/admin/ProjectCategories";
 import { ThemeProvider } from "next-themes";
 import { lazy } from "react";
 
@@ -58,7 +60,9 @@ function Router() {
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/posts" component={AdminPostsEnhanced} />
+      <Route path="/admin/posts/categories" component={AdminPostCategories} />
       <Route path="/admin/projects" component={AdminProjectsEnhanced} />
+      <Route path="/admin/projects/categories" component={AdminProjectCategories} />
       <Route path="/admin/services" component={AdminServicesEnhanced} />
       <Route path="/admin/comments" component={AdminComments} />
       <Route path="/admin/faqs" component={AdminFAQs} />
