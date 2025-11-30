@@ -169,54 +169,23 @@ export default function BlogPost() {
             )}
 
             <div 
-              className="prose prose-lg prose-invert max-w-none"
+              className="prose prose-lg prose-invert max-w-none
+                [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-8 [&_h1]:mb-4
+                [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3
+                [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-2
+                [&_ul]:list-disc [&_ul]:ml-6
+                [&_ol]:list-decimal [&_ol]:ml-6
+                [&_li]:mb-2 [&_li]:text-foreground/90
+                [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4
+                [&_p]:mb-4 [&_p]:text-foreground/90 [&_p]:leading-relaxed
+                [&_strong]:font-bold
+                [&_em]:italic
+                [&_a]:text-primary [&_a]:underline [&_a]:hover:text-primary/80
+                [&_code]:bg-muted [&_code]:px-2 [&_code]:py-1 [&_code]:rounded
+                [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:my-4"
               data-testid="content-post-body"
-            >
-              {post.content?.split("\n").map((paragraph: string, index: number) => {
-                if (!paragraph.trim()) return null;
-                
-                if (paragraph.startsWith("# ")) {
-                  return (
-                    <h1 key={index} className="text-3xl font-bold mt-8 mb-4">
-                      {paragraph.substring(2)}
-                    </h1>
-                  );
-                }
-                if (paragraph.startsWith("## ")) {
-                  return (
-                    <h2 key={index} className="text-2xl font-bold mt-6 mb-3">
-                      {paragraph.substring(3)}
-                    </h2>
-                  );
-                }
-                if (paragraph.startsWith("### ")) {
-                  return (
-                    <h3 key={index} className="text-xl font-bold mt-4 mb-2">
-                      {paragraph.substring(4)}
-                    </h3>
-                  );
-                }
-                if (paragraph.startsWith("- ") || paragraph.startsWith("* ")) {
-                  return (
-                    <li key={index} className="ml-4 text-foreground/90">
-                      {paragraph.substring(2)}
-                    </li>
-                  );
-                }
-                if (paragraph.startsWith("```")) {
-                  return (
-                    <pre key={index} className="bg-muted p-4 rounded-lg overflow-x-auto my-4">
-                      <code>{paragraph.replace(/```/g, "")}</code>
-                    </pre>
-                  );
-                }
-                
-                return (
-                  <p key={index} className="text-foreground/90 leading-relaxed mb-4">
-                    {paragraph}
-                  </p>
-                );
-              })}
+              dangerouslySetInnerHTML={{ __html: post.content || "" }}
+            />
             </div>
 
             {post.tags && post.tags.length > 0 && (

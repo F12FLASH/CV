@@ -12,6 +12,7 @@ import { api } from "@/lib/api";
 import type { Post, InsertPost } from "@shared/schema";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import {
   Dialog,
   DialogContent,
@@ -465,6 +466,16 @@ export default function AdminPostsEnhanced() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="content">Content *</Label>
+              <RichTextEditor
+                value={formData.content}
+                onChange={(content) =>
+                  setFormData((prev) => ({ ...prev, content }))
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="excerpt">Excerpt</Label>
               <Textarea
                 id="excerpt"
@@ -478,20 +489,6 @@ export default function AdminPostsEnhanced() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="content">Content *</Label>
-              <Textarea
-                id="content"
-                placeholder="Write your post content here..."
-                value={formData.content}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, content: e.target.value }))
-                }
-                rows={10}
-                className="font-mono text-sm"
-                data-testid="input-post-content"
-              />
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="tags">Tags (comma-separated)</Label>
