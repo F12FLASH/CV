@@ -39,7 +39,7 @@ export default function AdminProfile() {
   }, [currentUser]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => api.updateUser(currentUser.id, data),
+    mutationFn: (data: any) => api.updateProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       setIsEditing(false);
@@ -48,10 +48,10 @@ export default function AdminProfile() {
         description: "Your profile has been updated successfully.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to update profile.",
+        description: error.message || "Failed to update profile.",
         variant: "destructive",
       });
     },

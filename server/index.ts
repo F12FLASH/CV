@@ -1,11 +1,14 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { setupWebSocket } from "./websocket";
+import { pool } from "./db";
 
 const app = express();
+const PgSession = connectPgSimple(session);
 const httpServer = createServer(app);
 
 setupWebSocket(httpServer);
@@ -18,13 +21,14 @@ declare module "http" {
 
 app.use(
   express.json({
+    limit: '50mb',
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
   }),
 );
 
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Setup session middleware BEFORE routes
 const sessionSecret = process.env.SESSION_SECRET;
@@ -32,16 +36,21 @@ if (!sessionSecret && process.env.NODE_ENV === 'production') {
   throw new Error('SESSION_SECRET environment variable is required in production');
 }
 
-// Session configuration
-const sessionConfig = {
+// Session configuration with PostgreSQL store for persistence
+const sessionConfig: session.SessionOptions = {
+  store: new PgSession({
+    pool: pool as any,
+    tableName: 'session',
+    createTableIfMissing: true
+  }),
   secret: sessionSecret || 'dev-secret-key-for-development-only',
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 1 day
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: (process.env.NODE_ENV === 'production' ? 'strict' : 'lax') as 'strict' | 'lax' | 'none'
   }
 };
 

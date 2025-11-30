@@ -47,6 +47,26 @@ export const api = {
     return handleResponse<any>(res);
   },
 
+  updateProfile: async (data: any) => {
+    const res = await fetch(`${API_BASE}/auth/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return handleResponse<any>(res);
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    const res = await fetch(`${API_BASE}/auth/password`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    return handleResponse<any>(res);
+  },
+
   register: async (data: any) => {
     const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
