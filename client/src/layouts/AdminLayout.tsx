@@ -35,7 +35,9 @@ import {
   Inbox,
   Code2,
   Check,
-  X
+  X,
+  ChevronDown,
+  Folder
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -61,6 +63,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const { messages, markAsRead, logout } = useMockData();
   const { theme, setTheme } = useTheme();
 
@@ -131,10 +134,32 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return null;
   }
 
-  const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-    { icon: FileText, label: "Posts", href: "/admin/posts" },
-    { icon: Briefcase, label: "Projects", href: "/admin/projects" },
+  const toggleMenu = (id: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
+    );
+  };
+
+  const navItems: any[] = [
+    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
+    { 
+      id: "posts",
+      icon: FileText, 
+      label: "Posts", 
+      children: [
+        { icon: FileText, label: "Posts", href: "/admin/posts" },
+        { icon: Folder, label: "Categories", href: "/admin/posts/categories" },
+      ]
+    },
+    { 
+      id: "projects",
+      icon: Briefcase, 
+      label: "Projects", 
+      children: [
+        { icon: Briefcase, label: "Projects", href: "/admin/projects" },
+        { icon: Folder, label: "Categories", href: "/admin/projects/categories" },
+      ]
+    },
     { icon: ShoppingBag, label: "Services", href: "/admin/services" },
     { icon: MessageSquare, label: "Comments", href: "/admin/comments" },
     { icon: Code, label: "Skills", href: "/admin/skills" },
@@ -171,18 +196,65 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="flex-1 overflow-y-auto py-4">
           <nav className="px-2 space-y-1">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <div 
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${
-                    location === item.href 
-                      ? "bg-primary/10 text-primary" 
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <item.icon size={20} />
-                  {sidebarOpen && <span>{item.label}</span>}
-                </div>
-              </Link>
+              <div key={item.id || item.href}>
+                {item.children ? (
+                  <div>
+                    <button
+                      onClick={() => toggleMenu(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                        expandedMenus.includes(item.id)
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                      data-testid={`button-menu-${item.id}`}
+                    >
+                      <item.icon size={20} />
+                      {sidebarOpen && (
+                        <>
+                          <span className="flex-1">{item.label}</span>
+                          <ChevronDown 
+                            size={16} 
+                            className={`transition-transform ${expandedMenus.includes(item.id) ? "rotate-180" : ""}`}
+                          />
+                        </>
+                      )}
+                    </button>
+                    {expandedMenus.includes(item.id) && sidebarOpen && (
+                      <div className="ml-2 mt-1 space-y-1">
+                        {item.children.map((child: any) => (
+                          <Link key={child.href} href={child.href}>
+                            <div
+                              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer text-sm ${
+                                location === child.href
+                                  ? "bg-primary/10 text-primary"
+                                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                              }`}
+                              data-testid={`menu-item-${child.href}`}
+                            >
+                              <child.icon size={16} />
+                              <span>{child.label}</span>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link href={item.href}>
+                    <div 
+                      className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${
+                        location === item.href 
+                          ? "bg-primary/10 text-primary" 
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                      data-testid={`menu-item-${item.href}`}
+                    >
+                      <item.icon size={20} />
+                      {sidebarOpen && <span>{item.label}</span>}
+                    </div>
+                  </Link>
+                )}
+              </div>
             ))}
           </nav>
         </div>
