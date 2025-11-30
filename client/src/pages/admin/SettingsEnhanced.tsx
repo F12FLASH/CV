@@ -340,6 +340,48 @@ export default function AdminSettingsEnhanced() {
 
             <Card>
               <CardHeader>
+                <CardTitle>Channel Priority & Routing</CardTitle>
+                <CardDescription>Configure notification delivery channels and priority</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  {[
+                    { channel: "Email", priority: 1, enabled: true, desc: "Primary notification channel" },
+                    { channel: "Browser Push", priority: 2, enabled: false, desc: "Desktop notifications" },
+                    { channel: "SMS", priority: 3, enabled: false, desc: "Text messages for critical alerts" },
+                    { channel: "Slack", priority: 4, enabled: true, desc: "Team notifications" },
+                    { channel: "Discord", priority: 5, enabled: true, desc: "Community updates" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold">
+                          {item.priority}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{item.channel}</p>
+                          <p className="text-xs text-muted-foreground">{item.desc}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm">↑</Button>
+                        <Button variant="ghost" size="sm">↓</Button>
+                        <Switch defaultChecked={item.enabled} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
+                  <div>
+                    <p className="font-medium text-sm">Fallback Routing</p>
+                    <p className="text-xs text-muted-foreground">Try next channel if delivery fails</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>Alert Thresholds</CardTitle>
                 <CardDescription>Set triggers for automatic alerts</CardDescription>
               </CardHeader>

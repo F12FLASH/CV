@@ -92,7 +92,6 @@ export default function AdminSecurityEnhanced() {
             <TabsTrigger value="api-security">API Security</TabsTrigger>
             <TabsTrigger value="csp">CSP</TabsTrigger>
             <TabsTrigger value="sessions">Sessions</TabsTrigger>
-            <TabsTrigger value="backup">Backup</TabsTrigger>
             <TabsTrigger value="scanner">Scanner</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
@@ -836,69 +835,6 @@ export default function AdminSecurityEnhanced() {
                     <p className="text-xs text-muted-foreground">Require verification for flagged devices</p>
                   </div>
                   <Switch />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* BACKUP */}
-          <TabsContent value="backup" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Backup Management</CardTitle>
-                <CardDescription>Create and restore backups of your data</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Button className="flex-1">Create Backup Now</Button>
-                  <Button variant="outline" className="flex-1">Schedule Backup</Button>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Recent Backups</h4>
-                  {[
-                    { date: "Today, 2:30 PM", size: "124 MB", status: "Complete" },
-                    { date: "Yesterday, 2:15 PM", size: "118 MB", status: "Complete" },
-                    { date: "2 days ago, 2:00 PM", size: "115 MB", status: "Complete" },
-                  ].map((backup, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="text-sm font-medium">{backup.date}</p>
-                        <p className="text-xs text-muted-foreground">{backup.size}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Badge variant="outline">{backup.status}</Badge>
-                        <Button variant="ghost" size="sm">
-                          <Download className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Automatic Backup Schedule</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium">Backup Frequency</label>
-                  <select className="w-full p-2 rounded-md border border-input bg-background mt-1">
-                    <option>Daily</option>
-                    <option>Every 3 days</option>
-                    <option>Weekly</option>
-                    <option>Monthly</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Backup Time</label>
-                  <Input type="time" defaultValue="02:00" className="mt-1" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Auto Delete Old Backups</label>
-                  <Switch defaultChecked />
                 </div>
               </CardContent>
             </Card>
