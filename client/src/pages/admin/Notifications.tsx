@@ -77,6 +77,14 @@ export default function AdminNotifications() {
     },
   });
 
+  const archiveMessageMutation = useMutation({
+    mutationFn: (id: number) => api.archiveMessage(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+      await refetchMessages();
+    },
+  });
+
   const archiveCommentMutation = useMutation({
     mutationFn: (id: number) => api.archiveComment(id),
     onSuccess: async () => {
@@ -215,15 +223,12 @@ export default function AdminNotifications() {
       return;
     }
     
-    if (confirm(`Clear all ${total} notifications?\n\nThis will hide all notifications from this list. The original data (comments, reviews) will be preserved.`)) {
+    if (confirm(`Clear all ${total} notifications?\n\nThis will hide all notifications from this list. The original data will be preserved.`)) {
       try {
         // Archive messages that are not archived
         const messagesToArchive = messages.filter(m => !m.archived);
         for (const msg of messagesToArchive) {
-          await fetch(`/api/messages/${msg.id}/archive`, {
-            method: 'PUT',
-            credentials: 'include'
-          });
+          await archiveMessageMutation.mutateAsync(msg.id);
         }
         
         // Archive all unarchived comments
@@ -237,18 +242,6 @@ export default function AdminNotifications() {
         for (const review of reviewsToArchive) {
           await archiveReviewMutation.mutateAsync(review.id);
         }
-        
-        // Invalidate cache after all mutations
-        await queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
-        await queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
-        await queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
-        
-        // Refetch all data to update UI
-        await Promise.all([
-          refetchMessages(),
-          refetchComments(),
-          refetchReviews()
-        ]);
         
         toast({ title: "Success", description: `Cleared all ${total} notifications` });
       } catch (error) {
@@ -463,11 +456,7 @@ export default function AdminNotifications() {
                             title="Remove from notifications"
                             onClick={async () => {
                               try {
-                                await fetch(`/api/messages/${notif.originalId}/archive`, {
-                                  method: 'PUT',
-                                  credentials: 'include'
-                                });
-                                await refetchMessages();
+                                await archiveMessageMutation.mutateAsync(notif.originalId);
                                 toast({ description: "Notification removed" });
                               } catch (error) {
                                 toast({ description: "Failed to remove notification", variant: "destructive" });

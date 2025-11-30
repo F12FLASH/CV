@@ -212,6 +212,14 @@ export const api = {
     return handleResponse<any>(res);
   },
 
+  archiveMessage: async (id: number) => {
+    const res = await fetch(`${API_BASE}/messages/${id}/archive`, {
+      method: 'PUT',
+      credentials: 'include'
+    });
+    return handleResponse<any>(res);
+  },
+
   deleteMessage: async (id: number) => {
     const res = await fetch(`${API_BASE}/messages/${id}`, {
       method: 'DELETE',
