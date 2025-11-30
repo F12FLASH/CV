@@ -78,18 +78,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         
         if (res.ok) {
           setIsAuthenticated(true);
-        } else if (res.status === 401) {
-          // Only redirect on 401 Unauthorized
-          setLocation("/admin/login");
         } else {
-          // For other errors, assume authenticated to prevent disruption
-          console.error("Auth check failed with status:", res.status);
-          setIsAuthenticated(true);
+          // Redirect to login on any auth failure
+          setLocation("/admin/login");
+          return;
         }
       } catch (error) {
-        // On network errors, assume authenticated to prevent disruption
+        // On network errors, redirect to login
         console.error("Auth check network error:", error);
-        setIsAuthenticated(true);
+        setLocation("/admin/login");
+        return;
       } finally {
         setIsChecking(false);
       }

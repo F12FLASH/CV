@@ -45,7 +45,12 @@ export default function AdminLogin() {
       });
 
       if (response.ok) {
-        setLocation("/admin");
+        const data = await response.json();
+        console.log("Login successful:", data);
+        // Force a small delay to ensure session is saved
+        setTimeout(() => {
+          window.location.href = "/admin";
+        }, 100);
       } else {
         const data = await response.json();
         toast({
@@ -55,6 +60,7 @@ export default function AdminLogin() {
         });
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Error",
         description: "Failed to connect to server",
