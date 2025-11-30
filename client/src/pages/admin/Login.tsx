@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMockData } from "@/context/MockContext";
+import { useToast } from "@/hooks/use-toast";
 import loginBg from "@assets/generated_images/admin_login_background.png";
 
 export default function AdminLogin() {
@@ -15,23 +15,51 @@ export default function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [, setLocation] = useLocation();
-  const { login, isAuthenticated } = useMockData();
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      setLocation("/admin");
-    }
-  }, [isAuthenticated, setLocation]);
+    // Check if already authenticated
+    fetch("/api/auth/me", {
+      credentials: "include"
+    })
+    .then(res => {
+      if (res.ok) {
+        setLocation("/admin");
+      }
+    })
+    .catch(() => {});
+  }, [setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      const success = await login(username, password);
-      if (success) {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (response.ok) {
         setLocation("/admin");
+      } else {
+        const data = await response.json();
+        toast({
+          title: "Login Failed",
+          description: data.message || "Invalid credentials",
+          variant: "destructive",
+        });
       }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to connect to server",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

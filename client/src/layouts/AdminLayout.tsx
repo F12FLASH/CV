@@ -49,32 +49,59 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 
-export function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [location, setLocation] = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+// Define AdminLayoutProps type
+interface AdminLayoutProps {
+  children: React.ReactNode;
+}
+
+export function AdminLayout({ children }: AdminLayoutProps) {
+  const [, setLocation] = useLocation();
+  const [isChecking, setIsChecking] = useState(true);
+  const [location, setLocationState] = useLocation(); // Renamed to avoid conflict
   const { isAuthenticated, logout, messages, markAsRead } = useMockData();
   const { theme, setTheme } = useTheme();
-  
+
   useWebSocket();
-  
+
   const unreadCount = messages.filter(m => !m.read).length;
 
   // Protect route - check authentication state before redirecting
   useEffect(() => {
-    // Only redirect if definitely not authenticated
-    // Avoid redirect during initial load when auth state is being checked
+    fetch("/api/auth/me", {
+      credentials: "include"
+    })
+    .then(res => {
+      if (!res.ok) {
+        setLocationState("/admin/login");
+      }
+    })
+    .catch(() => {
+      setLocationState("/admin/login");
+    })
+    .finally(() => {
+      setIsChecking(false);
+    });
+  }, [setLocationState]);
+
+  if (isChecking) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  // Only redirect if definitely not authenticated
+  // Avoid redirect during initial load when auth state is being checked
+  useEffect(() => {
     const timer = setTimeout(() => {
       if (!isAuthenticated && location !== "/admin/login") {
-        setLocation("/admin/login");
+        setLocationState("/admin/login");
       }
     }, 100);
-    
+
     return () => clearTimeout(timer);
-  }, [isAuthenticated, setLocation, location]);
+  }, [isAuthenticated, setLocationState, location]);
 
   const handleLogout = () => {
     logout();
-    setLocation("/admin/login");
+    setLocationState("/admin/login");
   };
 
   if (!isAuthenticated) return null;
@@ -101,6 +128,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { icon: Shield, label: "Security", href: "/admin/security" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
+
+  // Placeholder for currentUser, assuming it's defined elsewhere or fetched
+  const currentUser = { name: "Loi Developer", email: "admin@loideveloper.com" }; 
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -165,7 +195,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
               {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
             </Button>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
@@ -202,7 +232,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                         className={`flex flex-col items-start p-3 cursor-pointer ${!msg.read ? 'bg-primary/5' : ''}`}
                         onClick={() => {
                           markAsRead(msg.id);
-                          setLocation("/admin/inbox");
+                          setLocationState("/admin/inbox");
                         }}
                       >
                         <div className="flex items-start gap-3 w-full">
@@ -231,13 +261,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="text-center justify-center text-primary cursor-pointer"
-                  onClick={() => setLocation("/admin/notifications")}
+                  onClick={() => setLocationState("/admin/notifications")}
                 >
                   View all notifications
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -257,7 +287,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setLocation("/admin/profile")}>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocationState("/admin/profile")}>Profile</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-red-500" onClick={handleLogout}>Log out</DropdownMenuItem>
               </DropdownMenuContent>
