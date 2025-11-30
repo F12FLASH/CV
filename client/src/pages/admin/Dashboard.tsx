@@ -1,6 +1,7 @@
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useMockData } from "@/context/MockContext";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Users, 
   Eye, 
@@ -53,7 +54,18 @@ const serverStats = [
 ];
 
 export default function AdminDashboard() {
-  const { activityLogs, notifications, posts, projects, messages } = useMockData();
+  const { activityLogs, posts, projects, messages } = useMockData();
+  const { data: comments = [] } = useQuery<any[]>({
+    queryKey: ['/api/comments'],
+  });
+  const { data: reviews = [] } = useQuery<any[]>({
+    queryKey: ['/api/reviews'],
+  });
+
+  const unreadMessages = messages.filter((m: any) => !m.read).length;
+  const unreadComments = comments.filter((c: any) => !c.read).length;
+  const unreadReviews = reviews.filter((r: any) => !r.read).length;
+  const totalUnread = unreadMessages + unreadComments + unreadReviews;
 
   return (
     <AdminLayout>
@@ -119,8 +131,8 @@ export default function AdminDashboard() {
                    </div>
                    <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/10 flex flex-col items-center justify-center text-center gap-2 hover:bg-yellow-500/10 transition-colors">
                       <MessageSquare className="h-8 w-8 text-yellow-500 mb-1" />
-                      <span className="text-2xl font-bold">{messages.length}</span>
-                      <span className="text-xs text-muted-foreground">Messages</span>
+                      <span className="text-2xl font-bold">{totalUnread}</span>
+                      <span className="text-xs text-muted-foreground">Unread</span>
                    </div>
                    <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/10 flex flex-col items-center justify-center text-center gap-2 hover:bg-purple-500/10 transition-colors">
                       <Users className="h-8 w-8 text-purple-500 mb-1" />
