@@ -79,6 +79,7 @@ export default function AdminLogin() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-primary/50 focus:bg-white/10 transition-all"
+                    tabIndex={1}
                     required 
                   />
                 </div>
@@ -87,7 +88,7 @@ export default function AdminLogin() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-white/80">Password</Label>
-                  <a href="#" className="text-xs text-primary hover:text-primary/80">Forgot password?</a>
+                  <a href="#" className="text-xs text-primary hover:text-primary/80" tabIndex={3}>Forgot password?</a>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
@@ -97,12 +98,14 @@ export default function AdminLogin() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-9 pr-9 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-primary/50 focus:bg-white/10 transition-all"
+                    tabIndex={2}
                     required 
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 text-white/40 hover:text-white transition-colors"
+                    tabIndex={4}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
