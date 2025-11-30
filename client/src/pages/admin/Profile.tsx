@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Camera, Save, Mail, User as UserIcon, Shield, Clock } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { api } from "@/lib/api";
@@ -16,11 +16,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export default function AdminProfile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     username: "",
+    avatar: "",
   });
 
   const { data: currentUser, isLoading } = useQuery({
@@ -34,7 +38,9 @@ export default function AdminProfile() {
         name: currentUser.name || "",
         email: currentUser.email || "",
         username: currentUser.username || "",
+        avatar: currentUser.avatar || "",
       });
+      setAvatarPreview(currentUser.avatar || "/avatars/01.png");
     }
   }, [currentUser]);
 
@@ -67,8 +73,65 @@ export default function AdminProfile() {
       name: currentUser?.name || "",
       email: currentUser?.email || "",
       username: currentUser?.username || "",
+      avatar: currentUser?.avatar || "",
     });
+    setAvatarPreview(currentUser?.avatar || "/avatars/01.png");
     setIsEditing(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image size must be less than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const base64 = event.target?.result as string;
+          const result = await api.uploadImage(base64);
+          setFormData({ ...formData, avatar: result.url });
+          setAvatarPreview(result.url);
+          toast({
+            title: "Success",
+            description: "Image uploaded successfully.",
+          });
+        } catch (error: any) {
+          toast({
+            title: "Upload failed",
+            description: error.message || "Failed to upload image.",
+            variant: "destructive",
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to process image.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   if (isLoading) {
@@ -119,19 +182,34 @@ export default function AdminProfile() {
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                 <div className="relative">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={currentUser.avatar || "/avatars/01.png"} alt={currentUser.name} />
+                    <AvatarImage src={avatarPreview} alt={currentUser.name} />
                     <AvatarFallback className="text-2xl">
                       {currentUser.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
-                    <Button 
-                      size="icon" 
-                      variant="secondary" 
-                      className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
+                    <>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                        disabled={isUploadingImage}
+                        data-testid="input-avatar-upload"
+                      />
+                      <Button 
+                        size="icon" 
+                        variant="secondary" 
+                        className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploadingImage}
+                        type="button"
+                        data-testid="button-upload-avatar"
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                    </>
                   )}
                 </div>
                 <div className="flex-1 text-center sm:text-left space-y-1">
