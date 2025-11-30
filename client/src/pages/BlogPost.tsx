@@ -186,7 +186,6 @@ export default function BlogPost() {
               data-testid="content-post-body"
               dangerouslySetInnerHTML={{ __html: post.content || "" }}
             />
-            </div>
 
             {post.tags && post.tags.length > 0 && (
               <>
