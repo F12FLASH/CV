@@ -2,6 +2,8 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import { storage } from "./storage";
+import * as fs from "fs";
+import * as path from "path";
 import { 
   insertProjectSchema, insertPostSchema, insertSkillSchema,
   insertServiceSchema, insertTestimonialSchema, insertMessageSchema,
@@ -878,12 +880,55 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Missing required fields" });
       }
       
+      const safeFilename = path.basename(filename).replace(/[^a-zA-Z0-9._-]/g, '_');
+      if (!safeFilename || safeFilename.startsWith('.')) {
+        return res.status(400).json({ message: "Invalid filename" });
+      }
+      
+      let savedUrl = url;
+      
+      if (url.startsWith("data:")) {
+        const uploadsDir = path.join(process.cwd(), "uploads");
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
+        let subDir = "media";
+        if (mimeType.startsWith("image/")) {
+          subDir = "images";
+        } else if (mimeType === "application/pdf" || mimeType.startsWith("application/")) {
+          subDir = "documents";
+        }
+        
+        const targetDir = path.join(uploadsDir, subDir);
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+        
+        const base64Data = url.split(",")[1];
+        if (!base64Data) {
+          return res.status(400).json({ message: "Invalid base64 data" });
+        }
+        
+        const buffer = Buffer.from(base64Data, "base64");
+        const filePath = path.join(targetDir, safeFilename);
+        
+        const resolvedPath = path.resolve(filePath);
+        const resolvedTargetDir = path.resolve(targetDir);
+        if (!resolvedPath.startsWith(resolvedTargetDir)) {
+          return res.status(400).json({ message: "Invalid file path" });
+        }
+        
+        fs.writeFileSync(filePath, buffer);
+        savedUrl = `/uploads/${subDir}/${safeFilename}`;
+      }
+      
       const mediaItem = await storage.createMedia({
-        filename,
+        filename: safeFilename,
         originalName,
         mimeType,
         size: size || 0,
-        url,
+        url: savedUrl,
         alt: alt || null,
       });
       res.status(201).json(mediaItem);
@@ -906,9 +951,22 @@ export async function registerRoutes(
 
   app.delete("/api/media/:id", requireAuth, async (req, res) => {
     try {
+      const mediaItem = await storage.getMedia(parseInt(req.params.id));
+      if (!mediaItem) {
+        return res.status(404).json({ message: "Media not found" });
+      }
+      
+      if (mediaItem.url.startsWith("/uploads/")) {
+        const relativePath = mediaItem.url.replace(/^\//, "");
+        const filePath = path.join(process.cwd(), relativePath);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+      
       const success = await storage.deleteMedia(parseInt(req.params.id));
       if (!success) {
-        return res.status(404).json({ message: "Media not found" });
+        return res.status(404).json({ message: "Failed to delete media record" });
       }
       res.json({ message: "Media deleted" });
     } catch (error: any) {
