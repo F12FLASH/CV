@@ -78,6 +78,9 @@ function Router() {
       <Route path="/admin/testimonials" component={AdminTestimonials} />
       <Route path="/admin/email-templates" component={AdminEmailTemplates} />
       <Route path="/admin/cache" component={AdminCache} />
+      <Route path="/admin/webhooks" component={lazy(() => import("@/pages/admin/Webhooks"))} />
+      <Route path="/admin/image-optimizer" component={lazy(() => import("@/pages/admin/ImageOptimizer"))} />
+      <Route path="/admin/page-builder" component={lazy(() => import("@/pages/admin/PageBuilder"))} />
 
       {/* Admin Fallback */}
       <Route path="/admin/:any*">
