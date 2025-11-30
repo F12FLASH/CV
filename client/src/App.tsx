@@ -13,7 +13,6 @@ import AdminMedia from "@/pages/admin/Media";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminLogin from "@/pages/admin/Login";
 import AdminPosts from "@/pages/admin/Posts";
-import AdminUsers from "@/pages/admin/Users";
 import AdminAnalytics from "@/pages/admin/Analytics";
 import AdminEditor from "@/pages/admin/Editor";
 import AdminSecurity from "@/pages/admin/Security";
@@ -28,7 +27,6 @@ import AdminSocial from "@/pages/admin/Social";
 import AdminSystem from "@/pages/admin/System";
 import AdminFileManager from "@/pages/admin/FileManager";
 import AdminActivityLog from "@/pages/admin/ActivityLog";
-import AdminRoles from "@/pages/admin/Roles";
 import AdminAPIKeys from "@/pages/admin/APIKeys";
 import AdminExportImport from "@/pages/admin/ExportImport";
 import AdminPostsEnhanced from "@/pages/admin/PostsEnhanced";
@@ -65,11 +63,9 @@ function Router() {
       <Route path="/admin/media" component={lazy(() => import("@/pages/admin/Media"))} />
       <Route path="/admin/files" component={lazy(() => import("@/pages/admin/FileManager"))} />
       <Route path="/admin/activity" component={AdminActivityLog} />
-      <Route path="/admin/roles" component={AdminRoles} />
       <Route path="/admin/api-keys" component={AdminAPIKeys} />
       <Route path="/admin/export-import" component={AdminExportImport} />
       <Route path="/admin/inbox" component={AdminInbox} />
-      <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
       <Route path="/admin/editor" component={AdminEditor} />
       <Route path="/admin/security" component={AdminSecurityEnhanced} />
