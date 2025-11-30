@@ -282,11 +282,13 @@ export default function AdminPostsEnhanced() {
 
   const bgImages = ['/images/blog/bg-1.png', '/images/blog/bg-2.png', '/images/blog/bg-3.png'];
 
-  const renderPostCard = (post: any) => (
+  const renderPostCard = (post: any) => {
+    const imageUrl = post.featuredImage || bgImages[post.id % bgImages.length];
+    return (
     <Card key={post.id} data-testid={`card-post-${post.id}`} className="overflow-hidden">
       <div 
         className="h-32 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url('${bgImages[post.id % bgImages.length]}')` }}
+        style={{ backgroundImage: `url('${imageUrl}')` }}
       >
         <div className="w-full h-full bg-black/40" />
       </div>
@@ -343,7 +345,8 @@ export default function AdminPostsEnhanced() {
         </div>
       </CardContent>
     </Card>
-  );
+    );
+  };
 
   return (
     <AdminLayout>
@@ -511,6 +514,40 @@ export default function AdminPostsEnhanced() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="image">Featured Image</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="image"
+                  placeholder="Image URL (e.g., /images/blog/bg-1.png)"
+                  value={formData.featuredImage || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, featuredImage: e.target.value || null }))
+                  }
+                  data-testid="input-post-image"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setFormData((prev) => ({ ...prev, featuredImage: null }))}
+                  data-testid="button-clear-image"
+                >
+                  Clear
+                </Button>
+              </div>
+              {formData.featuredImage && (
+                <div className="mt-2 border border-border rounded-md overflow-hidden">
+                  <img
+                    src={formData.featuredImage}
+                    alt="Featured preview"
+                    className="w-full h-40 object-cover"
+                  />
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Available images: /images/blog/bg-1.png, /images/blog/bg-2.png, /images/blog/bg-3.png
+              </p>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="tags">Tags (comma-separated)</Label>
