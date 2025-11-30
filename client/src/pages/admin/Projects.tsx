@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useMockData, Project } from "@/context/MockContext";
+import { api } from "@/lib/api";
 import { 
   Plus, 
   Search, 
@@ -38,6 +38,22 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
+
+type Project = {
+  id: number;
+  title: string;
+  category: string;
+  image: string | null;
+  description: string | null;
+  tech: string[];
+  link: string | null;
+  github: string | null;
+  status: "Published" | "Draft" | "Archived";
+  views: number;
+  featured: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
 
 type ProjectFormData = {
   title: string;
@@ -72,13 +88,35 @@ const categories = [
 ];
 
 export default function AdminProjects() {
-  const { projects, deleteProject, addProject, updateProject } = useMockData();
   const { toast } = useToast();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState<ProjectFormData>(defaultFormData);
   const [techInput, setTechInput] = useState("");
+
+  // Load projects from API
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getProjects();
+      setProjects(data);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load projects",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredProjects = projects.filter(project => 
     project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -87,8 +125,23 @@ export default function AdminProjects() {
   );
 
   const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this project?")) {
-      await deleteProject(id);
+    if (!confirm("Are you sure you want to delete this project?")) {
+      return;
+    }
+    
+    try {
+      await api.deleteProject(id);
+      toast({
+        title: "Success",
+        description: "Project deleted successfully",
+      });
+      await loadProjects();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete project",
+        variant: "destructive",
+      });
     }
   };
 
@@ -130,27 +183,33 @@ export default function AdminProjects() {
 
     setIsSaving(true);
     try {
+      const projectData = {
+        ...formData,
+        image: formData.image || null,
+        description: formData.description || null,
+        link: formData.link || null,
+        github: formData.github || null,
+      };
+
       if (editingProject) {
-        await updateProject(editingProject.id, {
-          ...formData,
-          image: formData.image || null,
-          description: formData.description || null,
-          link: formData.link || null,
-          github: formData.github || null,
+        await api.updateProject(editingProject.id, projectData);
+        toast({
+          title: "Success",
+          description: "Project updated successfully",
         });
       } else {
-        await addProject({
-          ...formData,
-          image: formData.image || null,
-          description: formData.description || null,
-          link: formData.link || null,
-          github: formData.github || null,
+        await api.createProject(projectData);
+        toast({
+          title: "Success",
+          description: "Project created successfully",
         });
       }
+      
       setIsDialogOpen(false);
       setFormData(defaultFormData);
       setTechInput("");
       setEditingProject(null);
+      await loadProjects();
     } catch (error: any) {
       console.error("Error saving project:", error);
       toast({
@@ -175,18 +234,40 @@ export default function AdminProjects() {
   };
 
   const toggleStatus = async (id: number, currentStatus: string) => {
-    const newStatus = currentStatus === "Published" ? "Draft" : "Published";
-    await updateProject(id, { status: newStatus });
+    try {
+      const newStatus = currentStatus === "Published" ? "Draft" : "Published";
+      await api.updateProject(id, { status: newStatus });
+      toast({
+        title: "Success",
+        description: `Project ${newStatus === "Published" ? "published" : "unpublished"}`,
+      });
+      await loadProjects();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update status",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleFeatured = async (id: number, currentFeatured: boolean) => {
-    await updateProject(id, { featured: !currentFeatured });
-    toast({
-      title: currentFeatured ? "Removed from featured" : "Added to featured",
-      description: currentFeatured 
-        ? "Project will no longer appear in featured section" 
-        : "Project will now appear in featured section",
-    });
+    try {
+      await api.updateProject(id, { featured: !currentFeatured });
+      toast({
+        title: currentFeatured ? "Removed from featured" : "Added to featured",
+        description: currentFeatured 
+          ? "Project will no longer appear in featured section" 
+          : "Project will now appear in featured section",
+      });
+      await loadProjects();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update featured status",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -223,7 +304,14 @@ export default function AdminProjects() {
         </div>
 
         <div className="space-y-4">
-          {filteredProjects.length === 0 ? (
+          {loading ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                <p className="text-muted-foreground">Loading projects...</p>
+              </CardContent>
+            </Card>
+          ) : filteredProjects.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Layers className="h-12 w-12 text-muted-foreground mb-4" />
