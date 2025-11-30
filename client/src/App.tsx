@@ -19,12 +19,14 @@ import AdminEditor from "@/pages/admin/Editor";
 import AdminSecurity from "@/pages/admin/Security";
 import AdminServices from "@/pages/admin/Services";
 import AdminComments from "@/pages/admin/Comments";
+import AdminFAQs from "@/pages/admin/FAQs";
+import AdminTools from "@/pages/admin/Tools";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      
+
       {/* Admin Routes */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminDashboard} />
@@ -32,7 +34,7 @@ function Router() {
       <Route path="/admin/projects" component={AdminProjects} />
       <Route path="/admin/services" component={AdminServices} />
       <Route path="/admin/comments" component={AdminComments} />
-      <Route path="/admin/faqs" component={AdminComments} /> {/* Reusing Comments page for FAQs as they are in tabs */}
+      <Route path="/admin/faqs" component={AdminFAQs} />
       <Route path="/admin/inbox" component={AdminInbox} />
       <Route path="/admin/media" component={AdminMedia} />
       <Route path="/admin/users" component={AdminUsers} />
@@ -40,14 +42,15 @@ function Router() {
       <Route path="/admin/editor" component={AdminEditor} />
       <Route path="/admin/security" component={AdminSecurity} />
       <Route path="/admin/settings" component={AdminSettings} />
-      
+      <Route path="/admin/tools" component={AdminTools} />
+
       {/* Admin Fallback */}
       <Route path="/admin/:any*">
          {(params) => {
             return <AdminDashboard />;
          }}
       </Route>
-      
+
       <Route component={NotFound} />
     </Switch>
   );
