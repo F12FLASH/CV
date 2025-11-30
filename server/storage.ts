@@ -10,7 +10,9 @@ import {
   notifications, type Notification, type InsertNotification,
   siteSettings, type SiteSetting, type InsertSiteSetting,
   categories, type Category, type InsertCategory,
-  media, type Media, type InsertMedia
+  media, type Media, type InsertMedia,
+  comments, type Comment, type InsertComment,
+  reviews, type Review, type InsertReview
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
@@ -102,6 +104,34 @@ export interface IStorage {
   getAllMedia(): Promise<Media[]>;
   createMedia(mediaItem: InsertMedia): Promise<Media>;
   deleteMedia(id: number): Promise<boolean>;
+
+  // Comments
+  getComment(id: number): Promise<Comment | undefined>;
+  getAllComments(): Promise<Comment[]>;
+  getCommentsByPost(postId: number): Promise<Comment[]>;
+  getCommentsByProject(projectId: number): Promise<Comment[]>;
+  getApprovedCommentsByPost(postId: number): Promise<Comment[]>;
+  getApprovedCommentsByProject(projectId: number): Promise<Comment[]>;
+  getPendingComments(): Promise<Comment[]>;
+  getUnreadComments(): Promise<Comment[]>;
+  createComment(comment: InsertComment): Promise<Comment>;
+  updateComment(id: number, comment: Partial<InsertComment>): Promise<Comment | undefined>;
+  approveComment(id: number): Promise<boolean>;
+  markCommentAsRead(id: number): Promise<boolean>;
+  deleteComment(id: number): Promise<boolean>;
+
+  // Reviews
+  getReview(id: number): Promise<Review | undefined>;
+  getAllReviews(): Promise<Review[]>;
+  getReviewsByProject(projectId: number): Promise<Review[]>;
+  getApprovedReviewsByProject(projectId: number): Promise<Review[]>;
+  getPendingReviews(): Promise<Review[]>;
+  getUnreadReviews(): Promise<Review[]>;
+  createReview(review: InsertReview): Promise<Review>;
+  updateReview(id: number, review: Partial<InsertReview>): Promise<Review | undefined>;
+  approveReview(id: number): Promise<boolean>;
+  markReviewAsRead(id: number): Promise<boolean>;
+  deleteReview(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -462,6 +492,122 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMedia(id: number): Promise<boolean> {
     const result = await db.delete(media).where(eq(media.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Comments
+  async getComment(id: number): Promise<Comment | undefined> {
+    const [comment] = await db.select().from(comments).where(eq(comments.id, id));
+    return comment || undefined;
+  }
+
+  async getAllComments(): Promise<Comment[]> {
+    return await db.select().from(comments).orderBy(desc(comments.createdAt));
+  }
+
+  async getCommentsByPost(postId: number): Promise<Comment[]> {
+    return await db.select().from(comments).where(eq(comments.postId, postId)).orderBy(desc(comments.createdAt));
+  }
+
+  async getCommentsByProject(projectId: number): Promise<Comment[]> {
+    return await db.select().from(comments).where(eq(comments.projectId, projectId)).orderBy(desc(comments.createdAt));
+  }
+
+  async getApprovedCommentsByPost(postId: number): Promise<Comment[]> {
+    return await db.select().from(comments)
+      .where(and(eq(comments.postId, postId), eq(comments.status, "Approved")))
+      .orderBy(desc(comments.createdAt));
+  }
+
+  async getApprovedCommentsByProject(projectId: number): Promise<Comment[]> {
+    return await db.select().from(comments)
+      .where(and(eq(comments.projectId, projectId), eq(comments.status, "Approved")))
+      .orderBy(desc(comments.createdAt));
+  }
+
+  async getPendingComments(): Promise<Comment[]> {
+    return await db.select().from(comments).where(eq(comments.status, "Pending")).orderBy(desc(comments.createdAt));
+  }
+
+  async getUnreadComments(): Promise<Comment[]> {
+    return await db.select().from(comments).where(eq(comments.read, false)).orderBy(desc(comments.createdAt));
+  }
+
+  async createComment(insertComment: InsertComment): Promise<Comment> {
+    const [comment] = await db.insert(comments).values(insertComment).returning();
+    return comment;
+  }
+
+  async updateComment(id: number, commentData: Partial<InsertComment>): Promise<Comment | undefined> {
+    const [comment] = await db.update(comments).set(commentData).where(eq(comments.id, id)).returning();
+    return comment || undefined;
+  }
+
+  async approveComment(id: number): Promise<boolean> {
+    const result = await db.update(comments).set({ status: "Approved" }).where(eq(comments.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async markCommentAsRead(id: number): Promise<boolean> {
+    const result = await db.update(comments).set({ read: true }).where(eq(comments.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteComment(id: number): Promise<boolean> {
+    const result = await db.delete(comments).where(eq(comments.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Reviews
+  async getReview(id: number): Promise<Review | undefined> {
+    const [review] = await db.select().from(reviews).where(eq(reviews.id, id));
+    return review || undefined;
+  }
+
+  async getAllReviews(): Promise<Review[]> {
+    return await db.select().from(reviews).orderBy(desc(reviews.createdAt));
+  }
+
+  async getReviewsByProject(projectId: number): Promise<Review[]> {
+    return await db.select().from(reviews).where(eq(reviews.projectId, projectId)).orderBy(desc(reviews.createdAt));
+  }
+
+  async getApprovedReviewsByProject(projectId: number): Promise<Review[]> {
+    return await db.select().from(reviews)
+      .where(and(eq(reviews.projectId, projectId), eq(reviews.status, "Approved")))
+      .orderBy(desc(reviews.createdAt));
+  }
+
+  async getPendingReviews(): Promise<Review[]> {
+    return await db.select().from(reviews).where(eq(reviews.status, "Pending")).orderBy(desc(reviews.createdAt));
+  }
+
+  async getUnreadReviews(): Promise<Review[]> {
+    return await db.select().from(reviews).where(eq(reviews.read, false)).orderBy(desc(reviews.createdAt));
+  }
+
+  async createReview(insertReview: InsertReview): Promise<Review> {
+    const [review] = await db.insert(reviews).values(insertReview).returning();
+    return review;
+  }
+
+  async updateReview(id: number, reviewData: Partial<InsertReview>): Promise<Review | undefined> {
+    const [review] = await db.update(reviews).set(reviewData).where(eq(reviews.id, id)).returning();
+    return review || undefined;
+  }
+
+  async approveReview(id: number): Promise<boolean> {
+    const result = await db.update(reviews).set({ status: "Approved" }).where(eq(reviews.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async markReviewAsRead(id: number): Promise<boolean> {
+    const result = await db.update(reviews).set({ read: true }).where(eq(reviews.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteReview(id: number): Promise<boolean> {
+    const result = await db.delete(reviews).where(eq(reviews.id, id)).returning();
     return result.length > 0;
   }
 }

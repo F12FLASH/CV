@@ -6,10 +6,10 @@ import {
   insertProjectSchema, insertPostSchema, insertSkillSchema,
   insertServiceSchema, insertTestimonialSchema, insertMessageSchema,
   insertUserSchema, insertCategorySchema, insertActivityLogSchema,
-  insertNotificationSchema
+  insertNotificationSchema, insertCommentSchema, insertReviewSchema
 } from "@shared/schema";
 import bcrypt from "bcrypt";
-import { broadcastNewMessage } from "./websocket";
+import { broadcastNewMessage, broadcastNotification } from "./websocket";
 
 const SALT_ROUNDS = 12;
 
@@ -897,11 +897,13 @@ export async function registerRoutes(
 
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
-      const [projects, posts, messages, users] = await Promise.all([
+      const [projects, posts, messages, users, comments, reviews] = await Promise.all([
         storage.getAllProjects(),
         storage.getAllPosts(),
         storage.getAllMessages(),
-        storage.getAllUsers()
+        storage.getAllUsers(),
+        storage.getAllComments(),
+        storage.getAllReviews()
       ]);
       
       const totalViews = projects.reduce((sum, p) => sum + (p.views || 0), 0) +
@@ -916,8 +918,259 @@ export async function registerRoutes(
         unreadMessages: messages.filter(m => !m.read).length,
         totalUsers: users.length,
         activeUsers: users.filter(u => u.status === "Active").length,
-        totalViews
+        totalViews,
+        totalComments: comments.length,
+        pendingComments: comments.filter(c => c.status === "Pending").length,
+        totalReviews: reviews.length,
+        pendingReviews: reviews.filter(r => r.status === "Pending").length
       });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Comments API
+  app.get("/api/comments", async (req, res) => {
+    try {
+      const postId = req.query.postId ? parseInt(req.query.postId as string) : undefined;
+      const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
+      const pending = req.query.pending === "true";
+      const approved = req.query.approved === "true";
+      
+      let comments;
+      if (pending) {
+        comments = await storage.getPendingComments();
+      } else if (postId && approved) {
+        comments = await storage.getApprovedCommentsByPost(postId);
+      } else if (projectId && approved) {
+        comments = await storage.getApprovedCommentsByProject(projectId);
+      } else if (postId) {
+        comments = await storage.getCommentsByPost(postId);
+      } else if (projectId) {
+        comments = await storage.getCommentsByProject(projectId);
+      } else {
+        comments = await storage.getAllComments();
+      }
+      res.json(comments);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/comments/unread", requireAdmin, async (req, res) => {
+    try {
+      const comments = await storage.getUnreadComments();
+      res.json(comments);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/comments/:id", async (req, res) => {
+    try {
+      const comment = await storage.getComment(parseInt(req.params.id));
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      res.json(comment);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/comments", async (req, res) => {
+    try {
+      const parsed = insertCommentSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      }
+      const comment = await storage.createComment(parsed.data);
+      
+      // Create notification and broadcast
+      const post = comment.postId ? await storage.getPost(comment.postId) : null;
+      const project = comment.projectId ? await storage.getProject(comment.projectId) : null;
+      const target = post?.title || project?.title || "Unknown";
+      
+      await storage.createNotification({
+        message: `New comment from ${comment.authorName} on "${target}"`,
+        type: "comment"
+      });
+      
+      broadcastNotification({
+        type: "NEW_COMMENT",
+        message: `New comment from ${comment.authorName}`,
+        data: comment
+      });
+      
+      res.status(201).json(comment);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/comments/:id", requireAuth, async (req, res) => {
+    try {
+      const comment = await storage.updateComment(parseInt(req.params.id), req.body);
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      res.json(comment);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/comments/:id/approve", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.approveComment(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      res.json({ message: "Comment approved" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/comments/:id/read", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.markCommentAsRead(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      res.json({ message: "Comment marked as read" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/comments/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteComment(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      res.json({ message: "Comment deleted" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Reviews API
+  app.get("/api/reviews", async (req, res) => {
+    try {
+      const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
+      const pending = req.query.pending === "true";
+      const approved = req.query.approved === "true";
+      
+      let reviews;
+      if (pending) {
+        reviews = await storage.getPendingReviews();
+      } else if (projectId && approved) {
+        reviews = await storage.getApprovedReviewsByProject(projectId);
+      } else if (projectId) {
+        reviews = await storage.getReviewsByProject(projectId);
+      } else {
+        reviews = await storage.getAllReviews();
+      }
+      res.json(reviews);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/reviews/unread", requireAdmin, async (req, res) => {
+    try {
+      const reviews = await storage.getUnreadReviews();
+      res.json(reviews);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/reviews/:id", async (req, res) => {
+    try {
+      const review = await storage.getReview(parseInt(req.params.id));
+      if (!review) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      res.json(review);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/reviews", async (req, res) => {
+    try {
+      const parsed = insertReviewSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      }
+      const review = await storage.createReview(parsed.data);
+      
+      // Create notification and broadcast
+      const project = await storage.getProject(review.projectId);
+      
+      await storage.createNotification({
+        message: `New ${review.rating}-star review from ${review.authorName} on "${project?.title || "Unknown"}"`,
+        type: "review"
+      });
+      
+      broadcastNotification({
+        type: "NEW_REVIEW",
+        message: `New ${review.rating}-star review from ${review.authorName}`,
+        data: review
+      });
+      
+      res.status(201).json(review);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/reviews/:id", requireAuth, async (req, res) => {
+    try {
+      const review = await storage.updateReview(parseInt(req.params.id), req.body);
+      if (!review) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      res.json(review);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/reviews/:id/approve", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.approveReview(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      res.json({ message: "Review approved" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/reviews/:id/read", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.markReviewAsRead(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      res.json({ message: "Review marked as read" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/reviews/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteReview(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      res.json({ message: "Review deleted" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

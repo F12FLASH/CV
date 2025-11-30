@@ -246,10 +246,88 @@ export const insertMediaSchema = createInsertSchema(media).omit({
 export type InsertMedia = z.infer<typeof insertMediaSchema>;
 export type Media = typeof media.$inferSelect;
 
+// Comments table - for blog posts and projects
+export const comments = pgTable("comments", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  authorName: text("author_name").notNull(),
+  authorEmail: text("author_email").notNull(),
+  authorAvatar: text("author_avatar"),
+  postId: integer("post_id"),
+  projectId: integer("project_id"),
+  parentId: integer("parent_id"),
+  status: text("status").notNull().default("Pending"),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertCommentSchema = createInsertSchema(comments).omit({
+  id: true,
+  read: true,
+  createdAt: true,
+});
+export type InsertComment = z.infer<typeof insertCommentSchema>;
+export type Comment = typeof comments.$inferSelect;
+
+// Reviews table - for projects
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  authorName: text("author_name").notNull(),
+  authorEmail: text("author_email").notNull(),
+  authorAvatar: text("author_avatar"),
+  projectId: integer("project_id").notNull(),
+  rating: integer("rating").notNull().default(5),
+  status: text("status").notNull().default("Pending"),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertReviewSchema = createInsertSchema(reviews).omit({
+  id: true,
+  read: true,
+  createdAt: true,
+});
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviews.$inferSelect;
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   activityLogs: many(activityLogs),
   notifications: many(notifications),
+}));
+
+export const commentsRelations = relations(comments, ({ one, many }) => ({
+  post: one(posts, {
+    fields: [comments.postId],
+    references: [posts.id],
+  }),
+  project: one(projects, {
+    fields: [comments.projectId],
+    references: [projects.id],
+  }),
+  parent: one(comments, {
+    fields: [comments.parentId],
+    references: [comments.id],
+    relationName: "replies",
+  }),
+  replies: many(comments, { relationName: "replies" }),
+}));
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  project: one(projects, {
+    fields: [reviews.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const postsRelations = relations(posts, ({ many }) => ({
+  comments: many(comments),
+}));
+
+export const projectsRelations = relations(projects, ({ many }) => ({
+  comments: many(comments),
+  reviews: many(reviews),
 }));
 
 export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
