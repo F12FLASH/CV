@@ -31,6 +31,8 @@ import AdminActivityLog from "@/pages/admin/ActivityLog";
 import AdminRoles from "@/pages/admin/Roles";
 import AdminAPIKeys from "@/pages/admin/APIKeys";
 import AdminExportImport from "@/pages/admin/ExportImport";
+import { ThemeProvider } from "next-themes";
+
 
 function Router() {
   return (
@@ -78,12 +80,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <MockProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </MockProvider>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <MockProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </MockProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
