@@ -32,6 +32,7 @@ import AdminRoles from "@/pages/admin/Roles";
 import AdminAPIKeys from "@/pages/admin/APIKeys";
 import AdminExportImport from "@/pages/admin/ExportImport";
 import { ThemeProvider } from "next-themes";
+import { lazy } from "react";
 
 
 function Router() {
@@ -52,7 +53,8 @@ function Router() {
       <Route path="/admin/theme" component={AdminTheme} />
       <Route path="/admin/social" component={AdminSocial} />
       <Route path="/admin/system" component={AdminSystem} />
-      <Route path="/admin/media" component={AdminFileManager} />
+      <Route path="/admin/media" component={lazy(() => import("@/pages/admin/Media"))} />
+      <Route path="/admin/files" component={lazy(() => import("@/pages/admin/FileManager"))} />
       <Route path="/admin/activity" component={AdminActivityLog} />
       <Route path="/admin/roles" component={AdminRoles} />
       <Route path="/admin/api-keys" component={AdminAPIKeys} />

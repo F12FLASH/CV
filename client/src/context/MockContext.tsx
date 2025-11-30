@@ -85,6 +85,8 @@ export interface Notification {
   date: string;
 }
 
+// Mock data context for admin panel
+// TODO: Replace with real API calls to /api/* endpoints
 const MockContext = createContext<MockContextType | undefined>(undefined);
 
 // Initial Data
