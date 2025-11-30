@@ -100,7 +100,7 @@ export default function AdminNotifications() {
       createdAt: m.createdAt ? new Date(m.createdAt) : null,
       originalId: m.id,
     })),
-    ...comments.map((c: any) => ({
+    ...comments.filter((c: any) => !c.read).map((c: any) => ({
       id: `comment-${c.id}`,
       type: 'comment' as const,
       sender: c.authorName || 'Unknown',
@@ -110,7 +110,7 @@ export default function AdminNotifications() {
       createdAt: c.createdAt ? new Date(c.createdAt) : null,
       originalId: c.id,
     })),
-    ...reviews.map((r: any) => ({
+    ...reviews.filter((r: any) => !r.read).map((r: any) => ({
       id: `review-${r.id}`,
       type: 'review' as const,
       sender: r.authorName || 'Unknown',
@@ -203,28 +203,28 @@ export default function AdminNotifications() {
       return;
     }
     
-    if (confirm(`Clear all ${total} notifications?\n\nThis will remove all notifications from your list. The original data will not be deleted.`)) {
+    if (confirm(`Clear all ${total} notifications?\n\nThis will remove all notifications from your list.`)) {
       try {
-        // Archive ALL messages
-        for (const msg of messages) {
+        // Archive messages that are not archived
+        const messagesToArchive = messages.filter(m => !m.archived);
+        for (const msg of messagesToArchive) {
           await fetch(`/api/messages/${msg.id}/archive`, {
             method: 'PUT',
             credentials: 'include'
           });
         }
-        // Mark ALL comments as read (comments don't have archive)
-        for (const comment of comments) {
+        
+        // Mark unread comments as read
+        const unreadComments = comments.filter((c: any) => !c.read);
+        for (const comment of unreadComments) {
           await markCommentReadMutation.mutateAsync(comment.id);
         }
-        // Mark ALL reviews as read (reviews don't have archive)
-        for (const review of reviews) {
+        
+        // Mark unread reviews as read
+        const unreadReviews = reviews.filter((r: any) => !r.read);
+        for (const review of unreadReviews) {
           await markReviewReadMutation.mutateAsync(review.id);
         }
-        
-        // Refetch to update the UI
-        await refetchMessages();
-        await refetchComments();
-        await refetchReviews();
         
         toast({ title: "Success", description: `Cleared all ${total} notifications` });
       } catch (error) {
@@ -461,8 +461,12 @@ export default function AdminNotifications() {
                             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                             title="Remove from notifications"
                             onClick={async () => {
-                              await markCommentReadMutation.mutateAsync(notif.originalId);
-                              toast({ description: "Notification removed" });
+                              try {
+                                await markCommentReadMutation.mutateAsync(notif.originalId);
+                                toast({ description: "Notification removed" });
+                              } catch (error) {
+                                toast({ description: "Failed to remove notification", variant: "destructive" });
+                              }
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
@@ -476,8 +480,12 @@ export default function AdminNotifications() {
                             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                             title="Remove from notifications"
                             onClick={async () => {
-                              await markReviewReadMutation.mutateAsync(notif.originalId);
-                              toast({ description: "Notification removed" });
+                              try {
+                                await markReviewReadMutation.mutateAsync(notif.originalId);
+                                toast({ description: "Notification removed" });
+                              } catch (error) {
+                                toast({ description: "Failed to remove notification", variant: "destructive" });
+                              }
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
