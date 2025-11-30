@@ -17,11 +17,23 @@ async function seed() {
   console.log("Seeding database...");
 
   try {
-    const existingUsers = await db.select().from(users);
-    if (existingUsers.length > 0) {
-      console.log("Database already seeded, skipping...");
-      return;
-    }
+    // Delete all existing data
+    console.log("Deleting existing data...");
+    await db.delete(activityLogs);
+    await db.delete(notifications);
+    await db.delete(comments);
+    await db.delete(reviews);
+    await db.delete(messages);
+    await db.delete(media);
+    await db.delete(posts);
+    await db.delete(projects);
+    await db.delete(testimonials);
+    await db.delete(services);
+    await db.delete(skills);
+    await db.delete(categories);
+    await db.delete(siteSettings);
+    await db.delete(users);
+    console.log("All existing data deleted successfully!");
 
     // ==================== USERS ====================
     await db.insert(users).values([
