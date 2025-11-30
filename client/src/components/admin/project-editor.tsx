@@ -228,9 +228,9 @@ export function ProjectEditor({
         />
       </Card>
 
-      {/* Character count */}
+      {/* Footer */}
       <div className="border-t bg-muted px-4 py-2 text-xs text-muted-foreground">
-        {editor.storage.characterCount.characters()} characters
+        Rich text editor ready
       </div>
     </div>
   );
