@@ -21,12 +21,12 @@ interface Category {
   createdAt: string;
 }
 
-const emptyCategory = {
+const getEmptyCategory = () => ({
   name: "",
   slug: "",
   type: "post",
   description: "",
-};
+});
 
 export default function AdminPostCategories() {
   const { toast } = useToast();
@@ -34,7 +34,7 @@ export default function AdminPostCategories() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState(emptyCategory);
+  const [formData, setFormData] = useState(getEmptyCategory());
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["/api/categories", "post"],
@@ -109,7 +109,7 @@ export default function AdminPostCategories() {
   });
 
   const resetForm = () => {
-    setFormData(emptyCategory);
+    setFormData(getEmptyCategory());
     setEditingCategory(null);
   };
 
