@@ -38,7 +38,8 @@ import {
   Check,
   X,
   ChevronDown,
-  Folder
+  Folder,
+  Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -277,6 +278,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     },
     { icon: ShoppingBag, label: "Services", href: "/admin/services" },
     { icon: MessageSquare, label: "Comments", href: "/admin/comments" },
+    { icon: Star, label: "Reviews", href: "/admin/reviews", data_testid: "menu-item-reviews" },
     { icon: Code, label: "Skills", href: "/admin/skills" },
     { icon: Mail, label: "Newsletter", href: "/admin/newsletter" },
     { icon: Inbox, label: "Inbox", href: "/admin/inbox" },
