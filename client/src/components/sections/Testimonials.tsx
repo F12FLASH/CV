@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -92,11 +93,15 @@ export function Testimonials() {
               </p>
 
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="font-bold text-primary">
+                <Avatar className="w-12 h-12">
+                  <AvatarImage 
+                    src={testimonials[current].avatar || undefined}
+                    alt={testimonials[current].name}
+                  />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
                     {testimonials[current].name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                  </span>
-                </div>
+                  </AvatarFallback>
+                </Avatar>
                 <div>
                   <p className="font-bold">{testimonials[current].name}</p>
                   <p className="text-sm text-muted-foreground">
