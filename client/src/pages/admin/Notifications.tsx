@@ -203,24 +203,24 @@ export default function AdminNotifications() {
       return;
     }
     
-    if (confirm(`Delete all ${total} notifications?\n\nThis action cannot be undone. All messages, comments, and reviews will be permanently deleted.`)) {
+    if (confirm(`Clear all ${total} notifications?\n\nThis will mark all notifications as read. Your messages, comments, and reviews will NOT be deleted.`)) {
       try {
-        // Delete ALL messages
+        // Mark ALL messages as read
         for (const msg of messages) {
-          await deleteMessageMutation.mutateAsync(msg.id);
+          await markMessageReadMutation.mutateAsync(msg.id);
         }
-        // Delete ALL comments
+        // Mark ALL comments as read
         for (const comment of comments) {
-          await deleteCommentMutation.mutateAsync(comment.id);
+          await markCommentReadMutation.mutateAsync(comment.id);
         }
-        // Delete ALL reviews
+        // Mark ALL reviews as read
         for (const review of reviews) {
-          await deleteReviewMutation.mutateAsync(review.id);
+          await markReviewReadMutation.mutateAsync(review.id);
         }
         
-        toast({ title: "Success", description: `Deleted all ${total} notifications` });
+        toast({ title: "Success", description: `Cleared all ${total} notifications` });
       } catch (error) {
-        toast({ title: "Error", description: "Failed to delete notifications", variant: "destructive" });
+        toast({ title: "Error", description: "Failed to clear notifications", variant: "destructive" });
       }
     }
   };
@@ -256,7 +256,7 @@ export default function AdminNotifications() {
               variant="outline" 
               onClick={handleClearAll}
               disabled={allNotifications.length === 0}
-              title="Clear all notifications (mark as read)"
+              title="Mark all notifications as read"
               data-testid="button-clear-all"
             >
               <Trash2 className="w-4 h-4 mr-2" />
@@ -427,13 +427,11 @@ export default function AdminNotifications() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            title="Delete notification"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                            title="Remove from notifications"
                             onClick={async () => {
-                              if (confirm("Delete this notification? This action cannot be undone.")) {
-                                await deleteMessageMutation.mutateAsync(notif.originalId);
-                                toast({ description: "Notification deleted" });
-                              }
+                              await markMessageReadMutation.mutateAsync(notif.originalId);
+                              toast({ description: "Notification removed" });
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
@@ -444,13 +442,11 @@ export default function AdminNotifications() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            title="Delete notification"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                            title="Remove from notifications"
                             onClick={async () => {
-                              if (confirm("Delete this notification? This action cannot be undone.")) {
-                                await deleteCommentMutation.mutateAsync(notif.originalId);
-                                toast({ description: "Notification deleted" });
-                              }
+                              await markCommentReadMutation.mutateAsync(notif.originalId);
+                              toast({ description: "Notification removed" });
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
@@ -461,13 +457,11 @@ export default function AdminNotifications() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            title="Delete notification"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                            title="Remove from notifications"
                             onClick={async () => {
-                              if (confirm("Delete this notification? This action cannot be undone.")) {
-                                await deleteReviewMutation.mutateAsync(notif.originalId);
-                                toast({ description: "Notification deleted" });
-                              }
+                              await markReviewMutation.mutateAsync(notif.originalId);
+                              toast({ description: "Notification removed" });
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
