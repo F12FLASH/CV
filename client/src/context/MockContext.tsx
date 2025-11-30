@@ -99,6 +99,7 @@ interface MockContextType {
   messages: Message[];
   markAsRead: (id: number) => Promise<void>;
   deleteMessage: (id: number) => Promise<void>;
+  refetchMessages: () => void;
   activityLogs: ActivityLog[];
   notifications: Notification[];
   isLoading: boolean;
@@ -338,6 +339,7 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
       messages,
       markAsRead,
       deleteMessage,
+      refetchMessages,
       activityLogs,
       notifications,
       isLoading,

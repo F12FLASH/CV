@@ -3,5 +3,5 @@
 [x] 3. Fix authentication persistence on page reload
 [x] 4. Add real-time notifications for contact form (WebSocket + sound + badge)
 [x] 5. Restart the workflow to verify project is working
-[ ] 6. Verify the project is working using the feedback tool
-[ ] 7. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool
+[x] 6. Verify the project is working using the feedback tool
+[x] 7. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool

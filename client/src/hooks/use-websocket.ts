@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import { useMockData } from "@/context/MockContext";
 
 interface WebSocketMessage {
@@ -14,8 +13,7 @@ export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { isAuthenticated } = useMockData();
+  const { isAuthenticated, refetchMessages } = useMockData();
 
   const playNotificationSound = useCallback(() => {
     notificationSound.currentTime = 0;
@@ -36,7 +34,7 @@ export function useWebSocket() {
         console.log("WebSocket connected");
       };
 
-      wsRef.current.onmessage = (event) => {
+      wsRef.current.onmessage = async (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
 
@@ -49,7 +47,11 @@ export function useWebSocket() {
               duration: 5000,
             });
 
-            queryClient.invalidateQueries({ queryKey: ["messages"] });
+            try {
+              await refetchMessages();
+            } catch (err) {
+              console.error("Failed to refetch messages:", err);
+            }
           }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
@@ -69,7 +71,7 @@ export function useWebSocket() {
     } catch (error) {
       console.error("Failed to create WebSocket connection:", error);
     }
-  }, [isAuthenticated, playNotificationSound, toast, queryClient]);
+  }, [isAuthenticated, playNotificationSound, toast, refetchMessages]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
