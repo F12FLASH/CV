@@ -9,6 +9,7 @@ import {
   insertNotificationSchema
 } from "@shared/schema";
 import bcrypt from "bcrypt";
+import { broadcastNewMessage } from "./websocket";
 
 const SALT_ROUNDS = 12;
 
@@ -530,6 +531,9 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
       const message = await storage.createMessage(parsed.data);
+      
+      broadcastNewMessage(message);
+      
       res.status(201).json(message);
     } catch (error: any) {
       res.status(500).json({ message: error.message });

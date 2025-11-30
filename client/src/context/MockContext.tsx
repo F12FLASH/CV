@@ -114,16 +114,23 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const savedAuth = localStorage.getItem("isAuthenticated");
-    const savedUser = localStorage.getItem("currentUser");
-    if (savedAuth === "true" && savedUser) {
-      setIsAuthenticated(true);
-      try {
-        setCurrentUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error("Failed to parse saved user");
+    const verifySession = async () => {
+      const savedAuth = localStorage.getItem("isAuthenticated");
+      if (savedAuth === "true") {
+        try {
+          const user = await api.getCurrentUser();
+          setIsAuthenticated(true);
+          setCurrentUser(user);
+          localStorage.setItem("currentUser", JSON.stringify(user));
+        } catch (error) {
+          localStorage.removeItem("isAuthenticated");
+          localStorage.removeItem("currentUser");
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+        }
       }
-    }
+    };
+    verifySession();
   }, []);
 
   const { data: projects = [], isLoading: projectsLoading, refetch: refetchProjects } = useQuery({

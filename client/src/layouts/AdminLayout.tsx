@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useMockData } from "@/context/MockContext";
 import { useTheme } from "next-themes";
+import { useWebSocket } from "@/hooks/use-websocket";
 import { 
   LayoutDashboard, 
   FileText, 
@@ -47,8 +48,12 @@ import { Input } from "@/components/ui/input";
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { isAuthenticated, logout } = useMockData();
+  const { isAuthenticated, logout, messages } = useMockData();
   const { theme, setTheme } = useTheme();
+  
+  useWebSocket();
+  
+  const unreadCount = messages.filter(m => !m.read).length;
 
   // Protect route
   useEffect(() => {
@@ -150,10 +155,16 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
               {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
             </Button>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
-            </Button>
+            <Link href="/admin/inbox">
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full text-xs text-white flex items-center justify-center font-medium">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -62,7 +62,7 @@ export default function AdminInbox() {
                     <span className={`font-medium ${!msg.read ? "text-foreground" : "text-muted-foreground"}`}>
                       {msg.sender}
                     </span>
-                    <span className="text-xs text-muted-foreground">{msg.date}</span>
+                    <span className="text-xs text-muted-foreground">{msg.createdAt ? new Date(msg.createdAt).toLocaleDateString() : ''}</span>
                   </div>
                   <span className="text-sm font-medium truncate w-full">
                     {msg.subject}
@@ -115,7 +115,7 @@ export default function AdminInbox() {
                       </div>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {selectedMessage.date}
+                      {selectedMessage.createdAt ? new Date(selectedMessage.createdAt).toLocaleDateString() : ''}
                     </div>
                   </div>
                   <Separator className="mb-6" />
