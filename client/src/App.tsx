@@ -37,6 +37,9 @@ import AdminServicesEnhanced from "@/pages/admin/ServicesEnhanced";
 import AdminSettingsEnhanced from "@/pages/admin/SettingsEnhanced";
 import AdminSecurityEnhanced from "@/pages/admin/SecurityEnhanced";
 import AdminThemeEnhanced from "@/pages/admin/ThemeEnhanced";
+import AdminTestimonials from "@/pages/admin/Testimonials";
+import AdminEmailTemplates from "@/pages/admin/EmailTemplates";
+import AdminCache from "@/pages/admin/Cache";
 import { ThemeProvider } from "next-themes";
 import { lazy } from "react";
 
@@ -72,6 +75,9 @@ function Router() {
       <Route path="/admin/security" component={AdminSecurityEnhanced} />
       <Route path="/admin/settings" component={AdminSettingsEnhanced} />
       <Route path="/admin/tools" component={AdminTools} />
+      <Route path="/admin/testimonials" component={AdminTestimonials} />
+      <Route path="/admin/email-templates" component={AdminEmailTemplates} />
+      <Route path="/admin/cache" component={AdminCache} />
 
       {/* Admin Fallback */}
       <Route path="/admin/:any*">
