@@ -36,11 +36,19 @@ Preferred communication style: Simple, everyday language.
 
 **Key Features:**
 - Portfolio showcase with project filtering
-- Blog/posts section
+- Blog/posts section with featured images (device upload + URL support)
 - Contact form with floating label inputs
 - Testimonials carousel
 - Skills visualization with animated progress bars
 - Admin dashboard with multiple management interfaces (projects, posts, users, media, analytics, etc.)
+
+**Recent Updates (Nov 30, 2025):**
+- Fixed TypeScript errors in Posts.tsx (added missing required fields: slug, content, excerpt, featuredImage, tags, publishedAt)
+- Enhanced featured image functionality:
+  - File upload from device (auto-converts to base64 data URL)
+  - URL input for image links (supports all image formats)
+  - Image preview with fallback error handling
+  - Automatic fallback to default background images if image fails to load
 
 ### Backend Architecture
 
