@@ -138,13 +138,24 @@ export default function AdminThemeEnhanced() {
 
   useEffect(() => {
     if (savedSettings) {
-      setTheme({ ...defaultTheme, ...savedSettings });
+      // If theme is stored as a string (JSON), parse it
+      if (typeof (savedSettings as any).theme === 'string') {
+        try {
+          const parsedTheme = JSON.parse((savedSettings as any).theme);
+          setTheme({ ...defaultTheme, ...parsedTheme });
+        } catch (e) {
+          console.error('Failed to parse theme:', e);
+        }
+      } else if ((savedSettings as any).theme && typeof (savedSettings as any).theme === 'object') {
+        // If it's already an object, use it directly
+        setTheme({ ...defaultTheme, ...(savedSettings as any).theme });
+      }
     }
   }, [savedSettings]);
 
   const saveMutation = useMutation({
     mutationFn: async (settings: ThemeSettings) => {
-      const res = await apiRequest('PUT', '/api/settings/theme', settings);
+      const res = await apiRequest('PUT', '/api/settings/theme', { value: JSON.stringify(settings) });
       return res.json();
     },
     onSuccess: () => {

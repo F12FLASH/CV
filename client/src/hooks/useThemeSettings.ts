@@ -21,10 +21,22 @@ export function useThemeSettings() {
   useEffect(() => {
     if (!settings) return;
 
-    const theme = (settings as any).theme || settings;
+    let theme = (settings as any).theme;
+    
+    // If theme is a JSON string, parse it
+    if (typeof theme === 'string') {
+      try {
+        theme = JSON.parse(theme);
+      } catch (e) {
+        console.error('Failed to parse theme from settings:', e);
+        return;
+      }
+    }
+    
     if (!theme || typeof theme !== 'object') return;
 
     const root = document.documentElement;
+    console.log('Applying theme settings:', theme);
     
     // Apply color settings
     if (theme.primaryColor) {
