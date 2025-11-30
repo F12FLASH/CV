@@ -16,6 +16,10 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
+localPort = 24678
+externalPort = 3003
+
+[[ports]]
 localPort = 34759
 externalPort = 3002
 
@@ -50,6 +54,9 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [agent]
 mockupState = "FULLSTACK"
