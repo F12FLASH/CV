@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Mail, MapPin, Phone, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useMockData } from "@/context/MockContext";
+import { api } from "@/lib/api";
 
 // Floating Label Input Component
 const FloatingLabelInput = ({ 
@@ -88,7 +88,6 @@ const FloatingLabelTextarea = ({
 export function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { addMessage } = useMockData();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -100,22 +99,28 @@ export function Contact() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    addMessage({
-      sender: formData.name,
-      email: formData.email,
-      subject: formData.subject,
-      message: formData.message
-    });
+    try {
+      await api.createMessage({
+        sender: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message
+      });
 
-    setIsSubmitting(false);
-    toast({
-      title: "Message sent!",
-      description: "Thank you for reaching out. I'll get back to you shortly.",
-    });
-    setFormData({ name: "", email: "", subject: "", message: "" });
+      toast({
+        title: "Message sent!",
+        description: "Thank you for reaching out. I'll get back to you shortly.",
+      });
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
