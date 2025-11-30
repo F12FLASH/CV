@@ -203,24 +203,24 @@ export default function AdminNotifications() {
       return;
     }
     
-    if (confirm(`Clear all ${total} notifications?\n\nThis will mark all notifications as read. Your messages, comments, and reviews will NOT be deleted.`)) {
+    if (confirm(`Delete all ${total} notifications?\n\nThis action cannot be undone. All messages, comments, and reviews will be permanently deleted.`)) {
       try {
-        // Mark ALL messages as read
+        // Delete ALL messages
         for (const msg of messages) {
-          await markMessageReadMutation.mutateAsync(msg.id);
+          await deleteMessageMutation.mutateAsync(msg.id);
         }
-        // Mark ALL comments as read
+        // Delete ALL comments
         for (const comment of comments) {
-          await markCommentReadMutation.mutateAsync(comment.id);
+          await deleteCommentMutation.mutateAsync(comment.id);
         }
-        // Mark ALL reviews as read
+        // Delete ALL reviews
         for (const review of reviews) {
-          await markReviewReadMutation.mutateAsync(review.id);
+          await deleteReviewMutation.mutateAsync(review.id);
         }
         
-        toast({ title: "Success", description: `Cleared all ${total} notifications` });
+        toast({ title: "Success", description: `Deleted all ${total} notifications` });
       } catch (error) {
-        toast({ title: "Error", description: "Failed to clear notifications", variant: "destructive" });
+        toast({ title: "Error", description: "Failed to delete notifications", variant: "destructive" });
       }
     }
   };
@@ -427,11 +427,13 @@ export default function AdminNotifications() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                            title="Remove notification"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Delete notification"
                             onClick={async () => {
-                              await markMessageReadMutation.mutateAsync(notif.originalId);
-                              toast({ description: "Notification removed" });
+                              if (confirm("Delete this notification? This action cannot be undone.")) {
+                                await deleteMessageMutation.mutateAsync(notif.originalId);
+                                toast({ description: "Notification deleted" });
+                              }
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
@@ -442,11 +444,13 @@ export default function AdminNotifications() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                            title="Remove notification"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Delete notification"
                             onClick={async () => {
-                              await markCommentReadMutation.mutateAsync(notif.originalId);
-                              toast({ description: "Notification removed" });
+                              if (confirm("Delete this notification? This action cannot be undone.")) {
+                                await deleteCommentMutation.mutateAsync(notif.originalId);
+                                toast({ description: "Notification deleted" });
+                              }
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
@@ -457,11 +461,13 @@ export default function AdminNotifications() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                            title="Remove notification"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Delete notification"
                             onClick={async () => {
-                              await markReviewReadMutation.mutateAsync(notif.originalId);
-                              toast({ description: "Notification removed" });
+                              if (confirm("Delete this notification? This action cannot be undone.")) {
+                                await deleteReviewMutation.mutateAsync(notif.originalId);
+                                toast({ description: "Notification deleted" });
+                              }
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
