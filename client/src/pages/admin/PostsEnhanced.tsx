@@ -7,7 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pagination } from "@/components/admin/pagination";
 import { useState } from "react";
 import { Plus, Eye, Edit, Trash, Calendar, Save, X } from "lucide-react";
-import { useMockData } from "@/context/MockContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import type { Post, InsertPost } from "@shared/schema";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -70,7 +72,46 @@ function generateSlug(title: string): string {
 }
 
 export default function AdminPostsEnhanced() {
-  const { posts, addPost, updatePost, deletePost, isLoading } = useMockData();
+  const queryClient = useQueryClient();
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ["admin-posts"],
+    queryFn: () => api.getPosts(),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: InsertPost) => api.createPost(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Post> }) => 
+      api.updatePost(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.deletePost(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
+    },
+  });
+
+  const addPost = async (data: InsertPost) => {
+    await createMutation.mutateAsync(data);
+  };
+
+  const updatePost = async (id: number, data: Partial<Post>) => {
+    await updateMutation.mutateAsync({ id, data });
+  };
+
+  const deletePost = async (id: number) => {
+    await deleteMutation.mutateAsync(id);
+  };
+
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState("published");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -148,6 +189,8 @@ export default function AdminPostsEnhanced() {
 
   const [formError, setFormError] = useState<string | null>(null);
 
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
@@ -156,7 +199,6 @@ export default function AdminPostsEnhanced() {
     }
     setFormError(null);
 
-    setIsSaving(true);
     try {
       const tags = tagsInput
         .split(",")
@@ -185,8 +227,6 @@ export default function AdminPostsEnhanced() {
     } catch (error: any) {
       console.error("Error saving post:", error);
       setFormError(error.message || "Failed to save post");
-    } finally {
-      setIsSaving(false);
     }
   };
 

@@ -15,7 +15,18 @@ export default function BlogPost() {
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ["post", slug],
-    queryFn: () => api.getPost(slug!),
+    queryFn: async () => {
+      const postData = await api.getPost(slug!);
+      // Increment view count
+      if (postData?.id) {
+        try {
+          await fetch(`/api/posts/${postData.id}/view`, { method: 'POST' });
+        } catch (e) {
+          console.error('Failed to increment view count');
+        }
+      }
+      return postData;
+    },
     enabled: !!slug,
   });
 

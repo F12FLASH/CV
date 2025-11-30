@@ -60,10 +60,12 @@ export function Blog() {
                     </div>
                   </div>
                   <Link href={`/blog/${post.slug}`}>
-                    <Button variant="ghost" className="group/btn p-0 h-auto" data-testid={`button-read-more-${post.id}`}>
-                      Read More 
-                      <ArrowRight className="ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
+                    <a className="inline-block">
+                      <Button variant="ghost" className="group/btn p-0 h-auto" data-testid={`button-read-more-${post.id}`}>
+                        Read More 
+                        <ArrowRight className="ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                      </Button>
+                    </a>
                   </Link>
                 </CardContent>
               </Card>

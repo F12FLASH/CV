@@ -52,7 +52,7 @@ export function Skills() {
   });
 
   const groupedSkills: Record<string, Array<{name: string; level: number}>> = {};
-  
+
   if (Array.isArray(skillsData) && skillsData.length > 0) {
     skillsData.forEach((skill: any) => {
       const category = skill.category || 'Other';
@@ -94,7 +94,7 @@ export function Skills() {
               </TabsTrigger>
             ))}
           </TabsList>
-          
+
           <div className="min-h-[400px]">
             {Object.entries(skills).map(([category, items]) => (
               <TabsContent key={category} value={category.toLowerCase()} className="mt-0">
