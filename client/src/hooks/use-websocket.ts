@@ -53,6 +53,40 @@ export function useWebSocket() {
               console.error("Failed to refetch messages:", err);
             }
           }
+          
+          const isNewComment = message.type === "NEW_COMMENT" || 
+            (message.type === "NOTIFICATION" && message.data?.type === "NEW_COMMENT");
+          
+          if (isNewComment) {
+            playNotificationSound();
+            const commentData = message.type === "NEW_COMMENT" ? message.data : message.data?.data;
+            const msgText = message.type === "NOTIFICATION" 
+              ? message.data?.message 
+              : `New comment from ${commentData?.authorName || 'Someone'}`;
+            
+            toast({
+              title: "New Comment",
+              description: msgText || "New comment received",
+              duration: 5000,
+            });
+          }
+          
+          const isNewReview = message.type === "NEW_REVIEW" || 
+            (message.type === "NOTIFICATION" && message.data?.type === "NEW_REVIEW");
+          
+          if (isNewReview) {
+            playNotificationSound();
+            const reviewData = message.type === "NEW_REVIEW" ? message.data : message.data?.data;
+            const msgText = message.type === "NOTIFICATION" 
+              ? message.data?.message 
+              : `New ${reviewData?.rating || 5}-star review from ${reviewData?.authorName || 'Someone'}`;
+            
+            toast({
+              title: "New Review",
+              description: msgText || "New review received",
+              duration: 5000,
+            });
+          }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
         }

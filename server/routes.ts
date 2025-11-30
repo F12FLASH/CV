@@ -9,7 +9,7 @@ import {
   insertNotificationSchema, insertCommentSchema, insertReviewSchema
 } from "@shared/schema";
 import bcrypt from "bcrypt";
-import { broadcastNewMessage, broadcastNotification } from "./websocket";
+import { broadcastNewMessage, broadcastNotification, broadcastNewComment, broadcastNewReview } from "./websocket";
 
 const SALT_ROUNDS = 12;
 

@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
 import type { Server } from "http";
-import type { Message } from "@shared/schema";
+import type { Message, Comment, Review } from "@shared/schema";
 
 let wss: WebSocketServer | null = null;
 
@@ -39,6 +39,36 @@ export function broadcastNotification(notification: { type: string; message: str
   const payload = JSON.stringify({
     type: "NOTIFICATION",
     data: notification,
+  });
+
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  });
+}
+
+export function broadcastNewComment(comment: Comment) {
+  if (!wss) return;
+
+  const payload = JSON.stringify({
+    type: "NEW_COMMENT",
+    data: comment,
+  });
+
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  });
+}
+
+export function broadcastNewReview(review: Review) {
+  if (!wss) return;
+
+  const payload = JSON.stringify({
+    type: "NEW_REVIEW",
+    data: review,
   });
 
   wss.clients.forEach((client) => {
