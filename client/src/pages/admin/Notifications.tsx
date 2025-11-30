@@ -199,31 +199,25 @@ export default function AdminNotifications() {
     
     if (confirm(`Clear all ${total} notifications?\n\nThis will mark all notifications as read. Your messages, comments, and reviews will NOT be deleted.`)) {
       try {
-        const allMessages = messages;
-        const allComments = comments;
-        const allReviews = reviews;
-        
-        // Mark ALL (read and unread) as read to clear them from notification list
-        for (const msg of allMessages) {
-          if (!msg.read) {
-            await markMessageReadMutation.mutateAsync(msg.id);
-          }
+        // Mark ALL messages as read
+        for (const msg of messages) {
+          markMessageReadMutation.mutate(msg.id);
         }
-        for (const comment of allComments) {
-          if (comment.read === false || !comment.read) {
-            await markCommentReadMutation.mutateAsync(comment.id);
-          }
+        // Mark ALL comments as read
+        for (const comment of comments) {
+          markCommentReadMutation.mutate(comment.id);
         }
-        for (const review of allReviews) {
-          if (review.read === false || !review.read) {
-            await markReviewReadMutation.mutateAsync(review.id);
-          }
+        // Mark ALL reviews as read
+        for (const review of reviews) {
+          markReviewReadMutation.mutate(review.id);
         }
         
-        // Refetch to clear the UI
-        refetchMessages();
-        refetchComments();
-        refetchReviews();
+        // Refetch after a short delay to ensure all mutations are processed
+        setTimeout(() => {
+          refetchMessages();
+          refetchComments();
+          refetchReviews();
+        }, 300);
         
         toast({ title: "Success", description: `Cleared all ${total} notifications` });
       } catch (error) {
@@ -437,8 +431,11 @@ export default function AdminNotifications() {
                             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                             title="Remove notification"
                             onClick={() => {
-                              markMessageReadMutation.mutate(notif.originalId);
-                              toast({ description: "Notification removed" });
+                              markMessageReadMutation.mutate(notif.originalId, {
+                                onSuccess: () => {
+                                  toast({ description: "Notification removed" });
+                                }
+                              });
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
@@ -452,8 +449,11 @@ export default function AdminNotifications() {
                             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                             title="Remove notification"
                             onClick={() => {
-                              markCommentReadMutation.mutate(notif.originalId);
-                              toast({ description: "Notification removed" });
+                              markCommentReadMutation.mutate(notif.originalId, {
+                                onSuccess: () => {
+                                  toast({ description: "Notification removed" });
+                                }
+                              });
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
@@ -467,8 +467,11 @@ export default function AdminNotifications() {
                             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                             title="Remove notification"
                             onClick={() => {
-                              markReviewReadMutation.mutate(notif.originalId);
-                              toast({ description: "Notification removed" });
+                              markReviewReadMutation.mutate(notif.originalId, {
+                                onSuccess: () => {
+                                  toast({ description: "Notification removed" });
+                                }
+                              });
                             }}
                             data-testid={`button-dismiss-notification-${notif.id}`}
                           >
