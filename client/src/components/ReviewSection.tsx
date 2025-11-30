@@ -70,19 +70,27 @@ export function ReviewSection({ projectId, title = "Reviews", compact = false }:
 
   const submitMutation = useMutation({
     mutationFn: async (data: ReviewFormValues) => {
+      const payload = {
+        ...data,
+        projectId,
+        status: 'Pending',
+      };
+      console.log('Submitting review:', payload);
       const response = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          projectId,
-          status: 'Pending',
-        }),
+        credentials: 'include',
+        body: JSON.stringify(payload),
       });
-      if (!response.ok) throw new Error('Failed to submit review');
-      return response.json();
+      const responseText = await response.text();
+      console.log('Response status:', response.status, 'Body:', responseText);
+      if (!response.ok) {
+        throw new Error(`Failed to submit review: ${responseText}`);
+      }
+      return JSON.parse(responseText);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Review created successfully:', data);
       toast({
         title: "Review submitted",
         description: "Your review is pending approval and will appear shortly.",
@@ -91,10 +99,11 @@ export function ReviewSection({ projectId, title = "Reviews", compact = false }:
       setShowForm(false);
       queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Review submission error:', error);
       toast({
         title: "Error",
-        description: "Failed to submit review. Please try again.",
+        description: error.message || "Failed to submit review. Please try again.",
         variant: "destructive",
       });
     },

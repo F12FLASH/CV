@@ -68,20 +68,28 @@ export function CommentSection({ postId, projectId, title = "Comments" }: Commen
 
   const submitMutation = useMutation({
     mutationFn: async (data: CommentFormValues) => {
+      const payload = {
+        ...data,
+        postId: postId || null,
+        projectId: projectId || null,
+        status: 'Pending',
+      };
+      console.log('Submitting comment:', payload);
       const response = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          postId: postId || null,
-          projectId: projectId || null,
-          status: 'Pending',
-        }),
+        credentials: 'include',
+        body: JSON.stringify(payload),
       });
-      if (!response.ok) throw new Error('Failed to submit comment');
-      return response.json();
+      const responseText = await response.text();
+      console.log('Response status:', response.status, 'Body:', responseText);
+      if (!response.ok) {
+        throw new Error(`Failed to submit comment: ${responseText}`);
+      }
+      return JSON.parse(responseText);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Comment created successfully:', data);
       toast({
         title: "Comment submitted",
         description: "Your comment is pending approval and will appear shortly.",
@@ -90,10 +98,11 @@ export function CommentSection({ postId, projectId, title = "Comments" }: Commen
       setShowForm(false);
       queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Comment submission error:', error);
       toast({
         title: "Error",
-        description: "Failed to submit comment. Please try again.",
+        description: error.message || "Failed to submit comment. Please try again.",
         variant: "destructive",
       });
     },

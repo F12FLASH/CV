@@ -980,11 +980,14 @@ export async function registerRoutes(
 
   app.post("/api/comments", async (req, res) => {
     try {
+      console.log('[POST /api/comments] Body:', req.body);
       const parsed = insertCommentSchema.safeParse(req.body);
       if (!parsed.success) {
+        console.error('[POST /api/comments] Validation errors:', parsed.error.errors);
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
       const comment = await storage.createComment(parsed.data);
+      console.log('[POST /api/comments] Created comment:', comment);
       
       // Create notification and broadcast
       const post = comment.postId ? await storage.getPost(comment.postId) : null;
@@ -1004,6 +1007,7 @@ export async function registerRoutes(
       
       res.status(201).json(comment);
     } catch (error: any) {
+      console.error('[POST /api/comments] Error:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -1102,11 +1106,14 @@ export async function registerRoutes(
 
   app.post("/api/reviews", async (req, res) => {
     try {
+      console.log('[POST /api/reviews] Body:', req.body);
       const parsed = insertReviewSchema.safeParse(req.body);
       if (!parsed.success) {
+        console.error('[POST /api/reviews] Validation errors:', parsed.error.errors);
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
       const review = await storage.createReview(parsed.data);
+      console.log('[POST /api/reviews] Created review:', review);
       
       // Create notification and broadcast
       const project = await storage.getProject(review.projectId);
