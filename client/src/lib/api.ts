@@ -9,6 +9,19 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const api = {
+  // Upload
+  uploadImage: async (imageData: string, filename?: string) => {
+    const res = await fetch(`${API_BASE}/upload/image`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: imageData, filename }),
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+
+  // Auth
   login: async (username: string, password: string) => {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
@@ -76,9 +89,9 @@ export const api = {
   },
 
   deleteProject: async (id: number) => {
-    const res = await fetch(`${API_BASE}/projects/${id}`, { 
+    const res = await fetch(`${API_BASE}/projects/${id}`, {
       method: 'DELETE',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },
@@ -115,9 +128,9 @@ export const api = {
   },
 
   deletePost: async (id: number) => {
-    const res = await fetch(`${API_BASE}/posts/${id}`, { 
+    const res = await fetch(`${API_BASE}/posts/${id}`, {
       method: 'DELETE',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },
@@ -143,9 +156,9 @@ export const api = {
   },
 
   deleteUser: async (id: number) => {
-    const res = await fetch(`${API_BASE}/users/${id}`, { 
+    const res = await fetch(`${API_BASE}/users/${id}`, {
       method: 'DELETE',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },
@@ -172,17 +185,17 @@ export const api = {
   },
 
   markMessageAsRead: async (id: number) => {
-    const res = await fetch(`${API_BASE}/messages/${id}/read`, { 
+    const res = await fetch(`${API_BASE}/messages/${id}/read`, {
       method: 'PUT',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },
 
   deleteMessage: async (id: number) => {
-    const res = await fetch(`${API_BASE}/messages/${id}`, { 
+    const res = await fetch(`${API_BASE}/messages/${id}`, {
       method: 'DELETE',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },
@@ -213,9 +226,9 @@ export const api = {
   },
 
   deleteSkill: async (id: number) => {
-    const res = await fetch(`${API_BASE}/skills/${id}`, { 
+    const res = await fetch(`${API_BASE}/skills/${id}`, {
       method: 'DELETE',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },
@@ -247,9 +260,9 @@ export const api = {
   },
 
   deleteService: async (id: number) => {
-    const res = await fetch(`${API_BASE}/services/${id}`, { 
+    const res = await fetch(`${API_BASE}/services/${id}`, {
       method: 'DELETE',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },
@@ -281,9 +294,9 @@ export const api = {
   },
 
   deleteTestimonial: async (id: number) => {
-    const res = await fetch(`${API_BASE}/testimonials/${id}`, { 
+    const res = await fetch(`${API_BASE}/testimonials/${id}`, {
       method: 'DELETE',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },
@@ -300,9 +313,9 @@ export const api = {
   },
 
   markNotificationAsRead: async (id: number) => {
-    const res = await fetch(`${API_BASE}/notifications/${id}/read`, { 
+    const res = await fetch(`${API_BASE}/notifications/${id}/read`, {
       method: 'PUT',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },
@@ -359,9 +372,9 @@ export const api = {
   },
 
   deleteCategory: async (id: number) => {
-    const res = await fetch(`${API_BASE}/categories/${id}`, { 
+    const res = await fetch(`${API_BASE}/categories/${id}`, {
       method: 'DELETE',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },
@@ -372,9 +385,9 @@ export const api = {
   },
 
   deleteMedia: async (id: number) => {
-    const res = await fetch(`${API_BASE}/media/${id}`, { 
+    const res = await fetch(`${API_BASE}/media/${id}`, {
       method: 'DELETE',
-      credentials: 'include' 
+      credentials: 'include'
     });
     return handleResponse<any>(res);
   },

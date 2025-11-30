@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Upload, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Upload, Trash2, Eye, ChevronLeft, ChevronRight, Link as LinkIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Image {
   id: number;
@@ -11,7 +15,7 @@ interface Image {
 
 interface ImageGalleryProps {
   images: Image[];
-  onAddImage?: () => void;
+  onAddImage?: (url: string, alt: string) => void;
   onDeleteImage?: (id: number) => void;
   onReorder?: (images: Image[]) => void;
 }
@@ -24,9 +28,44 @@ export function ImageGallery({
 }: ImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageAlt, setImageAlt] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragStart = (index: number) => {
     setDraggedItem(index);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setImageUrl(base64String);
+      setImageAlt(file.name);
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddImage = () => {
+    if (imageUrl && onAddImage) {
+      onAddImage(imageUrl, imageAlt || "Image");
+      setImageUrl("");
+      setImageAlt("");
+      setShowUploadDialog(false);
+    }
+  };
+
+  const openUploadDialog = () => {
+    setShowUploadDialog(true);
+    setImageUrl("");
+    setImageAlt("");
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -87,7 +126,7 @@ export function ImageGallery({
         <div className="flex justify-between items-center">
           <h4 className="font-medium text-sm">Gallery ({images.length})</h4>
           {onAddImage && (
-            <Button size="sm" variant="outline" onClick={onAddImage} className="gap-2">
+            <Button size="sm" variant="outline" onClick={openUploadDialog} className="gap-2">
               <Upload className="w-4 h-4" /> Add Image
             </Button>
           )}
@@ -133,6 +172,85 @@ export function ImageGallery({
         </div>
         <p className="text-xs text-muted-foreground">Drag to reorder images</p>
       </div>
+
+      {/* Upload Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Image</DialogTitle>
+          </DialogHeader>
+          <Tabs defaultValue="url">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="url">From URL</TabsTrigger>
+              <TabsTrigger value="upload">Upload File</TabsTrigger>
+            </TabsList>
+            <TabsContent value="url" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="image-url">Image URL</Label>
+                <Input
+                  id="image-url"
+                  placeholder="https://example.com/image.jpg or /images/blog/bg-1.png"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="image-alt">Image Description</Label>
+                <Input
+                  id="image-alt"
+                  placeholder="Description of the image"
+                  value={imageAlt}
+                  onChange={(e) => setImageAlt(e.target.value)}
+                />
+              </div>
+              {imageUrl && (
+                <div className="border rounded-md overflow-hidden">
+                  <img src={imageUrl} alt="Preview" className="w-full h-40 object-cover" />
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="upload" className="space-y-4">
+              <div className="space-y-2">
+                <Label>Upload Image</Label>
+                <div className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary/50" onClick={() => fileInputRef.current?.click()}>
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Click to upload or drag and drop</p>
+                  <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF, WebP (Max 10MB)</p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="upload-alt">Image Description</Label>
+                <Input
+                  id="upload-alt"
+                  placeholder="Description of the image"
+                  value={imageAlt}
+                  onChange={(e) => setImageAlt(e.target.value)}
+                />
+              </div>
+              {imageUrl && (
+                <div className="border rounded-md overflow-hidden">
+                  <img src={imageUrl} alt="Preview" className="w-full h-40 object-cover" />
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddImage} disabled={!imageUrl || uploading}>
+              {uploading ? "Uploading..." : "Add Image"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

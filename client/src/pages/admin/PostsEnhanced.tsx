@@ -202,18 +202,18 @@ export default function AdminPostsEnhanced() {
     if (formData.status !== "Published") {
       return null;
     }
-    
+
     if (formData.publishedAt instanceof Date && !isNaN(formData.publishedAt.getTime())) {
       return formData.publishedAt.toISOString();
     }
-    
+
     if (formData.publishedAt && typeof formData.publishedAt === 'string') {
       const date = new Date(formData.publishedAt);
       if (!isNaN(date.getTime())) {
         return date.toISOString();
       }
     }
-    
+
     return new Date().toISOString();
   };
 

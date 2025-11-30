@@ -729,6 +729,26 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/upload/image", requireAuth, async (req, res) => {
+    try {
+      const { image, filename } = req.body;
+      if (!image) {
+        return res.status(400).json({ message: "No image data provided" });
+      }
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const name = filename || `upload-${timestamp}`;
+      const imagePath = `/uploads/${name}`;
+      
+      // In production, you would save to cloud storage
+      // For now, we'll return the data URL directly
+      res.json({ url: image, path: imagePath });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/media", requireAuth, async (req, res) => {
     try {
       const media = await storage.getAllMedia();
