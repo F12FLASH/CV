@@ -6,12 +6,25 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, Mail, User as UserIcon, Shield, Clock } from "lucide-react";
+import { Camera, Save, Mail, User as UserIcon, Shield, Clock, AlertCircle, Check } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { api } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { z } from "zod";
+
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type PasswordForm = z.infer<typeof passwordSchema>;
 
 export default function AdminProfile() {
   const { toast } = useToast();
@@ -20,6 +33,13 @@ export default function AdminProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordErrors, setPasswordErrors] = useState<Partial<PasswordForm>>({});
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -71,6 +91,26 @@ export default function AdminProfile() {
     },
   });
 
+  const passwordMutation = useMutation({
+    mutationFn: (data: PasswordForm) => api.changePassword(data.currentPassword, data.newPassword),
+    onSuccess: () => {
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordErrors({});
+      setIsPasswordModalOpen(false);
+      toast({
+        title: "Success",
+        description: "Your password has been changed successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to change password.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSave = async () => {
     if (!currentUser) return;
     updateMutation.mutate(formData);
@@ -85,6 +125,28 @@ export default function AdminProfile() {
     });
     setAvatarPreview(currentUser?.avatar || "/avatars/01.png");
     setIsEditing(false);
+  };
+
+  const handleChangePassword = () => {
+    setPasswordErrors({});
+    const result = passwordSchema.safeParse(passwordForm);
+    if (!result.success) {
+      const errors: Partial<PasswordForm> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0] as keyof PasswordForm] = { message: err.message } as any;
+        }
+      });
+      setPasswordErrors(errors);
+      return;
+    }
+    passwordMutation.mutate(result.data);
+  };
+
+  const handleClosePasswordModal = () => {
+    setIsPasswordModalOpen(false);
+    setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    setPasswordErrors({});
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -351,7 +413,12 @@ export default function AdminProfile() {
               <CardDescription>Manage your password and security preferences</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                className="w-full sm:w-auto"
+                onClick={() => setIsPasswordModalOpen(true)}
+                data-testid="button-change-password"
+              >
                 Change Password
               </Button>
               <Separator />
@@ -366,6 +433,87 @@ export default function AdminProfile() {
           </Card>
         </div>
       </div>
+
+      {/* Change Password Dialog */}
+      <Dialog open={isPasswordModalOpen} onOpenChange={handleClosePasswordModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Enter your current password and a new password to change it.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Current Password</Label>
+              <Input
+                id="current-password"
+                type="password"
+                value={passwordForm.currentPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                placeholder="Enter your current password"
+                data-testid="input-current-password"
+              />
+              {passwordErrors.currentPassword && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {(passwordErrors.currentPassword as any).message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                placeholder="Enter your new password (minimum 8 characters)"
+                data-testid="input-new-password"
+              />
+              {passwordErrors.newPassword && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {(passwordErrors.newPassword as any).message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm New Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                placeholder="Confirm your new password"
+                data-testid="input-confirm-password"
+              />
+              {passwordErrors.confirmPassword && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {(passwordErrors.confirmPassword as any).message}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2 justify-end">
+            <Button 
+              variant="outline" 
+              onClick={handleClosePasswordModal}
+              data-testid="button-cancel-password"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleChangePassword}
+              disabled={passwordMutation.isPending}
+              data-testid="button-save-password"
+            >
+              {passwordMutation.isPending ? "Saving..." : "Change Password"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
