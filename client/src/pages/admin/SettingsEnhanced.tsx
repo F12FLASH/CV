@@ -106,7 +106,6 @@ export default function AdminSettingsEnhanced() {
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="branding">Branding</TabsTrigger>
             <TabsTrigger value="seo">SEO</TabsTrigger>
-            <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
             <TabsTrigger value="email">Email</TabsTrigger>
             <TabsTrigger value="storage">Storage</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
@@ -635,74 +634,6 @@ export default function AdminSettingsEnhanced() {
               <CardContent className="space-y-2">
                 <Button variant="outline" className="w-full justify-start">Edit robots.txt</Button>
                 <Button variant="outline" className="w-full justify-start">Regenerate Sitemap</Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* TESTIMONIALS TAB */}
-          <TabsContent value="testimonials" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Manage Testimonials</CardTitle>
-                <CardDescription>Add, edit, and manage client testimonials for "What Clients Say" section</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Client Name</Label>
-                      <Input placeholder="e.g., John Smith" data-testid="input-testimonial-name" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Job Title / Role</Label>
-                      <Input placeholder="e.g., CEO" data-testid="input-testimonial-role" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Company Name</Label>
-                    <Input placeholder="e.g., TechCorp Inc" data-testid="input-testimonial-company" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Testimonial Text</Label>
-                    <Textarea placeholder="What did the client say about your work?" rows={4} data-testid="input-testimonial-content" />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Rating (Stars)</Label>
-                      <select className="w-full p-2 rounded-md border border-input bg-background" data-testid="select-testimonial-rating">
-                        <option>5 stars</option>
-                        <option>4 stars</option>
-                        <option>3 stars</option>
-                        <option>2 stars</option>
-                        <option>1 star</option>
-                      </select>
-                    </div>
-                    <div className="flex items-end">
-                      <Button variant="outline" className="w-full" data-testid="button-upload-testimonial-avatar">
-                        Upload Avatar
-                      </Button>
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <Button className="flex-1 bg-primary" data-testid="button-add-testimonial">
-                        Add Testimonial
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Testimonials</CardTitle>
-                <CardDescription>Manage all testimonials displayed on your website</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="text-sm text-muted-foreground text-center py-8">
-                    Loading testimonials from database...
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
