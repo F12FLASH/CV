@@ -59,12 +59,18 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   
   const unreadCount = messages.filter(m => !m.read).length;
 
-  // Protect route
+  // Protect route - check authentication state before redirecting
   useEffect(() => {
-    if (!isAuthenticated) {
-      setLocation("/admin/login");
-    }
-  }, [isAuthenticated, setLocation]);
+    // Only redirect if definitely not authenticated
+    // Avoid redirect during initial load when auth state is being checked
+    const timer = setTimeout(() => {
+      if (!isAuthenticated && location !== "/admin/login") {
+        setLocation("/admin/login");
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, setLocation, location]);
 
   const handleLogout = () => {
     logout();

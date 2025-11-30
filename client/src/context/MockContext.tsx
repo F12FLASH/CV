@@ -81,6 +81,7 @@ export interface Notification {
 
 interface MockContextType {
   isAuthenticated: boolean;
+  isCheckingAuth: boolean;
   currentUser: User | null;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
@@ -110,6 +111,7 @@ const MockContext = createContext<MockContextType | undefined>(undefined);
 
 export function MockProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -128,7 +130,11 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem("currentUser");
           setIsAuthenticated(false);
           setCurrentUser(null);
+        } finally {
+          setIsCheckingAuth(false);
         }
+      } else {
+        setIsCheckingAuth(false);
       }
     };
     verifySession();
@@ -325,6 +331,7 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
   return (
     <MockContext.Provider value={{
       isAuthenticated,
+      isCheckingAuth,
       currentUser,
       login,
       logout,

@@ -32,17 +32,20 @@ if (!sessionSecret && process.env.NODE_ENV === 'production') {
   throw new Error('SESSION_SECRET environment variable is required in production');
 }
 
-app.use(session({
+// Session configuration
+const sessionConfig = {
   secret: sessionSecret || 'dev-secret-key-for-development-only',
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
   }
-}));
+};
+
+app.use(session(sessionConfig));
 
 // Setup CORS headers for credentials
 app.use((req, res, next) => {
@@ -50,7 +53,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', req.get('origin') || '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
