@@ -1,40 +1,14 @@
 import { motion } from "framer-motion";
 import { TypeAnimation } from "react-type-animation";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Float, PerspectiveCamera } from "@react-three/drei";
 import { ArrowRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import avatarImage from "@assets/generated_images/futuristic_3d_developer_avatar.png";
 
-function Particles() {
-  return (
-    <points>
-      <sphereGeometry args={[10, 64, 64]} />
-      <pointsMaterial
-        size={0.02}
-        color="#7c3aed"
-        transparent
-        opacity={0.8}
-        sizeAttenuation
-      />
-    </points>
-  );
-}
-
 export function Hero() {
   return (
     <section id="home" className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-background">
-      {/* Background Particles (Three.js) */}
-      <div className="absolute inset-0 z-0 opacity-30">
-        <Canvas>
-          <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-          <ambientLight intensity={0.5} />
-          <Float speed={2} rotationIntensity={1} floatIntensity={2}>
-            <Particles />
-          </Float>
-          <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
-        </Canvas>
-      </div>
+      {/* Background Gradient */}
+      <div className="absolute inset-0 z-0 opacity-30 bg-gradient-to-br from-primary/10 via-background to-secondary/10"></div>
 
       <div className="container mx-auto px-4 z-10 grid md:grid-cols-2 gap-12 items-center">
         {/* Left Column: Content */}
