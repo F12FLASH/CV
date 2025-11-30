@@ -35,9 +35,15 @@ export default function AdminPosts() {
   const handleAddDummy = () => {
     addPost({
       title: "New Blog Post Draft",
+      slug: "new-blog-post-draft",
       category: "General",
       author: "Loi Developer",
       status: "Draft",
+      content: "",
+      excerpt: null,
+      featuredImage: null,
+      tags: [],
+      publishedAt: null,
     });
   };
 
@@ -129,7 +135,7 @@ export default function AdminPosts() {
                       {post.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{post.date}</TableCell>
+                  <TableCell>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : (post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'N/A')}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="icon" onClick={() => startEdit(post.id, post.title)}>
