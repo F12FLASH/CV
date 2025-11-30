@@ -215,9 +215,6 @@ export default function AdminPostsEnhanced() {
         } else if (formData.publishedAt instanceof Date) {
           // If it's a Date object, convert to ISO string
           publishedAt = formData.publishedAt.toISOString();
-        } else {
-          // Fallback: try to create a new Date from the value
-          publishedAt = new Date(formData.publishedAt).toISOString();
         }
       }
 
