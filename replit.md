@@ -113,6 +113,28 @@ Preferred communication style: Simple, everyday language.
   - ✅ Total unread count includes messages + comments + reviews
   - ✅ Database migration applied successfully with featured column
 
+- **Hacker-Themed Preloader Redesign (Nov 30, 2025)**
+  - ✅ Complete redesign of loading page with matrix/hacker aesthetic
+  - ✅ Matrix-style falling green characters animation
+  - ✅ Terminal-like typing effect with rotating status messages
+  - ✅ Glowing `</>` code symbol
+  - ✅ Progress bar with percentage display
+  - ✅ [SECURE] [ENCRYPTED] [PROTECTED] status badges
+  - ✅ System info display at bottom corners
+
+- **Recaptcha Configuration Tab (Nov 30, 2025)**
+  - ✅ Added new Recaptcha tab to Security Center (next to Authentication)
+  - ✅ Four protection options: Disabled, Local Verification, Google reCAPTCHA v3, Cloudflare Turnstile
+  - ✅ Local verification features: Honeypot fields, Time-based validation, IP Rate limiting
+  - ✅ Protection coverage settings for all forms (Login, Contact, Newsletter, Comments, Registration)
+  - ✅ Bot detection statistics display
+
+- **WebSocket Improvements (Nov 30, 2025)**
+  - ✅ Removed dependency on MockContext authentication for WebSocket connection
+  - ✅ WebSocket now connects immediately and reconnects automatically
+  - ✅ Real-time notification updates without requiring page reload
+  - ✅ Query cache invalidation on NEW_MESSAGE events for instant inbox updates
+
 ### Backend Architecture
 
 **Technology Stack:**

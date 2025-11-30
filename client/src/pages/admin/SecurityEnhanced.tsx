@@ -86,6 +86,7 @@ export default function AdminSecurityEnhanced() {
         <Tabs defaultValue="authentication" className="space-y-6">
           <TabsList className="flex flex-wrap gap-1 h-auto p-1">
             <TabsTrigger value="authentication">Authentication</TabsTrigger>
+            <TabsTrigger value="recaptcha">Recaptcha</TabsTrigger>
             <TabsTrigger value="firewall">Firewall</TabsTrigger>
             <TabsTrigger value="threat">Threat Protection</TabsTrigger>
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
@@ -173,6 +174,232 @@ export default function AdminSecurityEnhanced() {
                 <Button variant="outline" className="w-full">View Login History</Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* RECAPTCHA */}
+          <TabsContent value="recaptcha" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShieldAlert className="w-5 h-5" />
+                    Bot Protection Settings
+                  </CardTitle>
+                  <CardDescription>Configure CAPTCHA protection for forms and login</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="captcha" 
+                          value="disabled"
+                          className="w-4 h-4 text-primary"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm flex items-center gap-2">
+                            <XCircle className="w-4 h-4 text-muted-foreground" />
+                            Disabled
+                          </div>
+                          <div className="text-xs text-muted-foreground">No bot protection (not recommended)</div>
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="p-4 border rounded-lg space-y-3 border-primary/50 bg-primary/5">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="captcha" 
+                          value="local"
+                          defaultChecked
+                          className="w-4 h-4 text-primary"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm flex items-center gap-2">
+                            <Server className="w-4 h-4 text-muted-foreground" />
+                            Local Verification
+                            <Badge variant="secondary" className="text-[10px]">Active</Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground">Server-side honeypot + rate limiting</div>
+                        </div>
+                      </label>
+                      <div className="ml-7 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs">Honeypot Fields</span>
+                          <Switch defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs">Time-based Validation</span>
+                          <Switch defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs">IP Rate Limiting</span>
+                          <Switch defaultChecked />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="captcha" 
+                          value="google"
+                          className="w-4 h-4 text-primary"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm flex items-center gap-2">
+                            <Globe className="w-4 h-4 text-muted-foreground" />
+                            Google reCAPTCHA v3
+                          </div>
+                          <div className="text-xs text-muted-foreground">Invisible, score-based protection</div>
+                        </div>
+                      </label>
+                      <div className="ml-7 space-y-3 pt-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Site Key</Label>
+                          <Input placeholder="Enter Google reCAPTCHA site key" className="text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Secret Key</Label>
+                          <div className="relative">
+                            <Input type="password" placeholder="Enter secret key" className="text-sm pr-10" />
+                            <Button variant="ghost" size="icon" className="absolute right-0 top-0 h-full">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Minimum Score (0.0 - 1.0)</Label>
+                          <Input type="number" defaultValue="0.5" step="0.1" min="0" max="1" className="text-sm" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border rounded-lg space-y-3">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="captcha" 
+                          value="cloudflare"
+                          className="w-4 h-4 text-primary"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-muted-foreground" />
+                            Cloudflare Turnstile
+                          </div>
+                          <div className="text-xs text-muted-foreground">Privacy-friendly, works with adblockers</div>
+                        </div>
+                      </label>
+                      <div className="ml-7 space-y-3 pt-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Site Key</Label>
+                          <Input placeholder="Enter Cloudflare site key" className="text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Secret Key</Label>
+                          <div className="relative">
+                            <Input type="password" placeholder="Enter secret key" className="text-sm pr-10" />
+                            <Button variant="ghost" size="icon" className="absolute right-0 top-0 h-full">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch id="turnstile-managed" />
+                          <Label htmlFor="turnstile-managed" className="text-xs">Managed Challenge Mode</Label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button className="w-full">Save Captcha Settings</Button>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Zap className="w-5 h-5" />
+                      Protection Coverage
+                    </CardTitle>
+                    <CardDescription>Choose which forms to protect</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Login Form</p>
+                        <p className="text-xs text-muted-foreground">Admin login page</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Contact Form</p>
+                        <p className="text-xs text-muted-foreground">Public contact form</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Newsletter Signup</p>
+                        <p className="text-xs text-muted-foreground">Email subscription form</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Comment Forms</p>
+                        <p className="text-xs text-muted-foreground">Blog post comments</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Registration Form</p>
+                        <p className="text-xs text-muted-foreground">User registration (if enabled)</p>
+                      </div>
+                      <Switch />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5" />
+                      Bot Detection Stats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                        <p className="text-2xl font-bold text-green-500">1,247</p>
+                        <p className="text-xs text-muted-foreground">Legitimate Submissions</p>
+                      </div>
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <p className="text-2xl font-bold text-red-500">89</p>
+                        <p className="text-xs text-muted-foreground">Blocked Bots</p>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs text-muted-foreground">Protection Rate</span>
+                        <span className="text-sm font-medium">93.3%</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-green-500 rounded-full" style={{ width: "93.3%" }} />
+                      </div>
+                    </div>
+                    <Button variant="outline" className="w-full">View Detailed Report</Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           {/* FIREWALL */}

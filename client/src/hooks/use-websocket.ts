@@ -1,6 +1,5 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useMockData } from "@/context/MockContext";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface WebSocketMessage {
@@ -14,9 +13,9 @@ export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isClosingRef = useRef(false);
+  const [isConnected, setIsConnected] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { isAuthenticated, refetchMessages } = useMockData();
 
   const playNotificationSound = useCallback(() => {
     notificationSound.currentTime = 0;
@@ -34,6 +33,7 @@ export function useWebSocket() {
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
+        setIsConnected(true);
       };
 
       wsRef.current.onmessage = async (event) => {
@@ -49,12 +49,7 @@ export function useWebSocket() {
               duration: 5000,
             });
 
-            try {
-              await refetchMessages();
-              queryClient.invalidateQueries({ queryKey: ['messages'] });
-            } catch (err) {
-              console.error("Failed to refetch messages:", err);
-            }
+            queryClient.invalidateQueries({ queryKey: ['messages'] });
           }
           
           const isNewComment = message.type === "NEW_COMMENT" || 
@@ -100,7 +95,8 @@ export function useWebSocket() {
       };
 
       wsRef.current.onclose = () => {
-        if (!isClosingRef.current && isAuthenticated) {
+        setIsConnected(false);
+        if (!isClosingRef.current) {
           reconnectTimeoutRef.current = setTimeout(connect, 3000);
         }
       };
@@ -110,7 +106,7 @@ export function useWebSocket() {
       };
     } catch (error) {
     }
-  }, [isAuthenticated, playNotificationSound, toast, refetchMessages, queryClient]);
+  }, [playNotificationSound, toast, queryClient]);
 
   const disconnect = useCallback(() => {
     isClosingRef.current = true;
@@ -128,11 +124,7 @@ export function useWebSocket() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      connect();
-    } else {
-      disconnect();
-    }
+    connect();
 
     const handleBeforeUnload = () => {
       isClosingRef.current = true;
@@ -147,7 +139,7 @@ export function useWebSocket() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       disconnect();
     };
-  }, [isAuthenticated, connect, disconnect]);
+  }, [connect, disconnect]);
 
-  return { connect, disconnect };
+  return { connect, disconnect, isConnected };
 }
