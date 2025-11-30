@@ -204,6 +204,20 @@ export default function AdminPostsEnhanced() {
         .map((t) => t.trim())
         .filter(Boolean);
 
+      let publishedAt: string | null = null;
+      if (formData.status === "Published") {
+        // If publishing for the first time, set to now
+        if (!formData.publishedAt) {
+          publishedAt = new Date().toISOString();
+        } else if (typeof formData.publishedAt === "string") {
+          // Keep existing published date if already a string
+          publishedAt = formData.publishedAt;
+        } else {
+          // If it's a Date object, convert to ISO string
+          publishedAt = (formData.publishedAt as any).toISOString?.() || new Date().toISOString();
+        }
+      }
+
       const postData = {
         title: formData.title.trim(),
         slug: formData.slug.trim() || generateSlug(formData.title),
@@ -214,7 +228,7 @@ export default function AdminPostsEnhanced() {
         status: formData.status,
         tags,
         featuredImage: formData.featuredImage,
-        publishedAt: formData.status === "Published" ? new Date().toISOString() : null,
+        publishedAt,
       };
 
       if (editingPost) {
