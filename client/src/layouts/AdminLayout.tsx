@@ -85,37 +85,37 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     enabled: isAuthenticated,
   });
 
-  const deleteMessageMutation = useMutation({
+  const markMessageAsReadMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await fetch(`/api/messages/${id}`, {
-        method: 'DELETE',
+      const res = await fetch(`/api/messages/${id}/read`, {
+        method: 'PUT',
         credentials: 'include'
       });
-      if (!res.ok) throw new Error('Failed to delete');
+      if (!res.ok) throw new Error('Failed to mark as read');
       return res.json();
     },
     onSuccess: () => refetchMessages(),
   });
 
-  const deleteCommentMutation = useMutation({
+  const markCommentAsReadMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await fetch(`/api/comments/${id}`, {
-        method: 'DELETE',
+      const res = await fetch(`/api/comments/${id}/read`, {
+        method: 'PUT',
         credentials: 'include'
       });
-      if (!res.ok) throw new Error('Failed to delete');
+      if (!res.ok) throw new Error('Failed to mark as read');
       return res.json();
     },
     onSuccess: () => refetchComments(),
   });
 
-  const deleteReviewMutation = useMutation({
+  const markReviewAsReadMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await fetch(`/api/reviews/${id}`, {
-        method: 'DELETE',
+      const res = await fetch(`/api/reviews/${id}/read`, {
+        method: 'PUT',
         credentials: 'include'
       });
-      if (!res.ok) throw new Error('Failed to delete');
+      if (!res.ok) throw new Error('Failed to mark as read');
       return res.json();
     },
     onSuccess: () => refetchReviews(),
@@ -183,6 +183,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     const dateB = b.createdAt ? b.createdAt.getTime() : 0;
     return dateB - dateA;
   });
+
+  const unreadNotifications = allNotifications.filter(n => !n.read);
 
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
@@ -427,26 +429,26 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <ScrollArea className="h-[300px]">
-                  {allNotifications.length === 0 ? (
+                  {unreadNotifications.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground">
                       <Bell className="mx-auto h-8 w-8 mb-2 opacity-50" />
-                      <p className="text-sm">No notifications yet</p>
+                      <p className="text-sm">No new notifications</p>
                     </div>
                   ) : (
                     <>
-                      {allNotifications.slice(0, 10).map((notif) => (
+                      {unreadNotifications.slice(0, 10).map((notif) => (
                         <DropdownMenuItem 
                           key={notif.id} 
                           className={`flex flex-col items-start p-3 cursor-pointer ${!notif.read ? 'bg-primary/5' : ''}`}
                           onClick={() => {
                             if (notif.type === 'message') {
-                              deleteMessageMutation.mutate(notif.originalId);
+                              markMessageAsReadMutation.mutate(notif.originalId);
                               setLocation("/admin/inbox");
                             } else if (notif.type === 'comment') {
-                              deleteCommentMutation.mutate(notif.originalId);
+                              markCommentAsReadMutation.mutate(notif.originalId);
                               setLocation("/admin/comments");
                             } else {
-                              deleteReviewMutation.mutate(notif.originalId);
+                              markReviewAsReadMutation.mutate(notif.originalId);
                               setLocation("/admin/comments");
                             }
                           }}
