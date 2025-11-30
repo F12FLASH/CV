@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { CommentSection } from "@/components/CommentSection";
 
 export default function BlogPost() {
   const [match, params] = useRoute("/blog/:slug");
@@ -226,6 +227,8 @@ export default function BlogPost() {
                 <Share2 className="w-4 h-4 mr-2" /> Share
               </Button>
             </div>
+
+            <CommentSection postId={post.id} title="Comments" />
           </motion.div>
         </div>
       </article>

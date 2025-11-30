@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Github, Plus, X } from "lucide-react";
+import { ExternalLink, Github, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMockData } from "@/context/MockContext";
 import { api } from "@/lib/api";
+import { ReviewSection } from "@/components/ReviewSection";
 
 const useSafeMockData = () => {
   try {
@@ -134,40 +136,47 @@ export function Projects() {
 
         {/* Details Modal */}
         <Dialog open={!!selectedProject} onOpenChange={() => setSelectedProject(null)}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>{selectedProject?.title}</DialogTitle>
-              <DialogDescription>{selectedProject?.description}</DialogDescription>
-            </DialogHeader>
-            {selectedProject && (
-              <div className="space-y-6">
-                <div className="aspect-video rounded-lg overflow-hidden bg-muted">
-                  <img src={selectedProject.image} alt={selectedProject.title} className="w-full h-full object-cover" />
-                </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-bold mb-2">Challenge & Solution</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-bold mb-2">Technologies</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedProject.tech.map((t: string) => (
-                        <span key={t} className="px-2 py-1 bg-primary/10 text-primary rounded text-sm">
-                          {t}
-                        </span>
-                      ))}
+          <DialogContent className="max-w-3xl max-h-[90vh] p-0">
+            <ScrollArea className="max-h-[85vh]">
+              <div className="p-6">
+                <DialogHeader>
+                  <DialogTitle>{selectedProject?.title}</DialogTitle>
+                  <DialogDescription>{selectedProject?.description}</DialogDescription>
+                </DialogHeader>
+                {selectedProject && (
+                  <div className="space-y-6 mt-4">
+                    <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+                      <img src={selectedProject.image} alt={selectedProject.title} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="font-bold mb-2">Challenge & Solution</h4>
+                        <p className="text-muted-foreground text-sm">
+                          {selectedProject.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-bold mb-2">Technologies</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedProject.tech.map((t: string) => (
+                            <span key={t} className="px-2 py-1 bg-primary/10 text-primary rounded text-sm">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <ReviewSection projectId={selectedProject.id} title="Project Reviews" />
+                    
+                    <div className="flex justify-end gap-4">
+                      <Button variant="outline" onClick={() => setSelectedProject(null)}>Close</Button>
+                      <Button>View Live Project</Button>
                     </div>
                   </div>
-                </div>
-                <div className="flex justify-end gap-4">
-                  <Button variant="outline" onClick={() => setSelectedProject(null)}>Close</Button>
-                  <Button>View Live Project</Button>
-                </div>
+                )}
               </div>
-            )}
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       </div>
