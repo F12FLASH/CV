@@ -15,9 +15,14 @@ import {
   Paperclip
 } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 export default function AdminInbox() {
-  const { messages, markAsRead, deleteMessage } = useMockData();
+  const { markAsRead, deleteMessage, isAuthenticated } = useMockData();
+  const { data: messages = [] } = useQuery<any[]>({
+    queryKey: ['/api/messages'],
+    enabled: isAuthenticated,
+  });
   const [selectedMessageId, setSelectedMessageId] = useState<number>(messages[0]?.id || 0);
 
   const selectedMessage = messages.find(m => m.id === selectedMessageId) || messages[0];

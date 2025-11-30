@@ -80,15 +80,21 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     enabled: isAuthenticated,
   });
 
-  // Auto-refetch comments and reviews when WebSocket connects to get real-time updates
+  const { data: apiMessages = [], refetch: refetchMessages } = useQuery<any[]>({
+    queryKey: ['/api/messages'],
+    enabled: isAuthenticated,
+  });
+
+  // Auto-refetch all items when WebSocket connects to get real-time updates
   useEffect(() => {
     if (isConnected && isAuthenticated) {
+      refetchMessages();
       refetchComments();
       refetchReviews();
     }
-  }, [isConnected, isAuthenticated, refetchComments, refetchReviews]);
+  }, [isConnected, isAuthenticated, refetchMessages, refetchComments, refetchReviews]);
 
-  const unreadMessages = messages.filter(m => !m.read).length;
+  const unreadMessages = (apiMessages || []).filter(m => !m.read).length;
   const unreadComments = comments.filter(c => !c.read).length;
   const unreadReviews = reviews.filter(r => !r.read).length;
   const unreadCount = unreadMessages + unreadComments + unreadReviews;
@@ -106,7 +112,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   const allNotifications: NotificationItem[] = [
-    ...messages.map(m => ({
+    ...(apiMessages || []).map(m => ({
       id: `msg-${m.id}`,
       type: 'message' as const,
       sender: m.sender || 'Unknown',

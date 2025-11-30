@@ -30,7 +30,7 @@ type NotificationItem = {
 };
 
 export default function AdminNotifications() {
-  const { messages, markAsRead, deleteMessage, isAuthenticated } = useMockData();
+  const { markAsRead, deleteMessage, isAuthenticated } = useMockData();
   const [emailNotif, setEmailNotif] = useState(true);
   const [commentAlerts, setCommentAlerts] = useState(true);
   const [systemUpdates, setSystemUpdates] = useState(true);
@@ -38,6 +38,11 @@ export default function AdminNotifications() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterRead, setFilterRead] = useState<string>("all");
+
+  const { data: messages = [] } = useQuery<any[]>({
+    queryKey: ['/api/messages'],
+    enabled: isAuthenticated,
+  });
 
   const { data: comments = [] } = useQuery<any[]>({
     queryKey: ['/api/comments'],
