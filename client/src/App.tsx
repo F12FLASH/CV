@@ -81,6 +81,8 @@ function Router() {
       <Route path="/admin/webhooks" component={lazy(() => import("@/pages/admin/Webhooks"))} />
       <Route path="/admin/image-optimizer" component={lazy(() => import("@/pages/admin/ImageOptimizer"))} />
       <Route path="/admin/page-builder" component={lazy(() => import("@/pages/admin/PageBuilder"))} />
+      <Route path="/admin/api-docs" component={lazy(() => import("@/pages/admin/APIDocs"))} />
+      <Route path="/admin/scheduler" component={lazy(() => import("@/pages/admin/Scheduler"))} />
 
       {/* Admin Fallback */}
       <Route path="/admin/:any*">

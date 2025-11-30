@@ -111,17 +111,17 @@ export default function AdminTools() {
       category: "Developer Tools",
       items: [
         { 
-          name: "API Testing", 
-          description: "Test API endpoints and responses",
-          icon: TestTube,
-          href: "/admin/api-testing",
+          name: "API Documentation", 
+          description: "Test and explore API endpoints",
+          icon: Code,
+          href: "/admin/api-docs",
           color: "text-red-500"
         },
         { 
-          name: "Code Snippets", 
-          description: "Manage reusable code snippets",
-          icon: FileCode,
-          href: "/admin/snippets",
+          name: "Scheduled Tasks", 
+          description: "Manage cron jobs and automation",
+          icon: Clock,
+          href: "/admin/scheduler",
           color: "text-green-500"
         },
         { 
