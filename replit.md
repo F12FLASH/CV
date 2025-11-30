@@ -87,6 +87,21 @@ Preferred communication style: Simple, everyday language.
   - PostCategories and ProjectCategories dialogs now properly render and handle form submission
   - All mutations include proper error handling and user feedback via toast notifications
 
+- **Comments & Reviews System (Nov 30, 2025)**
+  - Database tables: `comments` (for blog posts) and `reviews` (for projects with star ratings)
+  - Full CRUD API routes with authentication and admin controls
+  - Approval workflow: Pending → Approved/Spam status management
+  - CommentSection component integrated into blog post detail pages
+  - ReviewSection component with star ratings integrated into project detail modal
+  - Sample data seeded for testing
+  - Admin Comments page for managing all comments and reviews
+
+- **Real-time WebSocket Notifications (Nov 30, 2025)**
+  - WebSocket broadcast functions for new comments and reviews
+  - useWebSocket hook handles NEW_COMMENT and NEW_REVIEW notifications
+  - Toast notifications with sound for admin panel when new comments/reviews arrive
+  - Supports both direct and wrapped notification formats for flexibility
+
 ### Backend Architecture
 
 **Technology Stack:**
