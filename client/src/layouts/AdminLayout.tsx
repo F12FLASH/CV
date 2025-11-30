@@ -68,6 +68,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const unreadCount = messages.filter(m => !m.read).length;
 
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: api.getCurrentUser,
+    staleTime: Infinity,
+    enabled: isAuthenticated, // Only fetch when authenticated
+  });
+
   // Check authentication on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -146,12 +153,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { icon: Shield, label: "Security", href: "/admin/security" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
-
-  const { data: currentUser } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: api.getCurrentUser,
-    staleTime: Infinity,
-  }); 
 
   return (
     <div className="min-h-screen bg-background flex">
