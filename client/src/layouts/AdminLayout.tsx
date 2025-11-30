@@ -55,56 +55,64 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [isChecking, setIsChecking] = useState(true);
-  const [location, setLocationState] = useLocation(); // Renamed to avoid conflict
-  const { isAuthenticated, logout, messages, markAsRead } = useMockData();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { messages, markAsRead, logout } = useMockData();
   const { theme, setTheme } = useTheme();
 
   useWebSocket();
 
   const unreadCount = messages.filter(m => !m.read).length;
 
-  // Protect route - check authentication state before redirecting
+  // Check authentication on mount
   useEffect(() => {
     fetch("/api/auth/me", {
       credentials: "include"
     })
     .then(res => {
-      if (!res.ok) {
-        setLocationState("/admin/login");
+      if (res.ok) {
+        setIsAuthenticated(true);
+      } else {
+        setLocation("/admin/login");
       }
     })
     .catch(() => {
-      setLocationState("/admin/login");
+      setLocation("/admin/login");
     })
     .finally(() => {
       setIsChecking(false);
     });
-  }, [setLocationState]);
+  }, [setLocation]);
 
-  if (isChecking) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
-  // Only redirect if definitely not authenticated
-  // Avoid redirect during initial load when auth state is being checked
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isAuthenticated && location !== "/admin/login") {
-        setLocationState("/admin/login");
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, setLocationState, location]);
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
     logout();
-    setLocationState("/admin/login");
+    setLocation("/admin/login");
   };
 
-  if (!isAuthenticated) return null;
+  if (isChecking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
