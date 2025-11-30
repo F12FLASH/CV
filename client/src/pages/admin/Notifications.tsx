@@ -57,6 +57,7 @@ export default function AdminNotifications() {
     mutationFn: (id: number) => api.markMessageAsRead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+      refetchMessages();
     },
   });
 
@@ -64,6 +65,7 @@ export default function AdminNotifications() {
     mutationFn: (id: number) => api.markCommentAsRead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
+      refetchComments();
     },
   });
 
@@ -71,6 +73,7 @@ export default function AdminNotifications() {
     mutationFn: (id: number) => api.markReviewAsRead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
+      refetchReviews();
     },
   });
 
