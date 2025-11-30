@@ -46,10 +46,48 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+async function seedInitialData() {
+  try {
+    // Create default project categories
+    const projectCategories = [
+      { name: "Full-stack", slug: "full-stack", type: "project", description: "Full-stack applications" },
+      { name: "Front-end", slug: "frontend", type: "project", description: "Frontend projects" },
+      { name: "Back-end", slug: "backend", type: "project", description: "Backend projects" },
+      { name: "Mobile", slug: "mobile", type: "project", description: "Mobile applications" },
+      { name: "Design", slug: "design", type: "project", description: "Design projects" },
+    ];
+
+    // Create default post categories
+    const postCategories = [
+      { name: "Web Development", slug: "web-development", type: "post", description: "Web development tips and tricks" },
+      { name: "Backend", slug: "backend-post", type: "post", description: "Backend development articles" },
+      { name: "Frontend", slug: "frontend-post", type: "post", description: "Frontend development tips" },
+      { name: "Tutorial", slug: "tutorial", type: "post", description: "Step-by-step tutorials" },
+    ];
+
+    for (const cat of projectCategories) {
+      const existing = await storage.getCategoriesByType("project");
+      if (!existing.find(c => c.slug === cat.slug)) {
+        await storage.createCategory(cat);
+      }
+    }
+
+    for (const cat of postCategories) {
+      const existing = await storage.getCategoriesByType("post");
+      if (!existing.find(c => c.slug === cat.slug)) {
+        await storage.createCategory(cat);
+      }
+    }
+  } catch (error) {
+    console.log("Seed data already exists or error:", error);
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  await seedInitialData();
 
   app.post("/api/auth/login", async (req, res) => {
     try {

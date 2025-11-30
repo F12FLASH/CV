@@ -65,6 +65,17 @@ Preferred communication style: Simple, everyday language.
   - URL input for image links (supports all image formats)
   - Image preview with fallback error handling
   - Automatic fallback to default background images if image fails to load
+- **FIXED: Category API Authentication Issue (Nov 30)**
+  - Issue: Credentials not being sent with fetch requests to category endpoints
+  - Solution: Added `credentials: 'include'` to all fetch calls in category pages
+  - Fixed files: PostCategories.tsx and ProjectCategories.tsx
+  - All category API endpoints now properly authenticate
+  - Added error handling for failed requests
+- **Added Seed Data Initialization**
+  - Default project categories created on app startup: Full-stack, Front-end, Back-end, Mobile, Design
+  - Default post categories: Web Development, Backend, Frontend, Tutorial
+  - Categories stored in database with proper slug generation
+  - Prevents duplicate categories from being created on restart
 
 ### Backend Architecture
 

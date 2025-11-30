@@ -31,13 +31,13 @@ interface Project {
   updatedAt: string;
 }
 
-const categories = [
-  { id: "full-stack", label: "Full-stack" },
-  { id: "frontend", label: "Front-end" },
-  { id: "backend", label: "Back-end" },
-  { id: "mobile", label: "Mobile" },
-  { id: "design", label: "Design" },
-];
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  type: string;
+  description?: string;
+}
 
 const emptyProject = {
   title: "",
@@ -64,6 +64,14 @@ export default function AdminProjectsEnhanced() {
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["/api/projects"],
     queryFn: () => api.getProjects(),
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["/api/categories", "project"],
+    queryFn: () =>
+      fetch("/api/categories?type=project", { credentials: "include" })
+        .then(res => res.json() as Promise<Category[]>)
+        .catch(() => []),
   });
 
   const createMutation = useMutation({

@@ -39,7 +39,10 @@ export default function AdminPostCategories() {
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["/api/categories", "post"],
     queryFn: () => 
-      fetch("/api/categories?type=post").then(res => res.json()),
+      fetch("/api/categories?type=post", { credentials: "include" }).then(res => {
+        if (!res.ok) throw new Error("Failed to fetch categories");
+        return res.json();
+      }),
   });
 
   const createMutation = useMutation({
@@ -47,8 +50,12 @@ export default function AdminPostCategories() {
       fetch("/api/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
-      }).then(res => res.json()),
+      }).then(res => {
+        if (!res.ok) throw new Error("Failed to create category");
+        return res.json();
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories", "post"] });
       setIsDialogOpen(false);
@@ -65,8 +72,12 @@ export default function AdminPostCategories() {
       fetch(`/api/categories/${editingCategory?.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
-      }).then(res => res.json()),
+      }).then(res => {
+        if (!res.ok) throw new Error("Failed to update category");
+        return res.json();
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories", "post"] });
       setIsDialogOpen(false);
@@ -80,7 +91,13 @@ export default function AdminPostCategories() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) =>
-      fetch(`/api/categories/${id}`, { method: "DELETE" }).then(res => res.json()),
+      fetch(`/api/categories/${id}`, { 
+        method: "DELETE",
+        credentials: "include"
+      }).then(res => {
+        if (!res.ok) throw new Error("Failed to delete category");
+        return res.json();
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories", "post"] });
       setDeleteId(null);
