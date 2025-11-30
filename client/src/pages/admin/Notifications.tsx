@@ -5,11 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { useMockData } from "@/context/MockContext";
 import { Bell, Mail, MessageSquare, CheckCircle, Trash2, AlertCircle, Search, Filter, Check, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +32,7 @@ type NotificationItem = {
 };
 
 export default function AdminNotifications() {
-  const { markAsRead, deleteMessage, isAuthenticated } = useMockData();
+  const { toast } = useToast();
   const [emailNotif, setEmailNotif] = useState(true);
   const [commentAlerts, setCommentAlerts] = useState(true);
   const [systemUpdates, setSystemUpdates] = useState(true);
@@ -39,19 +41,36 @@ export default function AdminNotifications() {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterRead, setFilterRead] = useState<string>("all");
 
-  const { data: messages = [] } = useQuery<any[]>({
+  const { data: messages = [], refetch: refetchMessages } = useQuery<any[]>({
     queryKey: ['/api/messages'],
-    enabled: isAuthenticated,
   });
 
-  const { data: comments = [] } = useQuery<any[]>({
+  const { data: comments = [], refetch: refetchComments } = useQuery<any[]>({
     queryKey: ['/api/comments'],
-    enabled: isAuthenticated,
   });
 
-  const { data: reviews = [] } = useQuery<any[]>({
+  const { data: reviews = [], refetch: refetchReviews } = useQuery<any[]>({
     queryKey: ['/api/reviews'],
-    enabled: isAuthenticated,
+  });
+
+  const markMessageReadMutation = useMutation({
+    mutationFn: (id: number) => api.markMessageAsRead(id),
+    onSuccess: () => refetchMessages(),
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: (id: number) => api.deleteMessage(id),
+    onSuccess: () => refetchMessages(),
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: (id: number) => api.deleteComment(id),
+    onSuccess: () => refetchComments(),
+  });
+
+  const deleteReviewMutation = useMutation({
+    mutationFn: (id: number) => api.deleteReview(id),
+    onSuccess: () => refetchReviews(),
   });
 
   const allNotifications: NotificationItem[] = [
@@ -134,17 +153,39 @@ export default function AdminNotifications() {
     return matchesSearch && matchesType && matchesRead;
   });
 
-  const handleMarkAllAsRead = () => {
-    messages.forEach(msg => {
-      if (!msg.read) {
-        markAsRead(msg.id);
+  const handleMarkAllAsRead = async () => {
+    try {
+      for (const msg of messages) {
+        await markMessageReadMutation.mutateAsync(msg.id);
       }
-    });
+      toast({ title: "Success", description: `Marked all ${messages.length} messages as read` });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to mark messages as read", variant: "destructive" });
+    }
   };
 
-  const handleDeleteAll = () => {
-    if (confirm("Are you sure you want to delete all message notifications?")) {
-      messages.forEach(msg => deleteMessage(msg.id));
+  const handleDeleteAll = async () => {
+    const total = messages.length + comments.length + reviews.length;
+    if (total === 0) {
+      toast({ title: "Info", description: "No notifications to delete" });
+      return;
+    }
+    
+    if (confirm(`Delete all ${total} notifications? (${messages.length} messages, ${comments.length} comments, ${reviews.length} reviews)`)) {
+      try {
+        for (const msg of messages) {
+          await deleteMessageMutation.mutateAsync(msg.id);
+        }
+        for (const comment of comments) {
+          await deleteCommentMutation.mutateAsync(comment.id);
+        }
+        for (const review of reviews) {
+          await deleteReviewMutation.mutateAsync(review.id);
+        }
+        toast({ title: "Success", description: `Deleted all ${total} notifications` });
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to delete notifications", variant: "destructive" });
+      }
     }
   };
 
@@ -318,7 +359,7 @@ export default function AdminNotifications() {
                             size="icon"
                             className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
                             title="Mark as read"
-                            onClick={() => markAsRead(notif.originalId)}
+                            onClick={() => markMessageReadMutation.mutate(notif.originalId)}
                           >
                             <CheckCircle className="w-4 h-4" />
                           </Button>
@@ -331,7 +372,37 @@ export default function AdminNotifications() {
                             title="Delete"
                             onClick={() => {
                               if (confirm("Delete this notification?")) {
-                                deleteMessage(notif.originalId);
+                                deleteMessageMutation.mutate(notif.originalId);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {notif.type === 'comment' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Delete"
+                            onClick={() => {
+                              if (confirm("Delete this comment?")) {
+                                deleteCommentMutation.mutate(notif.originalId);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {notif.type === 'review' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Delete"
+                            onClick={() => {
+                              if (confirm("Delete this review?")) {
+                                deleteReviewMutation.mutate(notif.originalId);
                               }
                             }}
                           >

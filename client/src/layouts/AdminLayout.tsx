@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useMockData } from "@/context/MockContext";
 import { useTheme } from "next-themes";
 import { useWebSocket } from "@/hooks/use-websocket";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { Comment, Review } from "@shared/schema";
 import { 
@@ -83,6 +83,42 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { data: apiMessages = [], refetch: refetchMessages } = useQuery<any[]>({
     queryKey: ['/api/messages'],
     enabled: isAuthenticated,
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/messages/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      return res.json();
+    },
+    onSuccess: () => refetchMessages(),
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/comments/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      return res.json();
+    },
+    onSuccess: () => refetchComments(),
+  });
+
+  const deleteReviewMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/reviews/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      return res.json();
+    },
+    onSuccess: () => refetchReviews(),
   });
 
   // Auto-refetch all items when WebSocket connects to get real-time updates
@@ -404,9 +440,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                           className={`flex flex-col items-start p-3 cursor-pointer ${!notif.read ? 'bg-primary/5' : ''}`}
                           onClick={() => {
                             if (notif.type === 'message') {
-                              markAsRead(notif.originalId);
+                              deleteMessageMutation.mutate(notif.originalId);
                               setLocation("/admin/inbox");
+                            } else if (notif.type === 'comment') {
+                              deleteCommentMutation.mutate(notif.originalId);
+                              setLocation("/admin/comments");
                             } else {
+                              deleteReviewMutation.mutate(notif.originalId);
                               setLocation("/admin/comments");
                             }
                           }}

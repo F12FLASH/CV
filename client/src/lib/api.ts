@@ -220,6 +220,22 @@ export const api = {
     return handleResponse<any>(res);
   },
 
+  deleteComment: async (id: number) => {
+    const res = await fetch(`${API_BASE}/comments/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    return handleResponse<any>(res);
+  },
+
+  deleteReview: async (id: number) => {
+    const res = await fetch(`${API_BASE}/reviews/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    return handleResponse<any>(res);
+  },
+
   getSkills: async () => {
     const res = await fetch(`${API_BASE}/skills`, { credentials: 'include' });
     return handleResponse<any[]>(res);
