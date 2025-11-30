@@ -1348,5 +1348,38 @@ export async function registerRoutes(
     }
   });
 
+  // Debug Mode endpoints
+  app.get("/api/debug/settings", requireAdmin, async (req, res) => {
+    try {
+      const debugSetting = await storage.getSetting("debugSettings");
+      res.json(debugSetting ? JSON.parse(debugSetting.value) : { debugMode: false, showQueryDebug: false, performanceProfiling: false });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/debug/settings", requireAdmin, async (req, res) => {
+    try {
+      const { debugMode, showQueryDebug, performanceProfiling } = req.body;
+      await storage.upsertSetting("debugSettings", JSON.stringify({
+        debugMode,
+        showQueryDebug,
+        performanceProfiling,
+        updatedAt: new Date()
+      }));
+      
+      await storage.createActivityLog({
+        action: `Debug settings updated: Debug Mode=${debugMode}, Query Debug=${showQueryDebug}, Performance Profiling=${performanceProfiling}`,
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "info"
+      });
+      
+      res.json({ message: "Debug settings saved", debugMode, showQueryDebug, performanceProfiling });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 }

@@ -510,4 +510,24 @@ export const api = {
     });
     return handleResponse<{ message: string }>(res);
   },
+
+  // Debug Mode
+  getDebugSettings: async () => {
+    const res = await fetch(`${API_BASE}/debug/settings`, { credentials: 'include' });
+    return handleResponse<{
+      debugMode: boolean;
+      showQueryDebug: boolean;
+      performanceProfiling: boolean;
+    }>(res);
+  },
+
+  saveDebugSettings: async (settings: { debugMode: boolean; showQueryDebug: boolean; performanceProfiling: boolean }) => {
+    const res = await fetch(`${API_BASE}/debug/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(settings),
+    });
+    return handleResponse<{ message: string }>(res);
+  },
 };
