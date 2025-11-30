@@ -8,7 +8,16 @@ import { Link } from "wouter";
 
 export function Blog() {
   const { posts } = useMockData();
-  const publishedPosts = posts.filter(p => p.status === "Published" && p.featured === true).slice(0, 6);
+  const publishedPosts = posts
+    .filter(p => p.status === "Published")
+    .sort((a, b) => {
+      if (a.featured && !b.featured) return -1;
+      if (!a.featured && b.featured) return 1;
+      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 6);
   
   // Array of background images to rotate
   const bgImages = [

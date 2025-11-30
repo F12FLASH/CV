@@ -95,7 +95,6 @@ export function Contact() {
     message: ""
   });
 
-  // Pre-fill form with service data if available
   useEffect(() => {
     const prefillData = sessionStorage.getItem('contactFormData');
     if (prefillData) {
@@ -106,12 +105,26 @@ export function Contact() {
           subject: data.subject || "",
           message: data.message || ""
         }));
-        // Clear the sessionStorage after using it
         sessionStorage.removeItem('contactFormData');
       } catch (error) {
         console.error('Failed to parse prefill data:', error);
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const handlePrefill = (event: CustomEvent<{ subject: string; message: string }>) => {
+      setFormData(prev => ({
+        ...prev,
+        subject: event.detail.subject || "",
+        message: event.detail.message || ""
+      }));
+    };
+
+    window.addEventListener('contact:prefill', handlePrefill as EventListener);
+    return () => {
+      window.removeEventListener('contact:prefill', handlePrefill as EventListener);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

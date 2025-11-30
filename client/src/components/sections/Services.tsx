@@ -48,7 +48,6 @@ export function Services() {
   const services = servicesData.length > 0 ? servicesData : defaultServices;
 
   const handleContactClick = (service: any) => {
-    // Pre-fill contact form data
     const subject = `${service.title} - ${service.description}`;
     const message = `${service.price}\n${(service.features || []).join('\n')}`;
     
@@ -57,7 +56,10 @@ export function Services() {
       message
     }));
     
-    // Scroll to contact section
+    window.dispatchEvent(new CustomEvent('contact:prefill', {
+      detail: { subject, message }
+    }));
+    
     setTimeout(() => {
       const contactSection = document.getElementById('contact');
       if (contactSection) {
