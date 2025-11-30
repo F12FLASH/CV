@@ -152,6 +152,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
     queryFn: api.getCurrentUser,
+    staleTime: Infinity,
   }); 
 
   return (
@@ -294,8 +295,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={currentUser?.avatar || "/avatars/01.png"} alt={currentUser?.name || "User"} />
-                    <AvatarFallback>{currentUser?.name?.charAt(0).toUpperCase() || "L"}</AvatarFallback>
+                    <AvatarImage src={currentUser?.avatar ? String(currentUser.avatar) : "/avatars/01.png"} alt={currentUser?.name ? String(currentUser.name) : "User"} />
+                    <AvatarFallback>{currentUser?.name ? String(currentUser.name).charAt(0).toUpperCase() : "L"}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
