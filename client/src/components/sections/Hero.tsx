@@ -203,6 +203,18 @@ export function Hero() {
   const heroSubtitle = settings?.heroSubtitle || "Full-stack Developer & Security Enthusiast";
   const heroDescription = settings?.heroDescription || "Crafting secure & performant digital experiences with code";
   const heroStatus = settings?.heroStatus || "SYSTEM ONLINE";
+  const heroCTA = settings?.heroCTA || "View My Work";
+
+  const handleDownloadCV = () => {
+    // Try to find CV file from uploads or use a default path
+    const cvPath = "/uploads/documents/cv.pdf";
+    const link = document.createElement("a");
+    link.href = cvPath;
+    link.download = "CV.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const nameParts = heroTitle.split(" ");
   const firstName = nameParts[0] || "NGUYEN";
@@ -273,12 +285,23 @@ export function Hero() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-            <Button size="lg" className="bg-green-500 hover:bg-green-600 text-black font-mono gap-2 shadow-lg shadow-green-500/25 group border border-green-400">
+            <Button 
+              size="lg" 
+              onClick={handleDownloadCV}
+              className="bg-green-500 hover:bg-green-600 text-black font-mono gap-2 shadow-lg shadow-green-500/25 group border border-green-400"
+              data-testid="button-download-cv"
+            >
               <Download size={20} className="group-hover:-translate-y-1 transition-transform" /> 
               DOWNLOAD_CV.exe
             </Button>
-            <Button size="lg" variant="outline" className="border-green-500/50 text-green-400 hover:bg-green-500/10 font-mono gap-2 group">
-              VIEW_PROJECTS
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-green-500/50 text-green-400 hover:bg-green-500/10 font-mono gap-2 group"
+              onClick={() => window.location.href = "/projects"}
+              data-testid="button-view-projects"
+            >
+              {heroCTA}
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
