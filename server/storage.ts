@@ -201,9 +201,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPost(insertPost: InsertPost): Promise<Post> {
+    let publishedAt = null;
+    if (insertPost.publishedAt) {
+      if (typeof insertPost.publishedAt === 'string') {
+        const date = new Date(insertPost.publishedAt);
+        publishedAt = isNaN(date.getTime()) ? null : date;
+      } else if (insertPost.publishedAt instanceof Date) {
+        publishedAt = insertPost.publishedAt;
+      }
+    }
     const [post] = await db.insert(posts).values({
       ...insertPost,
-      tags: insertPost.tags ? [...insertPost.tags] : []
+      tags: insertPost.tags ? [...insertPost.tags] : [],
+      publishedAt
     }).returning();
     return post;
   }
@@ -212,6 +222,16 @@ export class DatabaseStorage implements IStorage {
     const updateData: any = { ...postData, updatedAt: new Date() };
     if (postData.tags) {
       updateData.tags = [...postData.tags];
+    }
+    if ('publishedAt' in updateData) {
+      if (updateData.publishedAt === null || updateData.publishedAt === undefined) {
+        updateData.publishedAt = null;
+      } else if (typeof updateData.publishedAt === 'string') {
+        const date = new Date(updateData.publishedAt);
+        updateData.publishedAt = isNaN(date.getTime()) ? null : date;
+      } else if (!(updateData.publishedAt instanceof Date)) {
+        updateData.publishedAt = null;
+      }
     }
     const [post] = await db.update(posts).set(updateData).where(eq(posts.id, id)).returning();
     return post || undefined;
