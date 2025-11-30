@@ -18,6 +18,7 @@ import { SettingsPerformance } from "./SettingsPerformance";
 import { SettingsIntegrations } from "./SettingsIntegrations";
 import { useSiteSettings } from "@/context/SiteContext";
 import { useToast } from "@/hooks/use-toast";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 export default function AdminSettingsEnhanced() {
   const [logoFile, setLogoFile] = useState<string | null>(null);
@@ -183,7 +184,7 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>About Me Section</CardTitle>
-                <CardDescription>Information about yourself.</CardDescription>
+                <CardDescription>Information about yourself with professional formatting.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -197,12 +198,11 @@ export default function AdminSettingsEnhanced() {
                 </div>
                 <div className="space-y-2">
                   <Label>Description</Label>
-                  <Textarea 
+                  <p className="text-sm text-muted-foreground">Use the rich text editor to format your content with headings, lists, links, and more.</p>
+                  <RichTextEditor
                     value={settings.aboutDescription}
-                    onChange={(e) => updateSettings({ aboutDescription: e.target.value })}
-                    placeholder="Write about yourself..."
-                    rows={4}
-                    data-testid="input-about-description"
+                    onChange={(value) => updateSettings({ aboutDescription: value })}
+                    placeholder="Write about yourself with rich formatting..."
                   />
                 </div>
               </CardContent>
