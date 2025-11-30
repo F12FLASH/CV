@@ -18,7 +18,8 @@ import {
   Filter, 
   Edit,
   Trash,
-  FileText
+  FileText,
+  Star
 } from "lucide-react";
 
 export default function AdminPosts() {
@@ -50,6 +51,10 @@ export default function AdminPosts() {
   const toggleStatus = (id: number, currentStatus: string) => {
     const newStatus = currentStatus === "Published" ? "Draft" : "Published";
     updatePost(id, { status: newStatus });
+  };
+
+  const toggleFeatured = (id: number, post: any) => {
+    updatePost(id, { featured: !post.featured });
   };
 
   const startEdit = (id: number, title: string) => {
@@ -98,6 +103,7 @@ export default function AdminPosts() {
                 <TableHead>Author</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Featured</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -134,6 +140,17 @@ export default function AdminPosts() {
                     >
                       {post.status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => toggleFeatured(post.id, post)}
+                      className={post.featured ? "text-yellow-500" : "text-muted-foreground"}
+                      title={post.featured ? "Remove from featured" : "Add to featured"}
+                    >
+                      <Star className="w-4 h-4" fill={post.featured ? "currentColor" : "none"} />
+                    </Button>
                   </TableCell>
                   <TableCell>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : (post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'N/A')}</TableCell>
                   <TableCell className="text-right">

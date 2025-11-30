@@ -62,6 +62,7 @@ export const posts = pgTable("posts", {
   author: text("author").notNull(),
   status: text("status").notNull().default("Draft"),
   views: integer("views").notNull().default(0),
+  featured: boolean("featured").notNull().default(false),
   featuredImage: text("featured_image"),
   tags: jsonb("tags").$type<string[]>().default([]),
   createdAt: timestamp("created_at").defaultNow(),

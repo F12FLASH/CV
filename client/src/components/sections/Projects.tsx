@@ -40,7 +40,9 @@ export function Projects() {
     loadCategories();
   }, []);
 
-  const featuredProjects = allProjects.filter(p => p.status === "Published" && p.featured === true);
+  const featuredProjects = allProjects
+    .filter(p => p.status === "Published" && p.featured === true)
+    .slice(0, 6);
 
   const filteredProjects = featuredProjects.filter(
     (p) => {

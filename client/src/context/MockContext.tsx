@@ -41,6 +41,7 @@ export interface Post {
   author: string;
   status: "Published" | "Draft" | "Archived";
   views: number;
+  featured: boolean;
   featuredImage: string | null;
   tags: string[];
   createdAt: Date | null;
