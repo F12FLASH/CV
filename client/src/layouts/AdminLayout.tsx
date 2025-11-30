@@ -15,7 +15,11 @@ import {
   Bell,
   Search,
   Code,
-  Shield
+  Shield,
+  MessageSquare,
+  HelpCircle,
+  ShoppingBag,
+  Wrench
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -52,9 +56,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
     { icon: FileText, label: "Posts", href: "/admin/posts" },
     { icon: Briefcase, label: "Projects", href: "/admin/projects" },
+    { icon: ShoppingBag, label: "Services", href: "/admin/services" },
+    { icon: MessageSquare, label: "Comments", href: "/admin/comments" },
+    { icon: HelpCircle, label: "FAQs", href: "/admin/faqs" },
     { icon: Mail, label: "Inbox", href: "/admin/inbox" },
     { icon: ImageIcon, label: "Media", href: "/admin/media" },
     { icon: Users, label: "Users", href: "/admin/users" },
+    { icon: Wrench, label: "Tools", href: "/admin/tools" },
     { icon: BarChart, label: "Analytics", href: "/admin/analytics" },
     { icon: Code, label: "Code Editor", href: "/admin/editor" },
     { icon: Shield, label: "Security", href: "/admin/security" },

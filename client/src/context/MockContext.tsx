@@ -46,6 +46,8 @@ interface MockContextType {
   users: User[];
   addUser: (user: Omit<User, "id" | "lastActive">) => void;
   deleteUser: (id: number) => void;
+  activityLogs: ActivityLog[];
+  notifications: Notification[];
 }
 
 export interface Post {
@@ -68,9 +70,37 @@ export interface User {
   avatar: string;
 }
 
+export interface ActivityLog {
+  id: number;
+  action: string;
+  user: string;
+  time: string;
+  type: "info" | "warning" | "success" | "error";
+}
+
+export interface Notification {
+  id: number;
+  message: string;
+  type: "system" | "security" | "update";
+  date: string;
+}
+
 const MockContext = createContext<MockContextType | undefined>(undefined);
 
 // Initial Data
+const initialActivityLogs: ActivityLog[] = [
+  { id: 1, action: "Admin published post 'React 19 Guide'", user: "Loi Developer", time: "2 mins ago", type: "success" },
+  { id: 2, action: "Deleted spam comment", user: "Sarah Editor", time: "15 mins ago", type: "warning" },
+  { id: 3, action: "Updated SEO settings", user: "Loi Developer", time: "1 hour ago", type: "info" },
+  { id: 4, action: "Failed login attempt from IP 192.168.x.x", user: "System", time: "2 hours ago", type: "error" },
+];
+
+const initialNotifications: Notification[] = [
+  { id: 1, message: "Plugin 'SEO Pro' needs update", type: "update", date: "Today" },
+  { id: 2, message: "Weekly backup completed", type: "system", date: "Yesterday" },
+  { id: 3, message: "New security patch available", type: "security", date: "2 days ago" },
+];
+
 const initialPosts: Post[] = [
   {
     id: 1,
@@ -192,6 +222,8 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [users, setUsers] = useState<User[]>(initialUsers);
+  const [activityLogs] = useState<ActivityLog[]>(initialActivityLogs);
+  const [notifications] = useState<Notification[]>(initialNotifications);
   const { toast } = useToast();
 
   // Load from localStorage on mount to simulate persistence
@@ -314,7 +346,9 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
       deletePost,
       users,
       addUser,
-      deleteUser
+      deleteUser,
+      activityLogs,
+      notifications
     }}>
       {children}
     </MockContext.Provider>
