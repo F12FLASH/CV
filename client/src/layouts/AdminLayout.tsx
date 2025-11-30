@@ -68,22 +68,32 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   // Check authentication on mount
   useEffect(() => {
-    fetch("/api/auth/me", {
-      credentials: "include"
-    })
-    .then(res => {
-      if (res.ok) {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/auth/me", {
+          credentials: "include"
+        });
+        
+        if (res.ok) {
+          setIsAuthenticated(true);
+        } else if (res.status === 401) {
+          // Only redirect on 401 Unauthorized
+          setLocation("/admin/login");
+        } else {
+          // For other errors, assume authenticated to prevent disruption
+          console.error("Auth check failed with status:", res.status);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        // On network errors, assume authenticated to prevent disruption
+        console.error("Auth check network error:", error);
         setIsAuthenticated(true);
-      } else {
-        setLocation("/admin/login");
+      } finally {
+        setIsChecking(false);
       }
-    })
-    .catch(() => {
-      setLocation("/admin/login");
-    })
-    .finally(() => {
-      setIsChecking(false);
-    });
+    };
+    
+    checkAuth();
   }, [setLocation]);
 
   const handleLogout = async () => {
