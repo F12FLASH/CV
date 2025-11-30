@@ -50,7 +50,12 @@ import AdminPostCategories from "@/pages/admin/PostCategories";
 import AdminProjectCategories from "@/pages/admin/ProjectCategories";
 import { ThemeProvider } from "next-themes";
 import { lazy } from "react";
+import { useThemeSettings } from "@/hooks/useThemeSettings";
 
+function ThemeLoader() {
+  useThemeSettings();
+  return null;
+}
 
 function Router() {
   return (
@@ -119,6 +124,7 @@ function App() {
             <MockProvider>
               <TooltipProvider>
                 <Toaster />
+                <ThemeLoader />
                 <Router />
               </TooltipProvider>
             </MockProvider>
