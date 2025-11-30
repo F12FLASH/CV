@@ -280,8 +280,16 @@ export default function AdminPostsEnhanced() {
     });
   };
 
+  const bgImages = ['/images/blog/bg-1.png', '/images/blog/bg-2.png', '/images/blog/bg-3.png'];
+
   const renderPostCard = (post: any) => (
-    <Card key={post.id} data-testid={`card-post-${post.id}`}>
+    <Card key={post.id} data-testid={`card-post-${post.id}`} className="overflow-hidden">
+      <div 
+        className="h-32 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url('${bgImages[post.id % bgImages.length]}')` }}
+      >
+        <div className="w-full h-full bg-black/40" />
+      </div>
       <CardContent className="p-4">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex-1">
