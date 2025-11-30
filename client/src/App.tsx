@@ -8,6 +8,8 @@ import { SiteProvider } from "@/context/SiteContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import Home from "@/pages/Home";
 import BlogPost from "@/pages/BlogPost";
+import Blog from "@/pages/Blog";
+import Projects from "@/pages/Projects";
 import NotFound from "@/pages/not-found";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminProjects from "@/pages/admin/Projects";
@@ -54,7 +56,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/blog" component={Blog} />
       <Route path="/blog/:slug" component={BlogPost} />
+      <Route path="/projects" component={Projects} />
 
       {/* Admin Routes */}
       <Route path="/admin/login" component={AdminLogin} />
