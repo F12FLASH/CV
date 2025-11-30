@@ -50,23 +50,6 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  const sessionSecret = process.env.SESSION_SECRET;
-  if (!sessionSecret && process.env.NODE_ENV === 'production') {
-    throw new Error('SESSION_SECRET environment variable is required in production');
-  }
-
-  app.use(session({
-    secret: sessionSecret || 'dev-secret-key-for-development-only',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
-    }
-  }));
-
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = req.body;
