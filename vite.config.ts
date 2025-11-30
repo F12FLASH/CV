@@ -43,11 +43,7 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     allowedHosts: true,
-    hmr: {
-      protocol: "wss",
-      host: "localhost",
-      port: 443,
-    },
+    hmr: false,
     fs: {
       strict: true,
       deny: ["**/.*"],
