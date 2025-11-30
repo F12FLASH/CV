@@ -21,6 +21,11 @@ import AdminServices from "@/pages/admin/Services";
 import AdminComments from "@/pages/admin/Comments";
 import AdminFAQs from "@/pages/admin/FAQs";
 import AdminTools from "@/pages/admin/Tools";
+import AdminSkills from "@/pages/admin/Skills";
+import AdminNewsletter from "@/pages/admin/Newsletter";
+import AdminTheme from "@/pages/admin/Theme";
+import AdminSocial from "@/pages/admin/Social";
+import AdminSystem from "@/pages/admin/System";
 
 function Router() {
   return (
@@ -35,6 +40,11 @@ function Router() {
       <Route path="/admin/services" component={AdminServices} />
       <Route path="/admin/comments" component={AdminComments} />
       <Route path="/admin/faqs" component={AdminFAQs} />
+      <Route path="/admin/skills" component={AdminSkills} />
+      <Route path="/admin/newsletter" component={AdminNewsletter} />
+      <Route path="/admin/theme" component={AdminTheme} />
+      <Route path="/admin/social" component={AdminSocial} />
+      <Route path="/admin/system" component={AdminSystem} />
       <Route path="/admin/inbox" component={AdminInbox} />
       <Route path="/admin/media" component={AdminMedia} />
       <Route path="/admin/users" component={AdminUsers} />
