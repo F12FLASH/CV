@@ -46,16 +46,6 @@ export default function AdminComments() {
     queryKey: ['/api/projects']
   });
 
-  const approveCommentMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiRequest(`/api/comments/${id}/approve`, { method: "PUT" });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
-      toast({ title: "Comment approved" });
-    }
-  });
-
   const deleteCommentMutation = useMutation({
     mutationFn: async (id: number) => {
       return apiRequest(`/api/comments/${id}`, { method: "DELETE" });
@@ -63,16 +53,6 @@ export default function AdminComments() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
       toast({ title: "Comment deleted" });
-    }
-  });
-
-  const approveReviewMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiRequest(`/api/reviews/${id}/approve`, { method: "PUT" });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
-      toast({ title: "Review approved" });
     }
   });
 
@@ -201,30 +181,16 @@ export default function AdminComments() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          {comment.status === 'Pending' && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              title="Approve"
-                              onClick={() => approveCommentMutation.mutate(comment.id)}
-                              disabled={approveCommentMutation.isPending}
-                              data-testid={`button-approve-comment-${comment.id}`}
-                            >
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                            </Button>
-                          )}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-destructive"
-                            onClick={() => deleteCommentMutation.mutate(comment.id)}
-                            disabled={deleteCommentMutation.isPending}
-                            data-testid={`button-delete-comment-${comment.id}`}
-                          >
-                            <Trash className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive"
+                          onClick={() => deleteCommentMutation.mutate(comment.id)}
+                          disabled={deleteCommentMutation.isPending}
+                          data-testid={`button-delete-comment-${comment.id}`}
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -288,32 +254,19 @@ export default function AdminComments() {
                     <CardContent>
                       <p className="text-sm italic">"{review.content}"</p>
                       <div className="flex justify-between items-center gap-2 mt-4">
-                        <Badge variant={review.status === 'Approved' ? 'default' : 'secondary'}>
+                        <Badge variant="default">
                           {review.status}
                         </Badge>
-                        <div className="flex gap-2">
-                          {review.status === 'Pending' && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => approveReviewMutation.mutate(review.id)}
-                              disabled={approveReviewMutation.isPending}
-                              data-testid={`button-approve-review-${review.id}`}
-                            >
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                            </Button>
-                          )}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-destructive"
-                            onClick={() => deleteReviewMutation.mutate(review.id)}
-                            disabled={deleteReviewMutation.isPending}
-                            data-testid={`button-delete-review-${review.id}`}
-                          >
-                            <Trash className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive"
+                          onClick={() => deleteReviewMutation.mutate(review.id)}
+                          disabled={deleteReviewMutation.isPending}
+                          data-testid={`button-delete-review-${review.id}`}
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>

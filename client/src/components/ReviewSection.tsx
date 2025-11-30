@@ -73,7 +73,7 @@ export function ReviewSection({ projectId, title = "Reviews", compact = false }:
       const payload = {
         ...data,
         projectId,
-        status: 'Pending',
+        status: 'Approved',
       };
       console.log('Submitting review:', payload);
       const response = await fetch('/api/reviews', {

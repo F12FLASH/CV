@@ -72,7 +72,7 @@ export function CommentSection({ postId, projectId, title = "Comments" }: Commen
         ...data,
         postId: postId || null,
         projectId: projectId || null,
-        status: 'Pending',
+        status: 'Approved',
       };
       console.log('Submitting comment:', payload);
       const response = await fetch('/api/comments', {

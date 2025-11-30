@@ -102,6 +102,17 @@ Preferred communication style: Simple, everyday language.
   - Toast notifications with sound for admin panel when new comments/reviews arrive
   - Supports both direct and wrapped notification formats for flexibility
 
+- **Auto-Approval System & Featured Content (Nov 30, 2025)**
+  - ✅ Comments and reviews now AUTO-APPROVED on submission (status: 'Approved')
+  - ✅ Comments/reviews appear IMMEDIATELY on pages without admin action
+  - ✅ Admin can only delete, add, edit - no approval workflow
+  - ✅ Added `featured` boolean column to posts table (matching projects)
+  - ✅ Admin can toggle "Featured on homepage" for both posts and projects using star icon
+  - ✅ Homepage sections show max 6 featured items (Featured Projects, Latest Articles)
+  - ✅ Notification bell now shows comments/reviews in real-time
+  - ✅ Total unread count includes messages + comments + reviews
+  - ✅ Database migration applied successfully with featured column
+
 ### Backend Architecture
 
 **Technology Stack:**

@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import type { Comment, Review } from "@shared/schema";
 import { 
   LayoutDashboard, 
   FileText, 
@@ -69,7 +70,20 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   useWebSocket();
 
-  const unreadCount = messages.filter(m => !m.read).length;
+  const { data: comments = [] } = useQuery<Comment[]>({
+    queryKey: ['/api/comments'],
+    enabled: isAuthenticated,
+  });
+
+  const { data: reviews = [] } = useQuery<Review[]>({
+    queryKey: ['/api/reviews'],
+    enabled: isAuthenticated,
+  });
+
+  const unreadMessages = messages.filter(m => !m.read).length;
+  const unreadComments = comments.filter(c => !c.read).length;
+  const unreadReviews = reviews.filter(r => !r.read).length;
+  const unreadCount = unreadMessages + unreadComments + unreadReviews;
 
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
@@ -314,42 +328,98 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <ScrollArea className="h-[300px]">
-                  {messages.length === 0 ? (
+                  {messages.length === 0 && comments.length === 0 && reviews.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground">
                       <Bell className="mx-auto h-8 w-8 mb-2 opacity-50" />
                       <p className="text-sm">No notifications yet</p>
                     </div>
                   ) : (
-                    messages.slice(0, 10).map((msg) => (
-                      <DropdownMenuItem 
-                        key={msg.id} 
-                        className={`flex flex-col items-start p-3 cursor-pointer ${!msg.read ? 'bg-primary/5' : ''}`}
-                        onClick={() => {
-                          markAsRead(msg.id);
-                          setLocation("/admin/inbox");
-                        }}
-                      >
-                        <div className="flex items-start gap-3 w-full">
-                          <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!msg.read ? 'bg-primary' : 'bg-transparent'}`} />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="font-medium text-sm truncate">{msg.sender || 'Unknown'}</p>
-                              {msg.createdAt && (
-                                <span className="text-xs text-muted-foreground flex-shrink-0">
-                                  {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
-                                </span>
-                              )}
+                    <>
+                      {messages.slice(0, 5).map((msg) => (
+                        <DropdownMenuItem 
+                          key={`msg-${msg.id}`} 
+                          className={`flex flex-col items-start p-3 cursor-pointer ${!msg.read ? 'bg-primary/5' : ''}`}
+                          onClick={() => {
+                            markAsRead(msg.id);
+                            setLocation("/admin/inbox");
+                          }}
+                        >
+                          <div className="flex items-start gap-3 w-full">
+                            <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!msg.read ? 'bg-primary' : 'bg-transparent'}`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="font-medium text-sm truncate">{msg.sender || 'Unknown'}</p>
+                                {msg.createdAt && (
+                                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                                    {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                Message
+                              </p>
+                              <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
+                                {msg.message ? `${msg.message.substring(0, 50)}...` : 'No content'}
+                              </p>
                             </div>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">
-                              {msg.subject || 'No subject'}
-                            </p>
-                            <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
-                              {msg.message ? `${msg.message.substring(0, 50)}...` : 'No message content'}
-                            </p>
                           </div>
-                        </div>
-                      </DropdownMenuItem>
-                    ))
+                        </DropdownMenuItem>
+                      ))}
+                      {comments.slice(0, 3).map((comment) => (
+                        <DropdownMenuItem 
+                          key={`comment-${comment.id}`} 
+                          className={`flex flex-col items-start p-3 cursor-pointer ${!comment.read ? 'bg-primary/5' : ''}`}
+                          onClick={() => setLocation("/admin/comments")}
+                        >
+                          <div className="flex items-start gap-3 w-full">
+                            <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!comment.read ? 'bg-primary' : 'bg-transparent'}`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="font-medium text-sm truncate">{comment.authorName}</p>
+                                {comment.createdAt && (
+                                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                New comment
+                              </p>
+                              <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
+                                {comment.content.substring(0, 50)}...
+                              </p>
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                      {reviews.slice(0, 2).map((review) => (
+                        <DropdownMenuItem 
+                          key={`review-${review.id}`} 
+                          className={`flex flex-col items-start p-3 cursor-pointer ${!review.read ? 'bg-primary/5' : ''}`}
+                          onClick={() => setLocation("/admin/comments")}
+                        >
+                          <div className="flex items-start gap-3 w-full">
+                            <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!review.read ? 'bg-primary' : 'bg-transparent'}`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="font-medium text-sm truncate">{review.authorName}</p>
+                                {review.createdAt && (
+                                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                                    {formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                {review.rating}-star review
+                              </p>
+                              <p className="text-xs text-muted-foreground/70 truncate mt-0.5">
+                                {review.content.substring(0, 50)}...
+                              </p>
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </>
                   )}
                 </ScrollArea>
                 <DropdownMenuSeparator />
