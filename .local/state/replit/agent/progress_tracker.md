@@ -9,3 +9,6 @@
 [x] 9. Apply mark-as-read functionality to Comments and Reviews pages
 [x] 10. Add markCommentAsRead and markReviewAsRead functions to API
 [x] 11. Update Notifications page with mark-as-read buttons for all notification types
+[x] 12. Reinstall tsx package that was missing after migration
+[x] 13. Run database migrations using npm run db:push to create all required tables
+[x] 14. Verify application is running successfully with all API endpoints responding correctly
