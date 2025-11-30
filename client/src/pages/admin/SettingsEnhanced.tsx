@@ -91,16 +91,6 @@ export default function AdminSettingsEnhanced() {
                     data-testid="input-tagline"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Contact Email</Label>
-                  <Input 
-                    type="email" 
-                    value={settings.contactEmail}
-                    onChange={(e) => updateSettings({ contactEmail: e.target.value })}
-                    placeholder="e.g., hello@example.com"
-                    data-testid="input-contact-email"
-                  />
-                </div>
               </CardContent>
             </Card>
 
@@ -184,7 +174,7 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>About Me Section</CardTitle>
-                <CardDescription>Information about yourself with professional formatting.</CardDescription>
+                <CardDescription>Complete information about yourself with professional formatting.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -196,14 +186,101 @@ export default function AdminSettingsEnhanced() {
                     data-testid="input-about-title"
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label>Profile Image URL</Label>
+                  <Input 
+                    value={settings.aboutImage}
+                    onChange={(e) => updateSettings({ aboutImage: e.target.value })}
+                    placeholder="e.g., /uploads/profile.jpg"
+                    data-testid="input-about-image"
+                  />
+                  <p className="text-xs text-muted-foreground">Upload via FileManager and paste the URL here</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Your Name</Label>
+                    <Input 
+                      value={settings.aboutName}
+                      onChange={(e) => updateSettings({ aboutName: e.target.value })}
+                      placeholder="e.g., Nguyen Thanh Loi"
+                      data-testid="input-about-name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input 
+                      type="email" 
+                      value={settings.aboutEmail}
+                      onChange={(e) => updateSettings({ aboutEmail: e.target.value })}
+                      placeholder="e.g., hello@example.com"
+                      data-testid="input-about-email"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>From (Location)</Label>
+                    <Input 
+                      value={settings.aboutLocation}
+                      onChange={(e) => updateSettings({ aboutLocation: e.target.value })}
+                      placeholder="e.g., Ho Chi Minh City"
+                      data-testid="input-about-location"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Freelance Status</Label>
+                    <Input 
+                      value={settings.aboutFreelance}
+                      onChange={(e) => updateSettings({ aboutFreelance: e.target.value })}
+                      placeholder="e.g., Available"
+                      data-testid="input-about-freelance"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Subtitle</Label>
+                  <Input 
+                    value={settings.aboutSubtitle}
+                    onChange={(e) => updateSettings({ aboutSubtitle: e.target.value })}
+                    placeholder="e.g., Full-stack Developer based in Vietnam"
+                    data-testid="input-about-subtitle"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>First Paragraph (Description)</Label>
                   <p className="text-sm text-muted-foreground">Use the rich text editor to format your content with headings, lists, links, and more.</p>
                   <RichTextEditor
                     value={settings.aboutDescription}
                     onChange={(value) => updateSettings({ aboutDescription: value })}
-                    placeholder="Write about yourself with rich formatting..."
+                    placeholder="Write your first paragraph about yourself..."
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Second Paragraph (Philosophy/Additional Info)</Label>
+                  <p className="text-sm text-muted-foreground">Add your philosophy or additional information in the second paragraph.</p>
+                  <RichTextEditor
+                    value={settings.aboutDescription2}
+                    onChange={(value) => updateSettings({ aboutDescription2: value })}
+                    placeholder="Write your philosophy or additional information..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Contact Email (for contact section)</Label>
+                  <Input 
+                    type="email" 
+                    value={settings.contactEmail}
+                    onChange={(e) => updateSettings({ contactEmail: e.target.value })}
+                    placeholder="e.g., hello@example.com"
+                    data-testid="input-contact-email"
+                  />
+                  <p className="text-xs text-muted-foreground">This email is used in both About and Contact sections</p>
                 </div>
               </CardContent>
             </Card>

@@ -4,15 +4,21 @@ import { api } from "@/lib/api";
 export interface SiteSettings {
   siteTitle: string;
   tagline: string;
-  contactEmail: string;
   maintenanceMode: boolean;
   heroTitle: string;
   heroSubtitle: string;
   heroCTA: string;
   cvFileUrl: string;
   aboutTitle: string;
+  aboutSubtitle: string;
   aboutDescription: string;
+  aboutDescription2: string;
   aboutImage: string;
+  aboutName: string;
+  aboutEmail: string;
+  aboutLocation: string;
+  aboutFreelance: string;
+  contactEmail: string;
   contactTitle: string;
   contactSubtitle: string;
   contactPhone: string;
@@ -38,15 +44,21 @@ interface SiteContextType {
 const defaultSettings: SiteSettings = {
   siteTitle: "Loi Developer - Full-stack Creative",
   tagline: "Building digital experiences with code.",
-  contactEmail: "loideveloper@example.com",
   maintenanceMode: false,
   heroTitle: "Hello, I'm Loi Developer",
   heroSubtitle: "Full-stack Developer | UI/UX Enthusiast | Creative Thinker",
   heroCTA: "View My Work",
   cvFileUrl: "",
   aboutTitle: "About Me",
-  aboutDescription: "I'm a passionate full-stack developer with expertise in building modern web applications.",
+  aboutSubtitle: "Full-stack Developer based in Vietnam",
+  aboutDescription: "I'm a passionate full-stack developer with expertise in building modern web applications. With years of experience in React, Node.js, and cloud technologies, I create digital experiences that combine beautiful design with robust functionality.",
+  aboutDescription2: "My philosophy is simple: Code with passion, build with purpose. Whether it's a complex backend system or a pixel-perfect frontend interface, I strive for excellence in every line of code.",
   aboutImage: "",
+  aboutName: "Nguyen Thanh Loi",
+  aboutEmail: "loideveloper@example.com",
+  aboutLocation: "Ho Chi Minh City",
+  aboutFreelance: "Available",
+  contactEmail: "loideveloper@example.com",
   contactTitle: "Let's Talk",
   contactSubtitle: "Have a project in mind? Contact me!",
   contactPhone: "+84 123 456 789",
@@ -75,15 +87,21 @@ export function SiteProvider({ children }: { children: ReactNode }) {
         setSettings({
           siteTitle: data.siteTitle || defaultSettings.siteTitle,
           tagline: data.tagline || defaultSettings.tagline,
-          contactEmail: data.contactEmail || defaultSettings.contactEmail,
           maintenanceMode: data.maintenanceMode ?? defaultSettings.maintenanceMode,
           heroTitle: data.heroTitle || defaultSettings.heroTitle,
           heroSubtitle: data.heroSubtitle || defaultSettings.heroSubtitle,
           heroCTA: data.heroCTA || defaultSettings.heroCTA,
           cvFileUrl: data.cvFileUrl || defaultSettings.cvFileUrl,
           aboutTitle: data.aboutTitle || defaultSettings.aboutTitle,
+          aboutSubtitle: data.aboutSubtitle || defaultSettings.aboutSubtitle,
           aboutDescription: data.aboutDescription || defaultSettings.aboutDescription,
+          aboutDescription2: data.aboutDescription2 || defaultSettings.aboutDescription2,
           aboutImage: data.aboutImage || defaultSettings.aboutImage,
+          aboutName: data.aboutName || defaultSettings.aboutName,
+          aboutEmail: data.aboutEmail || defaultSettings.aboutEmail,
+          aboutLocation: data.aboutLocation || defaultSettings.aboutLocation,
+          aboutFreelance: data.aboutFreelance || defaultSettings.aboutFreelance,
+          contactEmail: data.contactEmail || defaultSettings.contactEmail,
           contactTitle: data.contactTitle || defaultSettings.contactTitle,
           contactSubtitle: data.contactSubtitle || defaultSettings.contactSubtitle,
           contactPhone: data.contactPhone || defaultSettings.contactPhone,
