@@ -43,7 +43,7 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     allowedHosts: true,
-    middlewareMode: true,
+    hmr: false,
     fs: {
       strict: true,
       deny: ["**/.*"],

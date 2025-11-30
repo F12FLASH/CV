@@ -199,16 +199,33 @@ export default function AdminNotifications() {
     
     if (confirm(`Clear all ${total} notifications?\n\nThis will mark all notifications as read. Your messages, comments, and reviews will NOT be deleted.`)) {
       try {
-        for (const msg of messages.filter(m => !m.read)) {
-          await markMessageReadMutation.mutateAsync(msg.id);
+        const allMessages = messages;
+        const allComments = comments;
+        const allReviews = reviews;
+        
+        // Mark ALL (read and unread) as read to clear them from notification list
+        for (const msg of allMessages) {
+          if (!msg.read) {
+            await markMessageReadMutation.mutateAsync(msg.id);
+          }
         }
-        for (const comment of comments.filter((c: any) => !c.read)) {
-          await markCommentReadMutation.mutateAsync(comment.id);
+        for (const comment of allComments) {
+          if (comment.read === false || !comment.read) {
+            await markCommentReadMutation.mutateAsync(comment.id);
+          }
         }
-        for (const review of reviews.filter((r: any) => !r.read)) {
-          await markReviewReadMutation.mutateAsync(review.id);
+        for (const review of allReviews) {
+          if (review.read === false || !review.read) {
+            await markReviewReadMutation.mutateAsync(review.id);
+          }
         }
-        toast({ title: "Success", description: `Cleared all ${total} notifications (marked as read)` });
+        
+        // Refetch to clear the UI
+        refetchMessages();
+        refetchComments();
+        refetchReviews();
+        
+        toast({ title: "Success", description: `Cleared all ${total} notifications` });
       } catch (error) {
         toast({ title: "Error", description: "Failed to clear notifications", variant: "destructive" });
       }
@@ -417,13 +434,13 @@ export default function AdminNotifications() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            title="Delete"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                            title="Remove notification"
                             onClick={() => {
-                              if (confirm("Delete this notification?")) {
-                                deleteMessageMutation.mutate(notif.originalId);
-                              }
+                              markMessageReadMutation.mutate(notif.originalId);
+                              toast({ description: "Notification removed" });
                             }}
+                            data-testid={`button-dismiss-notification-${notif.id}`}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -432,13 +449,13 @@ export default function AdminNotifications() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            title="Delete"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                            title="Remove notification"
                             onClick={() => {
-                              if (confirm("Delete this comment?")) {
-                                deleteCommentMutation.mutate(notif.originalId);
-                              }
+                              markCommentReadMutation.mutate(notif.originalId);
+                              toast({ description: "Notification removed" });
                             }}
+                            data-testid={`button-dismiss-notification-${notif.id}`}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -447,13 +464,13 @@ export default function AdminNotifications() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            title="Delete"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                            title="Remove notification"
                             onClick={() => {
-                              if (confirm("Delete this review?")) {
-                                deleteReviewMutation.mutate(notif.originalId);
-                              }
+                              markReviewReadMutation.mutate(notif.originalId);
+                              toast({ description: "Notification removed" });
                             }}
+                            data-testid={`button-dismiss-notification-${notif.id}`}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
