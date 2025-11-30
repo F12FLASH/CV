@@ -17,6 +17,7 @@ export function About() {
   const aboutEmail = settings?.contactEmail || "loideveloper@example.com";
   const aboutLocation = settings?.aboutLocation || "Ho Chi Minh City";
   const aboutFreelance = settings?.aboutFreelance || "Available";
+  const aboutImageUrl = settings?.aboutImage || avatarImage;
 
   return (
     <section id="about" className="py-24 bg-background relative overflow-hidden">
@@ -46,7 +47,7 @@ export function About() {
               <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary rounded-2xl rotate-6 opacity-20" />
               <div className="absolute inset-0 bg-card rounded-2xl border border-white/10 shadow-2xl overflow-hidden rotate-0 hover:-rotate-2 transition-transform duration-300">
                 <img 
-                  src={avatarImage} 
+                  src={aboutImageUrl} 
                   alt="Portrait" 
                   className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" 
                 />

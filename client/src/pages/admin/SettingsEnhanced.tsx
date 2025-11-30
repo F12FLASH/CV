@@ -23,7 +23,9 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 export default function AdminSettingsEnhanced() {
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [profileImageUploading, setProfileImageUploading] = useState(false);
+  const [cvFileUploading, setCVFileUploading] = useState(false);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
+  const cvFileInputRef = useRef<HTMLInputElement>(null);
   const { settings, updateSettings, saveSettings, isSaving } = useSiteSettings();
   const { toast } = useToast();
 
@@ -49,6 +51,31 @@ export default function AdminSettingsEnhanced() {
       toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
     } finally {
       setProfileImageUploading(false);
+    }
+  };
+
+  const handleCVFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      toast({ title: "Error", description: "Please select a PDF file", variant: "destructive" });
+      return;
+    }
+
+    setCVFileUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = event.target?.result as string;
+        updateSettings({ cvFileUrl: base64 });
+        toast({ title: "Success", description: "CV file uploaded successfully" });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to upload CV file", variant: "destructive" });
+    } finally {
+      setCVFileUploading(false);
     }
   };
 
@@ -158,13 +185,13 @@ export default function AdminSettingsEnhanced() {
                 <Separator />
                 <div className="space-y-3">
                   <Label className="text-base font-semibold">CV File Management</Label>
-                  <p className="text-sm text-muted-foreground">Upload or manage your CV for the Download button</p>
+                  <p className="text-sm text-muted-foreground">Upload a PDF or paste a link for your CV Download button</p>
                   {settings.cvFileUrl && (
                     <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/50">
                       <div className="flex items-center gap-2 min-w-0">
                         <FileText className="w-4 h-4 flex-shrink-0 text-primary" />
                         <span className="text-sm font-medium truncate" data-testid="text-cv-file-name">
-                          {settings.cvFileUrl.split("/").pop()}
+                          {settings.cvFileUrl.startsWith("data:") ? "CV.pdf" : settings.cvFileUrl.split("/").pop() || "CV file"}
                         </span>
                       </div>
                       <Button
@@ -181,18 +208,37 @@ export default function AdminSettingsEnhanced() {
                     <div className="border-2 border-dashed rounded-lg p-4 text-center hover:bg-muted/50 transition-colors">
                       <FileText className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground mb-3">No CV uploaded</p>
-                      <p className="text-xs text-muted-foreground mb-3">Upload via FileManager at Admin → FileManager → Upload to documents folder</p>
+                      <p className="text-xs text-muted-foreground mb-2">Upload from device or paste a PDF link</p>
                     </div>
                   )}
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => cvFileInputRef.current?.click()}
+                      disabled={cvFileUploading}
+                      data-testid="button-upload-cv"
+                    >
+                      <Upload className="w-4 h-4 mr-2" /> {cvFileUploading ? "Uploading..." : "Upload PDF"}
+                    </Button>
+                    <input 
+                      ref={cvFileInputRef}
+                      type="file" 
+                      accept=".pdf,application/pdf"
+                      onChange={handleCVFileUpload}
+                      className="hidden"
+                      data-testid="input-cv-file-upload"
+                    />
+                  </div>
                   <div className="space-y-2">
-                    <Label className="text-sm">CV File URL (from FileManager)</Label>
+                    <Label className="text-sm">Or Paste PDF URL</Label>
                     <Input 
                       value={settings.cvFileUrl}
                       onChange={(e) => updateSettings({ cvFileUrl: e.target.value })}
-                      placeholder="e.g., /uploads/documents/CV.pdf"
+                      placeholder="e.g., https://example.com/CV.pdf or /uploads/CV.pdf"
                       data-testid="input-cv-file-url"
                     />
-                    <p className="text-xs text-muted-foreground">Paste the URL of your CV file from FileManager</p>
+                    <p className="text-xs text-muted-foreground">Paste a direct link to your CV PDF file</p>
                   </div>
                 </div>
               </CardContent>
