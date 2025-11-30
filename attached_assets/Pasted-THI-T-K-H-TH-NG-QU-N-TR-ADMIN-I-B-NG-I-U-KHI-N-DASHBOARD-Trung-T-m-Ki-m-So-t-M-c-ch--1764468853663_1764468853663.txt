@@ -1,0 +1,253 @@
+THIẾT KẾ HỆ THỐNG QUẢN TRỊ ADMIN
+
+I. BẢNG ĐIỀU KHIỂN (DASHBOARD) - "Trung Tâm Kiểm Soát"
+
+Mục đích: Cung cấp cái nhìn toàn cảnh, nhanh chóng và có thể tùy biến.
+
+Thiết kế Modular: Người dùng có thể kéo thả, thêm/bớt các "widget".
+
+Các Widget Chi Tiết:
+
+Tổng quan hoạt động:
+
+Số lượt xem trang trong hôm nay/tháng này.
+
+Số người dùng đang trực tuyến.
+
+Tỷ lệ thoát (Bounce Rate) trung bình.
+
+Thống kê nội dung nhanh:
+
+Hiển thị số lượng: Bài viết, Dự án, Bình luận chờ duyệt, Liên hệ mới.
+
+Kèm phần trăm tăng/giảm so với tháng trước.
+
+Biểu đồ lưu lượng truy cập:
+
+Biểu đồ đường thể hiện lượt xem theo thời gian thực (7 ngày/30 ngày/tùy chọn).
+
+Phân tích nguồn truy cập (Organic, Social, Direct, Referral).
+
+Hoạt động gần đây (Activity Log):
+
+Ghi lại chi tiết mọi hành động: "Admin đã xuất bản bài viết 'X'", "Đã xóa bình luận spam từ IP Y", "Cập nhật cài đặt SEO".
+
+Có bộ lọc theo loại hành động, người thực hiện và thời gian.
+
+Thông báo hệ thống:
+
+Cảnh báo bảo mật (ví dụ: Plugin cần cập nhật).
+
+Nhắc nhở sao lưu định kỳ.
+
+Thông báo phiên bản CMS mới.
+
+Hiệu suất website:
+
+Hiển thị điểm PageSpeed Insights (cho cả Desktop và Mobile).
+
+Cảnh báo nếu hình ảnh chưa được tối ưu hóa.
+
+II. QUẢN LÝ NỘI DUNG & MARKETING
+
+1. Quản lý Trang (Pages)
+
+Tính năng chi tiết:
+
+Danh sách trang: Hiển thị tiêu đề, trạng thái, người sửa cuối, ngày sửa.
+
+Trình soạn thảo nâng cao: Chế độ Full WYSIWYG, chèn shortcode, bố cục kéo thả.
+
+Thuộc tính trang:
+
+Đặt template trang (Ví dụ: Full-width, With Sidebar).
+
+Chọn ảnh nổi bật.
+
+Tùy chỉnh CSS/JS riêng cho từng trang.
+
+Điều hướng: Quản lý menu đa cấp kéo thả trực quan.
+
+2. Quản lý Blog
+
+Bài viết (Posts):
+
+Bộ lọc nâng cao: Lọc theo danh mục, thẻ, tác giả, ngày, trạng thái.
+
+Hành động loạt: Xuất bản, Lưu nháp, Chuyển vào Thùng rác hàng loạt.
+
+Lịch biên tập: Lên lịch xuất bản bài viết cho một thời điểm cụ thể.
+
+Phiên bản (Revisions): Xem và khôi phục các bản nháp cũ.
+
+Danh mục & Thẻ: Hỗ trợ cấu trúc phân cấp (Category cha - con), mô tả, SEO riêng.
+
+3. Portfolio & Dự Án Chi Tiết
+
+Dự án (Projects):
+
+Trường dữ liệu phong phú:
+
+Client Info: Tên, logo, link website.
+
+Project Info: Ngày bắt đầu/kết thúc, URL trực tiếp, URL mã nguồn.
+
+Gallery: Nhiều ảnh, cho phép sắp xếp thứ tự.
+
+"Công nghệ sử dụng": Trường chọn từ danh sách có sẵn (Tech Stack).
+
+"Thách thức & Giải pháp": Textarea mô tả chi tiết.
+
+Tùy chọn hiển thị: Cho phép/ẩn dự án trên trang chủ.
+
+4. Quản lý Dịch Vụ & Bán Hàng
+
+Dịch vụ (Services):
+
+Mô tả dịch vụ, biểu tượng (icon), thứ tự sắp xếp.
+
+Gallery hình ảnh minh họa cho dịch vụ.
+
+Gói làm việc (Session/Packages):
+
+Thiết lập giá: Giá gốc, giá khuyến mãi, thời hạn khuyến mãi.
+
+Đặc điểm gói: Liệt kê dạng bullet point (Ví dụ: "Hỗ trợ 24/7", "Bảo hành 6 tháng").
+
+Tích hợp thanh toán: Cấu hình để chuyển hướng đến cổng thanh toán (Momo, Zalopay, Bank Transfer).
+
+5. Quản lý Tương tác & Phản hồi
+
+Đánh giá (Testimonials):
+
+Thêm trường "Dự án/Sản phẩm được đánh giá" (liên kết với mục Projects).
+
+Tùy chọn hiển thị ngẫu nhiên trên trang chủ.
+
+Bình luận (Comments):
+
+Hệ thống kiểm duyệt: Tự động đánh dấu spam dựa trên từ khóa.
+
+Trả lời trực tiếp trong admin, định dạng văn bản đầy đủ.
+
+FAQ:
+
+Kéo thả để sắp xếp thứ tự câu hỏi trong một danh mục.
+
+Tìm kiếm nhanh trong danh sách FAQ.
+
+6. Quản lý Liên hệ & Tin nhắn
+
+Hộp thư đến (Inbox):
+
+Phân loại tin nhắn: "Mới", "Đã trả lời", "Quan trọng", "Spam".
+
+Giao diện đọc tin nhắn giống email, có phần trả lời nhanh.
+
+Gán nhãn (tags) cho các yêu cầu (Ví dụ: "Hợp tác", "Báo giá", "Hỏi đáp").
+
+III. QUẢN LÝ PHƯƠNG TIỆN NÂNG CAO
+
+Thư viện: Hỗ trợ upload đa phương tiện (ảnh, video, PDF, ZIP).
+
+Tính năng:
+
+Chỉnh sửa ảnh cơ bản: Xoay, cắt, lật, thay đổi kích thước.
+
+Tối ưu hóa ảnh tự động: Nén ảnh khi upload để tiết kiệm dung lượng.
+
+Phân quyền tập tin: Giới hạn quyền truy cập file cho các user role khác nhau.
+
+IV. TÙY CHỈNH GIAO DIỆN & GÓI GIAO DIỆN
+
+Trình tùy chỉnh trực tiếp (Live Customizer):
+
+Toàn bộ Header/Footer: Bố cục, logo, menu, text, social icons.
+
+Màu sắc toàn cục: Màu chủ đạo, màu văn bản, màu nền, màu liên kết.
+
+Typography: Chọn font chữ, kích thước, độ đậm cho toàn bộ H1-H6, Paragraph.
+
+Blog: Bố cục danh sách bài viết, bài viết đơn.
+
+Portfolio: Số cột, kiểu hover, bố cục chi tiết dự án.
+
+Quản lý Widget:
+
+Kéo thả widget vào các "Sidebar" và "Footer Area" đã được đăng ký.
+
+Menu: Xây dựng menu đa cấp trực quan, gán menu vào các vị trí (Primary, Footer).
+
+V. CÔNG CỤ & TÙY CHỈNH CODE
+
+Trình chỉnh sửa Code tích hợp:
+
+HTML Header/Footer: Chèn code tracking (Google Analytics, Facebook Pixel), schema markup.
+
+CSS Tùy chỉnh: Viết CSS bổ sung, có gợi ý code (syntax highlighting).
+
+JS Tùy chỉnh: Viết mã JavaScript tùy chỉnh.
+
+File Robots.txt & .htaccess: Chỉnh sửa trực tiếp với cảnh báo bảo mật rõ ràng.
+
+VI. CÔNG CỤ TIỆN ÍCH HỆ THỐNG
+
+Chế độ Bảo trì:
+
+Tùy chỉnh trang bảo trì: Title, mô tả, bộ đếm ngược, form thu thập email.
+
+Cho phép một số IP nhất định (ví dụ IP của admin) vẫn xem được site bình thường.
+
+Quản lý Chuyển hướng (Redirects):
+
+Tạo, quản lý các chuyển hướng 301 (vĩnh viễn) và 302 (tạm thời). Rất hữu ích khi thay đổi URL.
+
+Phân tích & SEO:
+
+Cấu hình SEO chung: Meta title/description mặc định, cấu trúc URL.
+
+SEO cho từng trang/bài viết: Điểm số SEO, gợi ý tối ưu, xem trước kết quả tìm kiếm.
+
+Sitemap: Tự động tạo và cập nhật sitemap.xml.
+
+Tích hợp Google Search Console: Nhập dữ liệu từ GSC để xem lỗi thu thập thông tin.
+
+VII. BẢO MẬT & NGƯỜI DÙNG
+
+Quản lý Người dùng & Phân quyền (User Roles):
+
+Vai trò chi tiết: Super Admin, Admin, Editor, Author, Contributor, Subscriber.
+
+Phân quyền hạt nhỏ: Quyết định chính xác vai trò nào được làm gì (ví dụ: Editor được xuất bản bài nhưng không được cài plugin).
+
+Bảo mật:
+
+Đăng nhập 2 lớp (2FA): Bắt buộc/bật tùy chọn.
+
+Giới hạn đăng nhập sai: Khóa IP sau số lần nhập sai mật khẩu.
+
+Theo dõi phiên đăng nhập: Xem các thiết bị đang đăng nhập và có quyền đăng xuất từ xa.
+
+VIII. CẤU HÌNH HỆ THỐNG & CÔNG CỤ
+
+Cài đặt chung:
+
+Địa chỉ & Liên hệ: Email, số điện thoại, địa chỉ công ty.
+
+Mạng xã hội: URL cho Facebook, GitHub, LinkedIn, v.v.
+
+Tích hợp API: Cấu hình API Key cho các dịch vụ bên thứ ba (Email SMTP, Cloudflare, v.v.)
+
+Sao lưu & Phục hồi:
+
+Sao lưu tự động: Lên lịch sao lưu hàng ngày/tuần lên Google Drive/Dropbox.
+
+Sao lưu thủ công: Tải về máy tính.
+
+Phục hồi 1 cú click: Chọn file backup và khôi phục toàn bộ.
+
+Nhật ký Hệ thống (System Logs):
+
+Ghi lại mọi lỗi PHP, lỗi cơ sở dữ liệu, cảnh báo bảo mật.
+
+Có bộ lọc theo mức độ (Error, Warning, Info) và thời gian.
