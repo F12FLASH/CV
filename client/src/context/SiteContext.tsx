@@ -9,6 +9,7 @@ export interface SiteSettings {
   heroTitle: string;
   heroSubtitle: string;
   heroCTA: string;
+  cvFileUrl: string;
   aboutTitle: string;
   aboutDescription: string;
   aboutImage: string;
@@ -42,6 +43,7 @@ const defaultSettings: SiteSettings = {
   heroTitle: "Hello, I'm Loi Developer",
   heroSubtitle: "Full-stack Developer | UI/UX Enthusiast | Creative Thinker",
   heroCTA: "View My Work",
+  cvFileUrl: "",
   aboutTitle: "About Me",
   aboutDescription: "I'm a passionate full-stack developer with expertise in building modern web applications.",
   aboutImage: "",
@@ -78,6 +80,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
           heroTitle: data.heroTitle || defaultSettings.heroTitle,
           heroSubtitle: data.heroSubtitle || defaultSettings.heroSubtitle,
           heroCTA: data.heroCTA || defaultSettings.heroCTA,
+          cvFileUrl: data.cvFileUrl || defaultSettings.cvFileUrl,
           aboutTitle: data.aboutTitle || defaultSettings.aboutTitle,
           aboutDescription: data.aboutDescription || defaultSettings.aboutDescription,
           aboutImage: data.aboutImage || defaultSettings.aboutImage,

@@ -129,13 +129,53 @@ export default function AdminSettingsEnhanced() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>CTA Button Text</Label>
+                  <Label>View Projects CTA Button Text</Label>
                   <Input 
                     value={settings.heroCTA}
                     onChange={(e) => updateSettings({ heroCTA: e.target.value })}
                     placeholder="e.g., View My Work"
                     data-testid="input-hero-cta"
                   />
+                </div>
+                <Separator />
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">CV File Management</Label>
+                  <p className="text-sm text-muted-foreground">Upload or manage your CV for the Download button</p>
+                  {settings.cvFileUrl && (
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/50">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText className="w-4 h-4 flex-shrink-0 text-primary" />
+                        <span className="text-sm font-medium truncate" data-testid="text-cv-file-name">
+                          {settings.cvFileUrl.split("/").pop()}
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => updateSettings({ cvFileUrl: "" })}
+                        data-testid="button-remove-cv"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                  {!settings.cvFileUrl && (
+                    <div className="border-2 border-dashed rounded-lg p-4 text-center hover:bg-muted/50 transition-colors">
+                      <FileText className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground mb-3">No CV uploaded</p>
+                      <p className="text-xs text-muted-foreground mb-3">Upload via FileManager at Admin → FileManager → Upload to documents folder</p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label className="text-sm">CV File URL (from FileManager)</Label>
+                    <Input 
+                      value={settings.cvFileUrl}
+                      onChange={(e) => updateSettings({ cvFileUrl: e.target.value })}
+                      placeholder="e.g., /uploads/documents/CV.pdf"
+                      data-testid="input-cv-file-url"
+                    />
+                    <p className="text-xs text-muted-foreground">Paste the URL of your CV file from FileManager</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

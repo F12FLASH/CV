@@ -205,12 +205,16 @@ export function Hero() {
   const heroStatus = settings?.heroStatus || "SYSTEM ONLINE";
   const heroCTA = settings?.heroCTA || "View My Work";
 
+  const cvFileUrl = settings?.cvFileUrl || "";
+
   const handleDownloadCV = () => {
-    // Try to find CV file from uploads or use a default path
-    const cvPath = "/uploads/documents/cv.pdf";
+    if (!cvFileUrl) {
+      alert("CV file not configured. Please upload a CV in Settings → General → Hero Section → CV File Management");
+      return;
+    }
     const link = document.createElement("a");
-    link.href = cvPath;
-    link.download = "CV.pdf";
+    link.href = cvFileUrl;
+    link.download = cvFileUrl.split("/").pop() || "CV.pdf";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
