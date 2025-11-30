@@ -21,3 +21,4 @@
 [x] 21. Re-installed tsx package after workflow restart
 [x] 22. Verified application is running successfully - server responding on port 5000 with all API endpoints working
 [x] 23. Confirmed HTML is being served correctly with all metadata and assets
+[x] 24. Fixed admin/notifications Clear All and Trash buttons for Messages - added missing archiveMessage function to storage interface and implementation, and added /api/messages/:id/archive route endpoint

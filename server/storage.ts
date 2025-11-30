@@ -76,6 +76,7 @@ export interface IStorage {
   getUnreadMessages(): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: number): Promise<boolean>;
+  archiveMessage(id: number): Promise<boolean>;
   deleteMessage(id: number): Promise<boolean>;
 
   // Activity Logs
@@ -397,6 +398,11 @@ export class DatabaseStorage implements IStorage {
 
   async markMessageAsRead(id: number): Promise<boolean> {
     const result = await db.update(messages).set({ read: true }).where(eq(messages.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async archiveMessage(id: number): Promise<boolean> {
+    const result = await db.update(messages).set({ archived: true }).where(eq(messages.id, id)).returning();
     return result.length > 0;
   }
 

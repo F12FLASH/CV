@@ -667,6 +667,18 @@ export async function registerRoutes(
     }
   });
 
+  app.put("/api/messages/:id/archive", requireAdmin, async (req, res) => {
+    try {
+      const success = await storage.archiveMessage(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      res.json({ message: "Message archived" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.delete("/api/messages/:id", requireAdmin, async (req, res) => {
     try {
       const success = await storage.deleteMessage(parseInt(req.params.id));
