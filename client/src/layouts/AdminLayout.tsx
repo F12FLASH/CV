@@ -3,6 +3,8 @@ import { Link, useLocation } from "wouter";
 import { useMockData } from "@/context/MockContext";
 import { useTheme } from "next-themes";
 import { useWebSocket } from "@/hooks/use-websocket";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { 
   LayoutDashboard, 
   FileText, 
@@ -147,8 +149,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
 
-  // Placeholder for currentUser, assuming it's defined elsewhere or fetched
-  const currentUser = { name: "Loi Developer", email: "admin@loideveloper.com" }; 
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: api.getCurrentUser,
+  }); 
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -290,8 +294,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/avatars/01.png" alt="@loi" />
-                    <AvatarFallback>L</AvatarFallback>
+                    <AvatarImage src={currentUser?.avatar || "/avatars/01.png"} alt={currentUser?.name || "User"} />
+                    <AvatarFallback>{currentUser?.name?.charAt(0).toUpperCase() || "L"}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
