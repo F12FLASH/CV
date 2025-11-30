@@ -5,7 +5,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Key, Lock, Smartphone, Globe, AlertTriangle, Download, Trash2, Filter } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Shield, Key, Lock, Smartphone, Globe, AlertTriangle, Download, Trash2, Filter,
+  ShieldAlert, FileCheck, FileWarning, RefreshCw, Eye, EyeOff, Clock, Users,
+  Fingerprint, Monitor, LogOut, Ban, CheckCircle, XCircle, FileText, Scale,
+  Database, Timer, Zap, Code, Server, AlertCircle
+} from "lucide-react";
 
 export default function AdminSecurityEnhanced() {
   return (
@@ -76,9 +84,14 @@ export default function AdminSecurityEnhanced() {
         </div>
 
         <Tabs defaultValue="authentication" className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl grid-cols-5">
+          <TabsList className="flex flex-wrap gap-1 h-auto p-1">
             <TabsTrigger value="authentication">Authentication</TabsTrigger>
             <TabsTrigger value="firewall">Firewall</TabsTrigger>
+            <TabsTrigger value="threat">Threat Protection</TabsTrigger>
+            <TabsTrigger value="compliance">Compliance</TabsTrigger>
+            <TabsTrigger value="api-security">API Security</TabsTrigger>
+            <TabsTrigger value="csp">CSP</TabsTrigger>
+            <TabsTrigger value="sessions">Sessions</TabsTrigger>
             <TabsTrigger value="backup">Backup</TabsTrigger>
             <TabsTrigger value="scanner">Scanner</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
@@ -225,6 +238,604 @@ export default function AdminSecurityEnhanced() {
                   <label className="text-sm font-medium">API Rate Limit</label>
                   <Input defaultValue="1000" type="number" className="mt-1" />
                   <p className="text-xs text-muted-foreground mt-1">Requests per hour per IP</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ADVANCED THREAT PROTECTION */}
+          <TabsContent value="threat" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5" /> DDoS Protection
+                </CardTitle>
+                <CardDescription>Protect against distributed denial-of-service attacks</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-green-500/5 border-green-500/20">
+                  <div>
+                    <p className="font-medium text-sm">DDoS Protection</p>
+                    <p className="text-xs text-muted-foreground">Automatic traffic analysis and filtering</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Max Requests/Second</Label>
+                    <Input type="number" defaultValue="100" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Burst Limit</Label>
+                    <Input type="number" defaultValue="500" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Challenge Mode</p>
+                    <p className="text-xs text-muted-foreground">Show CAPTCHA for suspicious traffic</p>
+                  </div>
+                  <Switch />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="w-5 h-5" /> SQL Injection Detection
+                </CardTitle>
+                <CardDescription>Block malicious SQL queries</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Enable SQL Injection Protection</p>
+                    <p className="text-xs text-muted-foreground">Automatically detect and block SQL injection attempts</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Log Blocked Attempts</p>
+                    <p className="text-xs text-muted-foreground">Record all blocked injection attempts</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Auto-ban Repeat Offenders</p>
+                    <p className="text-xs text-muted-foreground">Block IPs after 3 injection attempts</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Blocked this month</p>
+                  <p className="text-2xl font-bold text-red-500">127 attempts</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Code className="w-5 h-5" /> XSS Protection
+                </CardTitle>
+                <CardDescription>Prevent cross-site scripting attacks</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Enable XSS Protection</p>
+                    <p className="text-xs text-muted-foreground">Filter malicious scripts from user input</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Strict Mode</p>
+                    <p className="text-xs text-muted-foreground">Block all inline scripts (may affect functionality)</p>
+                  </div>
+                  <Switch />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">HTML Sanitization</p>
+                    <p className="text-xs text-muted-foreground">Clean HTML in user-submitted content</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* COMPLIANCE & AUDIT */}
+          <TabsContent value="compliance" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Scale className="w-5 h-5" /> GDPR Compliance
+                </CardTitle>
+                <CardDescription>European data protection regulation compliance</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { label: "Cookie Consent", status: "Active", color: "green" },
+                    { label: "Privacy Policy", status: "Updated", color: "green" },
+                    { label: "Data Export", status: "Available", color: "green" },
+                    { label: "Right to Erasure", status: "Enabled", color: "green" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                      <span className="text-sm">{item.label}</span>
+                      <Badge variant="outline" className={`text-${item.color}-500 border-${item.color}-500/50`}>
+                        {item.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm">GDPR Tools</h4>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Download className="w-4 h-4 mr-2" /> Export User Data (Subject Access Request)
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Trash2 className="w-4 h-4 mr-2" /> Process Erasure Request
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <FileText className="w-4 h-4 mr-2" /> Generate Privacy Report
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Timer className="w-5 h-5" /> Data Retention Policies
+                </CardTitle>
+                <CardDescription>Configure how long data is kept</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>User Activity Logs</Label>
+                    <select className="w-full p-2 rounded-md border border-input bg-background">
+                      <option>30 days</option>
+                      <option>90 days</option>
+                      <option>1 year</option>
+                      <option>Forever</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Security Logs</Label>
+                    <select className="w-full p-2 rounded-md border border-input bg-background">
+                      <option>90 days</option>
+                      <option>1 year</option>
+                      <option>2 years</option>
+                      <option>Forever</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Analytics Data</Label>
+                    <select className="w-full p-2 rounded-md border border-input bg-background">
+                      <option>1 year</option>
+                      <option>2 years</option>
+                      <option>5 years</option>
+                      <option>Forever</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Deleted User Data</Label>
+                    <select className="w-full p-2 rounded-md border border-input bg-background">
+                      <option>Immediately</option>
+                      <option>30 days</option>
+                      <option>90 days</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Auto-purge Expired Data</p>
+                    <p className="text-xs text-muted-foreground">Automatically delete data past retention period</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileCheck className="w-5 h-5" /> Audit Trail
+                </CardTitle>
+                <CardDescription>Complete record of system changes</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1">
+                    <Download className="w-4 h-4 mr-2" /> Export Audit Log (CSV)
+                  </Button>
+                  <Button variant="outline" className="flex-1">
+                    <Download className="w-4 h-4 mr-2" /> Export Audit Log (JSON)
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    { action: "Settings changed by Admin", time: "2 hours ago", type: "info" },
+                    { action: "New user created: john@example.com", time: "Yesterday", type: "success" },
+                    { action: "Post deleted: 'Old Article'", time: "2 days ago", type: "warning" },
+                    { action: "Backup created", time: "3 days ago", type: "info" },
+                  ].map((log, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 border rounded text-sm">
+                      {log.type === "success" && <CheckCircle className="w-4 h-4 text-green-500" />}
+                      {log.type === "warning" && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
+                      {log.type === "info" && <AlertCircle className="w-4 h-4 text-blue-500" />}
+                      <span className="flex-1">{log.action}</span>
+                      <span className="text-xs text-muted-foreground">{log.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* API SECURITY */}
+          <TabsContent value="api-security" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Key className="w-5 h-5" /> JWT Token Management
+                </CardTitle>
+                <CardDescription>Configure JSON Web Token settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Access Token Expiry</Label>
+                    <select className="w-full p-2 rounded-md border border-input bg-background">
+                      <option>15 minutes</option>
+                      <option>1 hour</option>
+                      <option>24 hours</option>
+                      <option>7 days</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Refresh Token Expiry</Label>
+                    <select className="w-full p-2 rounded-md border border-input bg-background">
+                      <option>7 days</option>
+                      <option>30 days</option>
+                      <option>90 days</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>JWT Secret Key</Label>
+                  <div className="flex gap-2">
+                    <Input type="password" defaultValue="••••••••••••••••••••••••" />
+                    <Button variant="outline">
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Regenerating will invalidate all existing tokens</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Require Token Refresh</p>
+                    <p className="text-xs text-muted-foreground">Force token refresh on sensitive actions</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <RefreshCw className="w-5 h-5" /> API Key Rotation
+                </CardTitle>
+                <CardDescription>Automatic key rotation policies</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Enable Auto-rotation</p>
+                    <p className="text-xs text-muted-foreground">Automatically rotate API keys periodically</p>
+                  </div>
+                  <Switch />
+                </div>
+                <div className="space-y-2">
+                  <Label>Rotation Interval</Label>
+                  <select className="w-full p-2 rounded-md border border-input bg-background">
+                    <option>Weekly</option>
+                    <option>Monthly</option>
+                    <option>Quarterly</option>
+                    <option>Yearly</option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Notify on Rotation</p>
+                    <p className="text-xs text-muted-foreground">Send email when keys are rotated</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <Button className="w-full">Rotate All Keys Now</Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Server className="w-5 h-5" /> OAuth Configuration
+                </CardTitle>
+                <CardDescription>Configure OAuth 2.0 providers</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {[
+                  { name: "Google", status: "Connected", icon: "🔗" },
+                  { name: "GitHub", status: "Connected", icon: "🔗" },
+                  { name: "Discord", status: "Not Connected", icon: "⚡" },
+                  { name: "Twitter", status: "Not Connected", icon: "🐦" },
+                ].map((provider, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{provider.icon}</span>
+                      <div>
+                        <p className="font-medium text-sm">{provider.name}</p>
+                        <p className="text-xs text-muted-foreground">{provider.status}</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      {provider.status === "Connected" ? "Configure" : "Connect"}
+                    </Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* CONTENT SECURITY POLICY */}
+          <TabsContent value="csp" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" /> Content Security Policy (CSP)
+                </CardTitle>
+                <CardDescription>Control which resources can be loaded</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-blue-500/5 border-blue-500/20">
+                  <div>
+                    <p className="font-medium text-sm">Enable CSP Headers</p>
+                    <p className="text-xs text-muted-foreground">Add Content-Security-Policy headers to responses</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>CSP Mode</Label>
+                  <select className="w-full p-2 rounded-md border border-input bg-background">
+                    <option>Report Only (Testing)</option>
+                    <option>Enforce (Production)</option>
+                  </select>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm">Policy Directives</h4>
+                  {[
+                    { directive: "default-src", value: "'self'" },
+                    { directive: "script-src", value: "'self' 'unsafe-inline' https://cdn.example.com" },
+                    { directive: "style-src", value: "'self' 'unsafe-inline' https://fonts.googleapis.com" },
+                    { directive: "img-src", value: "'self' data: https:" },
+                    { directive: "font-src", value: "'self' https://fonts.gstatic.com" },
+                    { directive: "connect-src", value: "'self' https://api.example.com" },
+                  ].map((item, i) => (
+                    <div key={i} className="grid grid-cols-3 gap-2">
+                      <code className="text-xs bg-muted px-2 py-2 rounded">{item.directive}</code>
+                      <Input defaultValue={item.value} className="col-span-2 font-mono text-xs" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Trusted Domains</CardTitle>
+                <CardDescription>Manage allowed external domains</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Whitelisted Domains</h4>
+                  {[
+                    "fonts.googleapis.com",
+                    "fonts.gstatic.com",
+                    "cdn.jsdelivr.net",
+                    "api.stripe.com",
+                  ].map((domain, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 border rounded">
+                      <span className="text-sm font-mono">{domain}</span>
+                      <Button variant="ghost" size="sm" className="text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input placeholder="Add trusted domain..." />
+                  <Button>Add</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>CSP Violation Reports</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="p-4 bg-muted rounded-lg text-center">
+                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-xs text-muted-foreground">Violations this week</p>
+                </div>
+                {[
+                  { blocked: "https://malicious-script.com/tracker.js", directive: "script-src", time: "2 hours ago" },
+                  { blocked: "inline script on /contact", directive: "script-src", time: "Yesterday" },
+                ].map((report, i) => (
+                  <div key={i} className="p-3 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <XCircle className="w-4 h-4 text-red-500" />
+                      <span className="text-sm font-medium">Blocked by {report.directive}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-mono truncate">{report.blocked}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{report.time}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* SESSION MANAGEMENT */}
+          <TabsContent value="sessions" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" /> Active Sessions
+                </CardTitle>
+                <CardDescription>Monitor and manage user sessions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-2xl font-bold text-green-500">24</p>
+                    <p className="text-xs text-muted-foreground">Active Now</p>
+                  </div>
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-2xl font-bold text-yellow-500">5</p>
+                    <p className="text-xs text-muted-foreground">Idle</p>
+                  </div>
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-2xl font-bold">156</p>
+                    <p className="text-xs text-muted-foreground">Total Today</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    { user: "admin@loideveloper.com", device: "Chrome / MacOS", ip: "192.168.1.1", status: "Active", time: "Now" },
+                    { user: "admin@loideveloper.com", device: "Safari / iOS", ip: "203.0.113.45", status: "Active", time: "5 mins ago" },
+                    { user: "editor@example.com", device: "Firefox / Windows", ip: "10.0.0.50", status: "Idle", time: "30 mins ago" },
+                  ].map((session, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Monitor className="w-5 h-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium text-sm">{session.user}</p>
+                          <p className="text-xs text-muted-foreground">{session.device} • {session.ip}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={session.status === "Active" ? "default" : "secondary"}>
+                          {session.status}
+                        </Badge>
+                        <Button variant="ghost" size="sm" className="text-destructive">
+                          <LogOut className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <Button variant="destructive" className="w-full">
+                  <LogOut className="w-4 h-4 mr-2" /> Force Logout All Users
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5" /> Session Policies
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Session Timeout (Idle)</Label>
+                    <select className="w-full p-2 rounded-md border border-input bg-background">
+                      <option>15 minutes</option>
+                      <option>30 minutes</option>
+                      <option>1 hour</option>
+                      <option>4 hours</option>
+                      <option>Never</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Max Session Duration</Label>
+                    <select className="w-full p-2 rounded-md border border-input bg-background">
+                      <option>8 hours</option>
+                      <option>24 hours</option>
+                      <option>7 days</option>
+                      <option>30 days</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Force Logout Inactive Users</p>
+                    <p className="text-xs text-muted-foreground">Auto-logout users after idle timeout</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Concurrent Session Limit</Label>
+                  <select className="w-full p-2 rounded-md border border-input bg-background">
+                    <option>Unlimited</option>
+                    <option>1 session per user</option>
+                    <option>3 sessions per user</option>
+                    <option>5 sessions per user</option>
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Fingerprint className="w-5 h-5" /> Device Fingerprinting
+                </CardTitle>
+                <CardDescription>Identify and track devices for security</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Enable Device Fingerprinting</p>
+                    <p className="text-xs text-muted-foreground">Track unique device signatures</p>
+                  </div>
+                  <Switch />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Alert on New Device</p>
+                    <p className="text-xs text-muted-foreground">Notify when login from unrecognized device</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Block Suspicious Devices</p>
+                    <p className="text-xs text-muted-foreground">Require verification for flagged devices</p>
+                  </div>
+                  <Switch />
                 </div>
               </CardContent>
             </Card>
