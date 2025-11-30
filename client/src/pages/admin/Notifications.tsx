@@ -39,7 +39,7 @@ export default function AdminNotifications() {
   const [newsletterStats, setNewsletterStats] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
-  const [filterRead, setFilterRead] = useState<string>("all");
+  const [filterRead, setFilterRead] = useState<string>("unread");
 
   const { data: messages = [], refetch: refetchMessages } = useQuery<any[]>({
     queryKey: ['/api/messages'],
