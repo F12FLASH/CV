@@ -4,62 +4,270 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RichEditor } from "@/components/admin/rich-editor";
-import { AdvancedSearch } from "@/components/admin/advanced-search";
 import { Pagination } from "@/components/admin/pagination";
 import { useState } from "react";
-import { Plus, Clock, Eye, Edit, Trash, Calendar } from "lucide-react";
+import { Plus, Eye, Edit, Trash, Calendar, Save, X } from "lucide-react";
+import { useMockData } from "@/context/MockContext";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+interface PostFormData {
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  category: string;
+  author: string;
+  status: "Published" | "Draft" | "Archived";
+  tags: string[];
+  featuredImage: string | null;
+  publishedAt: Date | null;
+}
+
+const defaultFormData: PostFormData = {
+  title: "",
+  slug: "",
+  content: "",
+  excerpt: "",
+  category: "Development",
+  author: "Loi Developer",
+  status: "Draft",
+  tags: [],
+  featuredImage: null,
+  publishedAt: null,
+};
+
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
 
 export default function AdminPostsEnhanced() {
+  const { posts, addPost, updatePost, deletePost, isLoading } = useMockData();
   const [currentPage, setCurrentPage] = useState(1);
-  const [editorContent, setEditorContent] = useState("# Welcome\n\nStart writing...");
   const [activeTab, setActiveTab] = useState("published");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<number | null>(null);
+  const [postToDelete, setPostToDelete] = useState<number | null>(null);
+  const [formData, setFormData] = useState<PostFormData>(defaultFormData);
+  const [tagsInput, setTagsInput] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const posts = [
-    {
-      id: 1,
-      title: "Getting Started with React 19",
-      category: "Development",
-      status: "Published",
-      date: "Mar 20, 2024",
-      views: 1542,
-      excerpt: "Learn the new features in React 19...",
-      scheduled: false,
-    },
-    {
-      id: 2,
-      title: "Web Design Trends 2024",
-      category: "Design",
-      status: "Draft",
-      date: "Mar 19, 2024",
-      views: 0,
-      excerpt: "Explore the latest design trends...",
-      scheduled: false,
-    },
-    {
-      id: 3,
-      title: "Performance Optimization Tips",
-      category: "Development",
-      status: "Scheduled",
-      date: "Mar 25, 2024",
-      views: 0,
-      excerpt: "Optimize your web app for speed...",
-      scheduled: true,
-    },
-  ];
+  const postsPerPage = 5;
 
-  const searchFilters = [
-    {
-      label: "Status",
-      key: "status",
-      options: ["Published", "Draft", "Scheduled", "Archived"],
-    },
-    {
-      label: "Category",
-      key: "category",
-      options: ["Development", "Design", "Business", "Other"],
-    },
-  ];
+  const filteredPosts = posts.filter((p) => {
+    if (activeTab === "published") return p.status === "Published";
+    if (activeTab === "draft") return p.status === "Draft";
+    if (activeTab === "archived") return p.status === "Archived";
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const paginatedPosts = filteredPosts.slice(
+    (currentPage - 1) * postsPerPage,
+    currentPage * postsPerPage
+  );
+
+  const handleOpenDialog = (postId?: number) => {
+    if (postId) {
+      const post = posts.find((p) => p.id === postId);
+      if (post) {
+        setEditingPost(postId);
+        setFormData({
+          title: post.title,
+          slug: post.slug,
+          content: post.content || "",
+          excerpt: post.excerpt || "",
+          category: post.category,
+          author: post.author,
+          status: post.status,
+          tags: post.tags || [],
+          featuredImage: post.featuredImage,
+          publishedAt: post.publishedAt,
+        });
+        setTagsInput(post.tags?.join(", ") || "");
+      }
+    } else {
+      setEditingPost(null);
+      setFormData(defaultFormData);
+      setTagsInput("");
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingPost(null);
+    setFormData(defaultFormData);
+    setTagsInput("");
+  };
+
+  const handleTitleChange = (title: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      title,
+      slug: editingPost ? prev.slug : generateSlug(title),
+    }));
+  };
+
+  const validateForm = (): string | null => {
+    if (!formData.title.trim()) return "Title is required";
+    if (!formData.content.trim()) return "Content is required";
+    if (!formData.category.trim()) return "Category is required";
+    if (!formData.author.trim()) return "Author is required";
+    return null;
+  };
+
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    const error = validateForm();
+    if (error) {
+      setFormError(error);
+      return;
+    }
+    setFormError(null);
+
+    setIsSaving(true);
+    try {
+      const tags = tagsInput
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      const postData = {
+        title: formData.title.trim(),
+        slug: formData.slug.trim() || generateSlug(formData.title),
+        content: formData.content.trim(),
+        excerpt: formData.excerpt.trim() || null,
+        category: formData.category,
+        author: formData.author.trim(),
+        status: formData.status,
+        tags,
+        featuredImage: formData.featuredImage,
+        publishedAt: formData.status === "Published" ? new Date().toISOString() : null,
+      };
+
+      if (editingPost) {
+        await updatePost(editingPost, postData as any);
+      } else {
+        await addPost(postData as any);
+      }
+      handleCloseDialog();
+    } catch (error: any) {
+      console.error("Error saving post:", error);
+      setFormError(error.message || "Failed to save post");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteClick = (id: number) => {
+    setPostToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (postToDelete) {
+      await deletePost(postToDelete);
+      setPostToDelete(null);
+    }
+    setIsDeleteDialogOpen(false);
+  };
+
+  const formatDate = (date: Date | string | null) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const renderPostCard = (post: any) => (
+    <Card key={post.id} data-testid={`card-post-${post.id}`}>
+      <CardContent className="p-4">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <h3 className="font-bold" data-testid={`text-post-title-${post.id}`}>{post.title}</h3>
+              <Badge variant="secondary">{post.category}</Badge>
+              <Badge
+                variant={post.status === "Published" ? "default" : "outline"}
+                className={post.status === "Published" ? "bg-green-500" : ""}
+              >
+                {post.status}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+              {post.excerpt || post.content?.substring(0, 100) || "No excerpt available"}
+            </p>
+            <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> {formatDate(post.publishedAt || post.createdAt)}
+              </span>
+              <span className="flex items-center gap-1">
+                <Eye className="w-3 h-3" /> {post.views || 0} views
+              </span>
+              {post.tags && post.tags.length > 0 && (
+                <span className="text-primary">
+                  {post.tags.slice(0, 3).join(", ")}
+                  {post.tags.length > 3 && "..."}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleOpenDialog(post.id)}
+              data-testid={`button-edit-post-${post.id}`}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => handleDeleteClick(post.id)}
+              data-testid={`button-delete-post-${post.id}`}
+            >
+              <Trash className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <AdminLayout>
@@ -67,125 +275,240 @@ export default function AdminPostsEnhanced() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-heading font-bold">Blog Posts</h1>
-            <p className="text-muted-foreground">Manage your blog content</p>
+            <p className="text-muted-foreground">
+              Manage your blog content ({posts.length} posts)
+            </p>
           </div>
-          <Button className="bg-primary gap-2">
+          <Button
+            className="bg-primary gap-2"
+            onClick={() => handleOpenDialog()}
+            data-testid="button-new-post"
+          >
             <Plus className="w-4 h-4" /> New Post
           </Button>
         </div>
 
-        <AdvancedSearch onSearch={() => {}} filters={searchFilters} />
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setCurrentPage(1); }}>
           <TabsList>
-            <TabsTrigger value="published">Published</TabsTrigger>
-            <TabsTrigger value="draft">Drafts</TabsTrigger>
-            <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
+            <TabsTrigger value="published" data-testid="tab-published">
+              Published ({posts.filter((p) => p.status === "Published").length})
+            </TabsTrigger>
+            <TabsTrigger value="draft" data-testid="tab-draft">
+              Drafts ({posts.filter((p) => p.status === "Draft").length})
+            </TabsTrigger>
+            <TabsTrigger value="archived" data-testid="tab-archived">
+              Archived ({posts.filter((p) => p.status === "Archived").length})
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="published" className="space-y-4">
-            {posts
-              .filter((p) => p.status === "Published")
-              .map((post) => (
-                <Card key={post.id}>
-                  <CardContent className="p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-bold">{post.title}</h3>
-                          <Badge>{post.category}</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {post.excerpt}
-                        </p>
-                        <div className="flex gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" /> {post.date}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" /> {post.views} views
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive"
-                        >
-                          <Trash className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={3}
-              onPageChange={setCurrentPage}
-            />
-          </TabsContent>
-
-          <TabsContent value="draft" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Create New Post</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Input placeholder="Post Title" />
-                <div className="grid grid-cols-2 gap-4">
-                  <Input placeholder="Category" />
-                  <Input placeholder="Tags (comma-separated)" />
-                </div>
-                <RichEditor
-                  value={editorContent}
-                  onChange={setEditorContent}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <Input placeholder="SEO Title" />
-                  <Input placeholder="SEO Keywords" />
-                </div>
-                <Input
-                  placeholder="Meta Description"
-                  className="col-span-2"
-                />
-                <div className="flex gap-2">
-                  <Button variant="outline">Save Draft</Button>
-                  <Button>Schedule...</Button>
-                  <Button className="bg-primary">Publish</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="scheduled" className="space-y-4">
-            {posts
-              .filter((p) => p.scheduled)
-              .map((post) => (
-                <Card key={post.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-bold">{post.title}</h3>
-                        <div className="flex items-center gap-2 mt-2 text-sm text-primary">
-                          <Clock className="w-4 h-4" />
-                          Scheduled for {post.date}
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Reschedule
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          <TabsContent value={activeTab} className="space-y-4 mt-4">
+            {isLoading ? (
+              <Card>
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  Loading posts...
+                </CardContent>
+              </Card>
+            ) : paginatedPosts.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  No posts found. Click "New Post" to create one.
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {paginatedPosts.map(renderPostCard)}
+                {totalPages > 1 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
+              </>
+            )}
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingPost ? "Edit Post" : "Create New Post"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingPost
+                ? "Update the post details below."
+                : "Fill in the details to create a new blog post."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                placeholder="Enter post title"
+                value={formData.title}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                data-testid="input-post-title"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="slug">Slug</Label>
+              <Input
+                id="slug"
+                placeholder="post-url-slug"
+                value={formData.slug}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                }
+                data-testid="input-post-slug"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(v) =>
+                    setFormData((prev) => ({ ...prev, category: v }))
+                  }
+                >
+                  <SelectTrigger data-testid="select-post-category">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Development">Development</SelectItem>
+                    <SelectItem value="Design">Design</SelectItem>
+                    <SelectItem value="Business">Business</SelectItem>
+                    <SelectItem value="Tutorial">Tutorial</SelectItem>
+                    <SelectItem value="News">News</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(v: "Published" | "Draft" | "Archived") =>
+                    setFormData((prev) => ({ ...prev, status: v }))
+                  }
+                >
+                  <SelectTrigger data-testid="select-post-status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Draft">Draft</SelectItem>
+                    <SelectItem value="Published">Published</SelectItem>
+                    <SelectItem value="Archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="excerpt">Excerpt</Label>
+              <Textarea
+                id="excerpt"
+                placeholder="Brief summary of the post"
+                value={formData.excerpt}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, excerpt: e.target.value }))
+                }
+                rows={2}
+                data-testid="input-post-excerpt"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="content">Content *</Label>
+              <Textarea
+                id="content"
+                placeholder="Write your post content here..."
+                value={formData.content}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, content: e.target.value }))
+                }
+                rows={10}
+                className="font-mono text-sm"
+                data-testid="input-post-content"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags (comma-separated)</Label>
+              <Input
+                id="tags"
+                placeholder="react, javascript, web development"
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+                data-testid="input-post-tags"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="author">Author</Label>
+              <Input
+                id="author"
+                placeholder="Author name"
+                value={formData.author}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, author: e.target.value }))
+                }
+                data-testid="input-post-author"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {formError && (
+              <p className="text-destructive text-sm w-full sm:w-auto sm:flex-1" data-testid="text-form-error">
+                {formError}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleCloseDialog}>
+                <X className="w-4 h-4 mr-2" /> Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSaving}
+                data-testid="button-save-post"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? "Saving..." : editingPost ? "Update Post" : "Create Post"}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              post from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }

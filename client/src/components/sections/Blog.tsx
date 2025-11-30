@@ -1,10 +1,10 @@
-
 import { motion } from "framer-motion";
 import { Calendar, User, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useMockData } from "@/context/MockContext";
+import { Link } from "wouter";
 
 export function Blog() {
   const { posts } = useMockData();
@@ -59,10 +59,12 @@ export function Blog() {
                       <span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : 'Draft'}</span>
                     </div>
                   </div>
-                  <Button variant="ghost" className="group/btn p-0 h-auto">
-                    Read More 
-                    <ArrowRight className="ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                  </Button>
+                  <Link href={`/blog/${post.slug}`}>
+                    <Button variant="ghost" className="group/btn p-0 h-auto" data-testid={`button-read-more-${post.id}`}>
+                      Read More 
+                      <ArrowRight className="ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </motion.div>

@@ -7,6 +7,7 @@ import { MockProvider } from "@/context/MockContext";
 import { SiteProvider } from "@/context/SiteContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import Home from "@/pages/Home";
+import BlogPost from "@/pages/BlogPost";
 import NotFound from "@/pages/not-found";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminProjects from "@/pages/admin/Projects";
@@ -49,6 +50,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/blog/:slug" component={BlogPost} />
 
       {/* Admin Routes */}
       <Route path="/admin/login" component={AdminLogin} />
