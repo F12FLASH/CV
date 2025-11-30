@@ -9,16 +9,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { 
-  Save, Upload, Mail, Database, Zap, Key, Plug, Bell, Webhook, Code2, Palette, 
+  Save, Upload, Mail, Database, Zap, Key, Plug, Bell, Webhook, Code2, 
   FileText, AlertCircle, CheckCircle, Clock, Globe, DollarSign, Hash, Languages,
   HardDrive, RefreshCw, Download, Trash2, Terminal, Bug, Gauge, Server
 } from "lucide-react";
 import { useState } from "react";
 import { SettingsPerformance } from "./SettingsPerformance";
 import { SettingsIntegrations } from "./SettingsIntegrations";
+import { useSiteSettings } from "@/context/SiteContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminSettingsEnhanced() {
   const [logoFile, setLogoFile] = useState<string | null>(null);
+  const { settings, updateSettings, saveSettings, isSaving } = useSiteSettings();
+  const { toast } = useToast();
+
+  const handleSave = async () => {
+    await saveSettings();
+    toast({ title: "Saved", description: "Settings saved successfully" });
+  };
 
   return (
     <AdminLayout>
@@ -28,8 +37,12 @@ export default function AdminSettingsEnhanced() {
             <h1 className="text-3xl font-heading font-bold">Settings</h1>
             <p className="text-muted-foreground">Manage your website configuration</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
-            <Save className="w-4 h-4 mr-2" /> Save Changes
+          <Button 
+            className="bg-primary hover:bg-primary/90" 
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            <Save className="w-4 h-4 mr-2" /> {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
 
@@ -46,7 +59,6 @@ export default function AdminSettingsEnhanced() {
             <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
             <TabsTrigger value="developer">Developer</TabsTrigger>
             <TabsTrigger value="localization">Localization</TabsTrigger>
-            <TabsTrigger value="theme">Theme</TabsTrigger>
             <TabsTrigger value="database">Database</TabsTrigger>
             <TabsTrigger value="logging">Logging</TabsTrigger>
           </TabsList>
@@ -61,15 +73,28 @@ export default function AdminSettingsEnhanced() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Site Title</Label>
-                  <Input defaultValue="Loi Developer - Full-stack Creative" />
+                  <Input 
+                    value={settings.siteTitle} 
+                    onChange={(e) => updateSettings({ siteTitle: e.target.value })}
+                    placeholder="Enter your site title"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Tagline</Label>
-                  <Input defaultValue="Building digital experiences with code." />
+                  <Input 
+                    value={settings.tagline}
+                    onChange={(e) => updateSettings({ tagline: e.target.value })}
+                    placeholder="Enter your tagline"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Contact Email</Label>
-                  <Input type="email" defaultValue="loideveloper@example.com" />
+                  <Input 
+                    type="email" 
+                    value={settings.contactEmail}
+                    onChange={(e) => updateSettings({ contactEmail: e.target.value })}
+                    placeholder="Enter your contact email"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -84,7 +109,10 @@ export default function AdminSettingsEnhanced() {
                   <Label>Enable Maintenance Mode</Label>
                   <p className="text-sm text-muted-foreground">Visitors will see a "Coming Soon" page.</p>
                 </div>
-                <Switch />
+                <Switch 
+                  checked={settings.maintenanceMode}
+                  onCheckedChange={(checked) => updateSettings({ maintenanceMode: checked })}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -786,164 +814,6 @@ export default function AdminSettingsEnhanced() {
                   ))}
                 </div>
                 <Button variant="outline" className="w-full">+ Add Translation Key</Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* THEME CUSTOMIZATION TAB */}
-          <TabsContent value="theme" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Palette className="w-5 h-5" /> Color Scheme
-                </CardTitle>
-                <CardDescription>Customize your site colors</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { label: "Primary Color", value: "#7c3aed", desc: "Main brand color" },
-                    { label: "Secondary Color", value: "#3b82f6", desc: "Supporting color" },
-                    { label: "Accent Color", value: "#10b981", desc: "Highlights & CTAs" },
-                    { label: "Background", value: "#0a0a0a", desc: "Page background" },
-                    { label: "Card Background", value: "#171717", desc: "Card surfaces" },
-                    { label: "Text Color", value: "#fafafa", desc: "Primary text" },
-                  ].map((color, i) => (
-                    <div key={i} className="space-y-2">
-                      <Label>{color.label}</Label>
-                      <div className="flex gap-2">
-                        <div 
-                          className="w-10 h-10 rounded border cursor-pointer" 
-                          style={{ backgroundColor: color.value }}
-                        />
-                        <Input defaultValue={color.value} className="font-mono" />
-                      </div>
-                      <p className="text-xs text-muted-foreground">{color.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Typography</CardTitle>
-                <CardDescription>Configure fonts and text styles</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Heading Font</Label>
-                    <select className="w-full p-2 rounded-md border border-input bg-background">
-                      <option>Space Grotesk</option>
-                      <option>Inter</option>
-                      <option>Poppins</option>
-                      <option>Montserrat</option>
-                      <option>Playfair Display</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Body Font</Label>
-                    <select className="w-full p-2 rounded-md border border-input bg-background">
-                      <option>Inter</option>
-                      <option>Open Sans</option>
-                      <option>Roboto</option>
-                      <option>Lato</option>
-                      <option>Source Sans Pro</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Base Font Size</Label>
-                    <select className="w-full p-2 rounded-md border border-input bg-background">
-                      <option>14px</option>
-                      <option>16px</option>
-                      <option>18px</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Line Height</Label>
-                    <select className="w-full p-2 rounded-md border border-input bg-background">
-                      <option>1.4</option>
-                      <option>1.5</option>
-                      <option>1.6</option>
-                      <option>1.75</option>
-                    </select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Layout & Spacing</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Border Radius</Label>
-                    <select className="w-full p-2 rounded-md border border-input bg-background">
-                      <option>None (0px)</option>
-                      <option>Small (4px)</option>
-                      <option>Medium (8px)</option>
-                      <option>Large (12px)</option>
-                      <option>Full (9999px)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Container Width</Label>
-                    <select className="w-full p-2 rounded-md border border-input bg-background">
-                      <option>Narrow (960px)</option>
-                      <option>Default (1200px)</option>
-                      <option>Wide (1400px)</option>
-                      <option>Full Width</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Enable Animations</p>
-                    <p className="text-xs text-muted-foreground">Smooth transitions and hover effects</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Glassmorphism Effects</p>
-                    <p className="text-xs text-muted-foreground">Blur and transparency on cards</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Theme Presets</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-4 gap-3">
-                  {[
-                    { name: "Dark Purple", colors: ["#7c3aed", "#0a0a0a"] },
-                    { name: "Ocean Blue", colors: ["#0ea5e9", "#0f172a"] },
-                    { name: "Forest Green", colors: ["#10b981", "#022c22"] },
-                    { name: "Sunset Orange", colors: ["#f97316", "#1c1917"] },
-                    { name: "Rose Pink", colors: ["#f43f5e", "#18181b"] },
-                    { name: "Light Mode", colors: ["#7c3aed", "#ffffff"] },
-                    { name: "Minimal", colors: ["#171717", "#fafafa"] },
-                    { name: "Custom", colors: ["#gradient", "#gradient"] },
-                  ].map((preset, i) => (
-                    <div 
-                      key={i} 
-                      className="p-3 border rounded-lg cursor-pointer hover:border-primary transition-colors"
-                    >
-                      <div className="flex gap-1 mb-2">
-                        <div className="w-6 h-6 rounded" style={{ backgroundColor: preset.colors[0] }} />
-                        <div className="w-6 h-6 rounded" style={{ backgroundColor: preset.colors[1] }} />
-                      </div>
-                      <p className="text-xs font-medium">{preset.name}</p>
-                    </div>
-                  ))}
-                </div>
               </CardContent>
             </Card>
           </TabsContent>

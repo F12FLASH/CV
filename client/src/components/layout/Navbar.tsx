@@ -4,12 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Moon, Sun, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,12 +36,12 @@ export function Navbar() {
   }, []);
 
   const navLinks = [
-    { name: "Home", href: "#home" },
-    { name: "About", href: "#about" },
-    { name: "Skills", href: "#skills" },
-    { name: "Projects", href: "#projects" },
-    { name: "Blog", href: "#blog" },
-    { name: "Contact", href: "#contact" },
+    { name: t("nav.home"), href: "#home" },
+    { name: t("nav.about"), href: "#about" },
+    { name: t("nav.skills"), href: "#skills" },
+    { name: t("nav.projects"), href: "#projects" },
+    { name: t("nav.blog"), href: "#blog" },
+    { name: t("nav.contact"), href: "#contact" },
   ];
 
   const scrollToSection = (id: string) => {
@@ -87,6 +90,7 @@ export function Navbar() {
 
         {/* Actions */}
         <div className="hidden md:flex items-center gap-4">
+          <LanguageSwitcher />
           <button
             onClick={toggleTheme}
             className="p-2 rounded-full hover:bg-secondary/10 transition-colors"
@@ -132,7 +136,8 @@ export function Navbar() {
                 {link.name}
               </button>
             ))}
-            <div className="flex gap-6 mt-8">
+            <div className="flex gap-6 mt-8 items-center">
+              <LanguageSwitcher />
               <button onClick={toggleTheme} className="p-4 bg-muted rounded-full">
                 {theme === "dark" ? <Moon size={24} /> : <Sun size={24} />}
               </button>

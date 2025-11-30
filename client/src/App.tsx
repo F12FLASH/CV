@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MockProvider } from "@/context/MockContext";
+import { SiteProvider } from "@/context/SiteContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -38,6 +40,7 @@ import AdminThemeEnhanced from "@/pages/admin/ThemeEnhanced";
 import AdminTestimonials from "@/pages/admin/Testimonials";
 import AdminEmailTemplates from "@/pages/admin/EmailTemplates";
 import AdminCache from "@/pages/admin/Cache";
+import AdminLanguageManager from "@/pages/admin/LanguageManager";
 import { ThemeProvider } from "next-themes";
 import { lazy } from "react";
 
@@ -74,6 +77,7 @@ function Router() {
       <Route path="/admin/testimonials" component={AdminTestimonials} />
       <Route path="/admin/email-templates" component={AdminEmailTemplates} />
       <Route path="/admin/cache" component={AdminCache} />
+      <Route path="/admin/languages" component={AdminLanguageManager} />
       <Route path="/admin/webhooks" component={lazy(() => import("@/pages/admin/Webhooks"))} />
       <Route path="/admin/image-optimizer" component={lazy(() => import("@/pages/admin/ImageOptimizer"))} />
       <Route path="/admin/page-builder" component={lazy(() => import("@/pages/admin/PageBuilder"))} />
@@ -96,12 +100,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-        <MockProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </MockProvider>
+        <LanguageProvider>
+          <SiteProvider>
+            <MockProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Router />
+              </TooltipProvider>
+            </MockProvider>
+          </SiteProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
