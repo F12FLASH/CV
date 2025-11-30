@@ -7,11 +7,47 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Loader2, Globe, User, Mail, MapPin, Phone, Share2, FileText, Shield, LayoutDashboard, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Save, 
+  Loader2, 
+  Globe, 
+  User, 
+  Mail, 
+  MapPin, 
+  Phone, 
+  Share2, 
+  FileText, 
+  Shield, 
+  LayoutDashboard, 
+  AlertCircle,
+  Key,
+  Eye,
+  EyeOff,
+  Smartphone,
+  LogOut,
+  Clock,
+  Download,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Youtube
+} from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface SiteSettings {
   siteTitle: string;
@@ -21,6 +57,7 @@ interface SiteSettings {
   heroSubtitle: string;
   heroDescription: string;
   heroStatus: string;
+  heroCTA: string;
   aboutTitle: string;
   aboutSubtitle: string;
   aboutDescription: string;
@@ -29,6 +66,8 @@ interface SiteSettings {
   aboutEmail: string;
   aboutLocation: string;
   aboutFreelance: string;
+  aboutImage: string;
+  cvFileUrl: string;
   contactTitle: string;
   contactSubtitle: string;
   contactPhone: string;
@@ -38,9 +77,11 @@ interface SiteSettings {
   socialInstagram: string;
   socialLinkedin: string;
   socialGithub: string;
+  socialYoutube: string;
   footerText: string;
   footerCopyright: string;
   metaDescription: string;
+  metaKeywords: string;
   googleAnalyticsId: string;
   maintenanceMode: boolean;
 }
@@ -53,6 +94,7 @@ const defaultSettings: SiteSettings = {
   heroSubtitle: "Full-stack Developer & Security Enthusiast",
   heroDescription: "Crafting secure & performant digital experiences with code",
   heroStatus: "SYSTEM ONLINE",
+  heroCTA: "View My Work",
   aboutTitle: "About Me",
   aboutSubtitle: "Full-stack Developer based in Vietnam",
   aboutDescription: "I started my coding journey with a curiosity for how things work on the web. Now, I specialize in building modern, scalable, and user-friendly applications using the latest technologies.",
@@ -61,6 +103,8 @@ const defaultSettings: SiteSettings = {
   aboutEmail: "loideveloper@example.com",
   aboutLocation: "Ho Chi Minh City",
   aboutFreelance: "Available",
+  aboutImage: "",
+  cvFileUrl: "",
   contactTitle: "Let's Talk",
   contactSubtitle: "Have a project in mind or just want to say hi? I'm always open to discussing new projects, creative ideas or opportunities to be part of your visions.",
   contactPhone: "+84 123 456 789",
@@ -70,9 +114,11 @@ const defaultSettings: SiteSettings = {
   socialInstagram: "",
   socialLinkedin: "",
   socialGithub: "",
+  socialYoutube: "",
   footerText: "Crafted with love & countless cups of coffee",
   footerCopyright: "2024 Loi Developer. All rights reserved.",
   metaDescription: "Portfolio of Nguyen Thanh Loi - Full-stack Developer & Creative Coder",
+  metaKeywords: "developer, portfolio, web development, full-stack",
   googleAnalyticsId: "",
   maintenanceMode: false,
 };
@@ -80,8 +126,16 @@ const defaultSettings: SiteSettings = {
 export default function AdminSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, logoutMutation } = useAuth();
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   const { data: serverSettings, isLoading } = useQuery<Record<string, any>>({
     queryKey: ["/api/settings"],
@@ -108,6 +162,29 @@ export default function AdminSettings() {
     },
   });
 
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const res = await fetch("/api/auth/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to change password");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Password changed successfully" });
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   const handleChange = (key: keyof SiteSettings, value: string | boolean) => {
     setSettings(prev => ({ ...prev, [key]: value }));
     setHasChanges(true);
@@ -115,6 +192,25 @@ export default function AdminSettings() {
 
   const handleSave = () => {
     updateMutation.mutate(settings);
+  };
+
+  const handlePasswordChange = () => {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    changePasswordMutation.mutate({
+      currentPassword: passwordForm.currentPassword,
+      newPassword: passwordForm.newPassword,
+    });
+  };
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
 
   if (isLoading) {
@@ -183,7 +279,6 @@ export default function AdminSettings() {
 
           <TabsContent value="general">
             <div className="space-y-6">
-              {/* Website Branding */}
               <Card className="border-l-4 border-l-primary">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
@@ -234,7 +329,6 @@ export default function AdminSettings() {
                 </CardContent>
               </Card>
 
-              {/* Contact Information */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -263,7 +357,6 @@ export default function AdminSettings() {
                 </CardContent>
               </Card>
 
-              {/* Footer Section */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -310,7 +403,6 @@ export default function AdminSettings() {
                 </CardContent>
               </Card>
 
-              {/* System Status */}
               <Card className="bg-card/50 border-yellow-500/30">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -381,17 +473,33 @@ export default function AdminSettings() {
                     data-testid="input-hero-description"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="heroStatus" className="font-semibold">Status Text</Label>
-                  <p className="text-xs text-muted-foreground mb-2">Badge text displayed in hero (e.g., "SYSTEM ONLINE")</p>
-                  <Input 
-                    id="heroStatus"
-                    value={settings.heroStatus}
-                    onChange={(e) => handleChange("heroStatus", e.target.value)}
-                    placeholder="SYSTEM ONLINE"
-                    data-testid="input-hero-status"
-                    className="text-base"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="heroStatus" className="font-semibold">Status Text</Label>
+                    <p className="text-xs text-muted-foreground mb-2">Badge text displayed in hero</p>
+                    <Input 
+                      id="heroStatus"
+                      value={settings.heroStatus}
+                      onChange={(e) => handleChange("heroStatus", e.target.value)}
+                      placeholder="SYSTEM ONLINE"
+                      data-testid="input-hero-status"
+                      className="text-base"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="heroCTA" className="font-semibold flex items-center gap-2">
+                      <LinkIcon className="w-4 h-4" /> CTA Button Text
+                    </Label>
+                    <p className="text-xs text-muted-foreground mb-2">Call-to-action button text</p>
+                    <Input 
+                      id="heroCTA"
+                      value={settings.heroCTA}
+                      onChange={(e) => handleChange("heroCTA", e.target.value)}
+                      placeholder="View My Work"
+                      data-testid="input-hero-cta"
+                      className="text-base"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -501,6 +609,37 @@ export default function AdminSettings() {
                         onChange={(e) => handleChange("aboutFreelance", e.target.value)}
                         placeholder="Available"
                         data-testid="input-about-freelance"
+                        className="text-base"
+                      />
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="aboutImage" className="font-semibold flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4" /> Profile Image URL
+                      </Label>
+                      <p className="text-xs text-muted-foreground mb-2">URL to your profile picture</p>
+                      <Input 
+                        id="aboutImage"
+                        value={settings.aboutImage}
+                        onChange={(e) => handleChange("aboutImage", e.target.value)}
+                        placeholder="https://example.com/your-photo.jpg"
+                        data-testid="input-about-image"
+                        className="text-base"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cvFileUrl" className="font-semibold flex items-center gap-2">
+                        <Download className="w-4 h-4" /> CV/Resume URL
+                      </Label>
+                      <p className="text-xs text-muted-foreground mb-2">Direct link to your CV file</p>
+                      <Input 
+                        id="cvFileUrl"
+                        value={settings.cvFileUrl}
+                        onChange={(e) => handleChange("cvFileUrl", e.target.value)}
+                        placeholder="https://example.com/your-cv.pdf"
+                        data-testid="input-cv-url"
                         className="text-base"
                       />
                     </div>
@@ -645,6 +784,19 @@ export default function AdminSettings() {
                       className="text-base"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="socialYoutube" className="font-semibold flex items-center gap-2">
+                      <Youtube className="w-4 h-4" /> YouTube
+                    </Label>
+                    <Input 
+                      id="socialYoutube"
+                      value={settings.socialYoutube}
+                      onChange={(e) => handleChange("socialYoutube", e.target.value)}
+                      placeholder="https://youtube.com/@yourchannel"
+                      data-testid="input-social-youtube"
+                      className="text-base"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -676,6 +828,20 @@ export default function AdminSettings() {
                   </p>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="metaKeywords" className="font-semibold">Meta Keywords</Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Comma-separated keywords for search engines
+                  </p>
+                  <Input 
+                    id="metaKeywords"
+                    value={settings.metaKeywords}
+                    onChange={(e) => handleChange("metaKeywords", e.target.value)}
+                    placeholder="developer, portfolio, web development, full-stack"
+                    data-testid="input-meta-keywords"
+                    className="text-base"
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="googleAnalyticsId" className="font-semibold">Google Analytics ID</Label>
                   <p className="text-xs text-muted-foreground mb-2">
                     Your Google Analytics tracking ID (e.g., G-XXXXXXXXXX)
@@ -694,23 +860,183 @@ export default function AdminSettings() {
           </TabsContent>
 
           <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Center</CardTitle>
-                <CardDescription>Manage security settings and protections.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900/30">
-                  <h3 className="font-semibold text-sm mb-2">Website Security</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Additional security features and configurations can be added here to protect your website and visitors' data.
-                  </p>
-                </div>
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground text-sm">More security options coming soon...</p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Key className="w-5 h-5" />
+                    Change Password
+                  </CardTitle>
+                  <CardDescription>Update your account password for enhanced security.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword" className="font-semibold">Current Password</Label>
+                    <div className="relative">
+                      <Input 
+                        id="currentPassword"
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={passwordForm.currentPassword}
+                        onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                        placeholder="Enter current password"
+                        data-testid="input-current-password"
+                        className="text-base pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      >
+                        {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword" className="font-semibold">New Password</Label>
+                    <div className="relative">
+                      <Input 
+                        id="newPassword"
+                        type={showNewPassword ? "text" : "password"}
+                        value={passwordForm.newPassword}
+                        onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                        placeholder="Enter new password"
+                        data-testid="input-new-password"
+                        className="text-base pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="font-semibold">Confirm New Password</Label>
+                    <Input 
+                      id="confirmPassword"
+                      type="password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      placeholder="Confirm new password"
+                      data-testid="input-confirm-password"
+                      className="text-base"
+                    />
+                  </div>
+                  <Button 
+                    onClick={handlePasswordChange}
+                    disabled={changePasswordMutation.isPending || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}
+                    data-testid="button-change-password"
+                  >
+                    {changePasswordMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Key className="w-4 h-4 mr-2" />
+                    )}
+                    Change Password
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Current Session
+                  </CardTitle>
+                  <CardDescription>Manage your active session.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-full bg-green-500/10">
+                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{user?.username || "Unknown"}</p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Badge variant="outline" className="text-xs">{user?.role || "User"}</Badge>
+                          <span className="mx-1">Active session</span>
+                        </p>
+                      </div>
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" className="text-destructive" data-testid="button-logout">
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Logout
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            You will be redirected to the login page and will need to sign in again.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/50 border-blue-500/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Smartphone className="w-5 h-5 text-blue-500" />
+                    Two-Factor Authentication
+                  </CardTitle>
+                  <CardDescription>Add an extra layer of security to your account.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900/30">
+                    <div className="space-y-1">
+                      <p className="font-semibold">2FA Status</p>
+                      <p className="text-sm text-muted-foreground">Two-factor authentication is not yet enabled</p>
+                    </div>
+                    <Badge variant="secondary">Coming Soon</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Security Tips
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <Shield className="w-4 h-4 mt-0.5 text-primary" />
+                      Use a strong password with at least 8 characters, including uppercase, lowercase, numbers, and symbols
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Shield className="w-4 h-4 mt-0.5 text-primary" />
+                      Never share your password with anyone
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Shield className="w-4 h-4 mt-0.5 text-primary" />
+                      Log out when using shared or public computers
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Shield className="w-4 h-4 mt-0.5 text-primary" />
+                      Regularly update your password for enhanced security
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

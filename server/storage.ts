@@ -137,6 +137,17 @@ export interface IStorage {
   markReviewAsRead(id: number): Promise<boolean>;
   archiveReview(id: number): Promise<boolean>;
   deleteReview(id: number): Promise<boolean>;
+
+  // System
+  getSystemStats(): Promise<{
+    databaseSize: string;
+    tableStats: { name: string; count: number }[];
+    serverUptime: number;
+    lastCheck: Date;
+    status: "Healthy" | "Warning" | "Error";
+  }>;
+  getActivityLogs(limit: number, offset: number): Promise<ActivityLog[]>;
+  clearActivityLogs(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -637,6 +648,68 @@ export class DatabaseStorage implements IStorage {
   async deleteReview(id: number): Promise<boolean> {
     const result = await db.delete(reviews).where(eq(reviews.id, id)).returning();
     return result.length > 0;
+  }
+
+  // System methods
+  async getSystemStats(): Promise<{
+    databaseSize: string;
+    tableStats: { name: string; count: number }[];
+    serverUptime: number;
+    lastCheck: Date;
+    status: "Healthy" | "Warning" | "Error";
+  }> {
+    try {
+      const [usersCount] = await db.select({ count: sql<number>`count(*)` }).from(users);
+      const [projectsCount] = await db.select({ count: sql<number>`count(*)` }).from(projects);
+      const [postsCount] = await db.select({ count: sql<number>`count(*)` }).from(posts);
+      const [skillsCount] = await db.select({ count: sql<number>`count(*)` }).from(skills);
+      const [servicesCount] = await db.select({ count: sql<number>`count(*)` }).from(services);
+      const [messagesCount] = await db.select({ count: sql<number>`count(*)` }).from(messages);
+      const [testimonialsCount] = await db.select({ count: sql<number>`count(*)` }).from(testimonials);
+      const [commentsCount] = await db.select({ count: sql<number>`count(*)` }).from(comments);
+      const [reviewsCount] = await db.select({ count: sql<number>`count(*)` }).from(reviews);
+      const [activityCount] = await db.select({ count: sql<number>`count(*)` }).from(activityLogs);
+
+      const tableStats = [
+        { name: "Users", count: Number(usersCount.count) },
+        { name: "Projects", count: Number(projectsCount.count) },
+        { name: "Posts", count: Number(postsCount.count) },
+        { name: "Skills", count: Number(skillsCount.count) },
+        { name: "Services", count: Number(servicesCount.count) },
+        { name: "Messages", count: Number(messagesCount.count) },
+        { name: "Testimonials", count: Number(testimonialsCount.count) },
+        { name: "Comments", count: Number(commentsCount.count) },
+        { name: "Reviews", count: Number(reviewsCount.count) },
+        { name: "Activity Logs", count: Number(activityCount.count) },
+      ];
+
+      const totalRecords = tableStats.reduce((sum, t) => sum + t.count, 0);
+      const estimatedSize = (totalRecords * 0.5).toFixed(1);
+
+      return {
+        databaseSize: `${estimatedSize} KB`,
+        tableStats,
+        serverUptime: process.uptime(),
+        lastCheck: new Date(),
+        status: "Healthy",
+      };
+    } catch (error) {
+      return {
+        databaseSize: "Unknown",
+        tableStats: [],
+        serverUptime: process.uptime(),
+        lastCheck: new Date(),
+        status: "Error",
+      };
+    }
+  }
+
+  async getActivityLogs(limit: number, offset: number): Promise<ActivityLog[]> {
+    return await db.select().from(activityLogs).orderBy(desc(activityLogs.createdAt)).limit(limit).offset(offset);
+  }
+
+  async clearActivityLogs(): Promise<void> {
+    await db.delete(activityLogs);
   }
 }
 

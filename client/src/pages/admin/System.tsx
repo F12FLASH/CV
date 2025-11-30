@@ -5,12 +5,21 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Database, 
   RotateCcw, 
-  Download, 
   Clock, 
   ShieldCheck,
   AlertTriangle,
   HardDrive,
-  RefreshCw
+  RefreshCw,
+  Trash2,
+  Activity,
+  Users,
+  FileText,
+  Briefcase,
+  MessageSquare,
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Info
 } from "lucide-react";
 import {
   Table,
@@ -20,148 +29,331 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  
+  if (days > 0) {
+    return `${days}d ${hours}h ${minutes}m`;
+  } else if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else {
+    return `${minutes}m`;
+  }
+}
+
+function getIconForType(type: string) {
+  switch (type) {
+    case "success": return <CheckCircle className="w-4 h-4 text-green-500" />;
+    case "error": return <XCircle className="w-4 h-4 text-red-500" />;
+    case "warning": return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+    default: return <Info className="w-4 h-4 text-blue-500" />;
+  }
+}
 
 export default function AdminSystem() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: systemStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
+    queryKey: ["/api/system/stats"],
+    queryFn: () => api.getSystemStats(),
+    refetchInterval: 30000,
+  });
+
+  const { data: activityLogs, isLoading: logsLoading } = useQuery({
+    queryKey: ["/api/system/activity-logs"],
+    queryFn: () => api.getSystemActivityLogs(20, 0),
+  });
+
+  const clearLogsMutation = useMutation({
+    mutationFn: () => api.clearActivityLogs(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/system/activity-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system/stats"] });
+      toast({ title: "Success", description: "Activity logs cleared" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to clear logs", variant: "destructive" });
+    },
+  });
+
+  const resetMutation = useMutation({
+    mutationFn: () => api.resetSystem(),
+    onSuccess: (data) => {
+      toast({ title: "Info", description: data.message });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to reset system", variant: "destructive" });
+    },
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Healthy": return "text-green-500";
+      case "Warning": return "text-yellow-500";
+      case "Error": return "text-red-500";
+      default: return "text-muted-foreground";
+    }
+  };
+
+  const getStatusBgColor = (status: string) => {
+    switch (status) {
+      case "Healthy": return "bg-green-500/5 border-green-500/20";
+      case "Warning": return "bg-yellow-500/5 border-yellow-500/20";
+      case "Error": return "bg-red-500/5 border-red-500/20";
+      default: return "";
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-heading font-bold">System & Backup</h1>
-            <p className="text-muted-foreground">Manage database backups and system health</p>
+            <h1 className="text-3xl font-heading font-bold">System & Monitoring</h1>
+            <p className="text-muted-foreground">Monitor system health and activity logs</p>
           </div>
           <div className="flex gap-2">
-             <Button variant="outline" className="gap-2 text-destructive border-destructive/50 hover:bg-destructive/10">
-                <RotateCcw className="w-4 h-4" /> Reset System
-             </Button>
-             <Button className="bg-primary gap-2">
-                <Database className="w-4 h-4" /> Create Backup Now
-             </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => refetchStats()}
+              disabled={statsLoading}
+              data-testid="button-refresh-stats"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${statsLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="text-destructive border-destructive/50"
+                  data-testid="button-reset-system"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" /> Reset System
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset System</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action will attempt to reset the system. This operation is restricted in this environment.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => resetMutation.mutate()}
+                    className="bg-destructive text-destructive-foreground"
+                  >
+                    {resetMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Reset"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
 
-        {/* System Status */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           <Card className="bg-green-500/5 border-green-500/20">
-              <CardHeader className="pb-2">
-                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-green-500" /> System Status
-                 </CardTitle>
-              </CardHeader>
-              <CardContent>
-                 <div className="text-2xl font-bold text-green-500">Healthy</div>
-                 <p className="text-xs text-muted-foreground mt-1">Last check: 2 mins ago</p>
-              </CardContent>
-           </Card>
-           <Card>
-              <CardHeader className="pb-2">
-                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+        {statsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className={getStatusBgColor(systemStats?.status || "Healthy")}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <ShieldCheck className={`w-4 h-4 ${getStatusColor(systemStats?.status || "Healthy")}`} /> 
+                    System Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${getStatusColor(systemStats?.status || "Healthy")}`}>
+                    {systemStats?.status || "Checking..."}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Last check: {systemStats?.lastCheck ? formatDistanceToNow(new Date(systemStats.lastCheck), { addSuffix: true }) : "Unknown"}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <HardDrive className="w-4 h-4 text-primary" /> Database Size
-                 </CardTitle>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{systemStats?.databaseSize || "Unknown"}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {systemStats?.tableStats?.reduce((sum, t) => sum + t.count, 0) || 0} total records
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-blue-500" /> Server Uptime
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {systemStats?.serverUptime ? formatUptime(systemStats.serverUptime) : "Unknown"}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Since last restart</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="w-5 h-5" />
+                  Database Tables
+                </CardTitle>
+                <CardDescription>Record counts per table</CardDescription>
               </CardHeader>
               <CardContent>
-                 <div className="text-2xl font-bold">45.2 MB</div>
-                 <div className="w-full bg-muted rounded-full h-1.5 mt-2 overflow-hidden">
-                    <div className="bg-primary h-full rounded-full" style={{ width: '15%' }} />
-                 </div>
-                 <p className="text-xs text-muted-foreground mt-1">15% of 500MB limit</p>
-              </CardContent>
-           </Card>
-           <Card>
-              <CardHeader className="pb-2">
-                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-blue-500" /> Next Auto-Backup
-                 </CardTitle>
-              </CardHeader>
-              <CardContent>
-                 <div className="text-2xl font-bold">02:00 AM</div>
-                 <p className="text-xs text-muted-foreground mt-1">Scheduled Daily</p>
-              </CardContent>
-           </Card>
-        </div>
-
-        {/* Backups List */}
-        <Card>
-           <CardHeader>
-              <CardTitle>Backup Points</CardTitle>
-              <CardDescription>List of available restore points</CardDescription>
-           </CardHeader>
-           <CardContent>
-              <Table>
-                 <TableHeader>
-                    <TableRow>
-                       <TableHead>Backup Name</TableHead>
-                       <TableHead>Type</TableHead>
-                       <TableHead>Size</TableHead>
-                       <TableHead>Date Created</TableHead>
-                       <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                 </TableHeader>
-                 <TableBody>
-                    {[
-                       { name: "daily_backup_2024_03_20", type: "Auto", size: "45.1 MB", date: "Mar 20, 2024 - 02:00 AM" },
-                       { name: "manual_pre_update", type: "Manual", size: "44.8 MB", date: "Mar 19, 2024 - 14:30 PM" },
-                       { name: "daily_backup_2024_03_19", type: "Auto", size: "44.5 MB", date: "Mar 19, 2024 - 02:00 AM" },
-                       { name: "daily_backup_2024_03_18", type: "Auto", size: "44.2 MB", date: "Mar 18, 2024 - 02:00 AM" },
-                    ].map((backup, i) => (
-                       <TableRow key={i}>
-                          <TableCell className="font-mono text-sm">{backup.name}</TableCell>
-                          <TableCell>
-                             <Badge variant={backup.type === 'Auto' ? 'secondary' : 'default'}>
-                                {backup.type}
-                             </Badge>
-                          </TableCell>
-                          <TableCell>{backup.size}</TableCell>
-                          <TableCell>{backup.date}</TableCell>
-                          <TableCell className="text-right">
-                             <div className="flex justify-end gap-2">
-                                <Button variant="outline" size="sm" className="gap-1">
-                                   <Download className="w-3 h-3" /> Download
-                                </Button>
-                                <Button variant="default" size="sm" className="gap-1">
-                                   <RefreshCw className="w-3 h-3" /> Restore
-                                </Button>
-                             </div>
-                          </TableCell>
-                       </TableRow>
-                    ))}
-                 </TableBody>
-              </Table>
-           </CardContent>
-        </Card>
-
-        {/* Audit Log */}
-        <Card>
-           <CardHeader>
-              <CardTitle>Audit Log</CardTitle>
-              <CardDescription>Detailed record of system activities</CardDescription>
-           </CardHeader>
-           <CardContent>
-              <div className="space-y-4">
-                 {[
-                    { action: "System Backup Created", user: "System", ip: "127.0.0.1", time: "2 hours ago", icon: Database },
-                    { action: "Failed Login Attempt", user: "Unknown", ip: "192.168.1.42", time: "5 hours ago", icon: AlertTriangle, color: "text-red-500" },
-                    { action: "Plugin 'SEO Pro' Updated", user: "Admin", ip: "10.0.0.5", time: "1 day ago", icon: RefreshCw },
-                 ].map((log, i) => (
-                    <div key={i} className="flex items-center justify-between border-b last:border-0 pb-4 last:pb-0">
-                       <div className="flex items-center gap-4">
-                          <div className={`p-2 rounded-full bg-muted ${log.color || ''}`}>
-                             <log.icon className="w-4 h-4" />
-                          </div>
-                          <div>
-                             <p className="font-medium">{log.action}</p>
-                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span>User: {log.user}</span>
-                                <span>•</span>
-                                <span>IP: {log.ip}</span>
-                             </div>
-                          </div>
-                       </div>
-                       <span className="text-xs text-muted-foreground">{log.time}</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                  {systemStats?.tableStats?.map((table) => (
+                    <div 
+                      key={table.name} 
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
+                    >
+                      <div className="p-2 rounded-md bg-primary/10">
+                        {table.name === "Users" && <Users className="w-4 h-4 text-primary" />}
+                        {table.name === "Projects" && <Briefcase className="w-4 h-4 text-primary" />}
+                        {table.name === "Posts" && <FileText className="w-4 h-4 text-primary" />}
+                        {table.name === "Messages" && <MessageSquare className="w-4 h-4 text-primary" />}
+                        {!["Users", "Projects", "Posts", "Messages"].includes(table.name) && 
+                          <Database className="w-4 h-4 text-primary" />}
+                      </div>
+                      <div>
+                        <p className="font-semibold">{table.count}</p>
+                        <p className="text-xs text-muted-foreground">{table.name}</p>
+                      </div>
                     </div>
-                 ))}
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Activity Log
+                </CardTitle>
+                <CardDescription>Recent system and user activities</CardDescription>
               </div>
-           </CardContent>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-destructive"
+                    data-testid="button-clear-logs"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" /> Clear Logs
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Clear Activity Logs</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete all activity logs. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => clearLogsMutation.mutate()}
+                      className="bg-destructive text-destructive-foreground"
+                    >
+                      {clearLogsMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Clear All"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {logsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : activityLogs && activityLogs.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Action</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="text-right">Time</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activityLogs.map((log: any) => (
+                    <TableRow key={log.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {getIconForType(log.type)}
+                          <span className="font-medium">{log.action}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {log.userName || "System"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            log.type === "success" ? "default" : 
+                            log.type === "error" ? "destructive" : 
+                            log.type === "warning" ? "secondary" : "outline"
+                          }
+                          className="text-xs"
+                        >
+                          {log.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground text-sm">
+                        {log.createdAt ? formatDistanceToNow(new Date(log.createdAt), { addSuffix: true }) : "Unknown"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Activity className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                <p>No activity logs found</p>
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
     </AdminLayout>

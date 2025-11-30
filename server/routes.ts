@@ -1298,5 +1298,55 @@ export async function registerRoutes(
     }
   });
 
+  // System endpoints
+  app.get("/api/system/stats", requireAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getSystemStats();
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/system/activity-logs", requireAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const logs = await storage.getActivityLogs(limit, offset);
+      res.json(logs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/system/clear-logs", requireAdmin, async (req, res) => {
+    try {
+      await storage.clearActivityLogs();
+      await storage.createActivityLog({
+        action: "Activity logs cleared",
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "warning"
+      });
+      res.json({ message: "Logs cleared successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/system/reset", requireAdmin, async (req, res) => {
+    try {
+      await storage.createActivityLog({
+        action: "System reset requested",
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "warning"
+      });
+      res.json({ message: "System reset is not available in this environment. Contact administrator." });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 }

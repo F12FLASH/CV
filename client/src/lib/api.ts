@@ -477,4 +477,37 @@ export const api = {
     });
     return handleResponse<any>(res);
   },
+
+  // System
+  getSystemStats: async () => {
+    const res = await fetch(`${API_BASE}/system/stats`, { credentials: 'include' });
+    return handleResponse<{
+      databaseSize: string;
+      tableStats: { name: string; count: number }[];
+      serverUptime: number;
+      lastCheck: string;
+      status: "Healthy" | "Warning" | "Error";
+    }>(res);
+  },
+
+  getSystemActivityLogs: async (limit = 50, offset = 0) => {
+    const res = await fetch(`${API_BASE}/system/activity-logs?limit=${limit}&offset=${offset}`, { credentials: 'include' });
+    return handleResponse<any[]>(res);
+  },
+
+  clearActivityLogs: async () => {
+    const res = await fetch(`${API_BASE}/system/clear-logs`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    return handleResponse<{ message: string }>(res);
+  },
+
+  resetSystem: async () => {
+    const res = await fetch(`${API_BASE}/system/reset`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    return handleResponse<{ message: string }>(res);
+  },
 };
