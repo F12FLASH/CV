@@ -2,9 +2,14 @@ import { AdminLayout } from "@/layouts/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Shield, Key, Lock, Smartphone, Globe, AlertTriangle } from "lucide-react";
+import { Shield, Key, Lock, Smartphone, Globe, AlertTriangle, Shield as ShieldIcon } from "lucide-react";
+import { useState } from "react";
 
 export default function AdminSecurity() {
+  const [recaptcha, setRecaptcha] = useState<'disabled' | 'local' | 'google' | 'cloudflare'>('google');
+  const [twoFaEnabled, setTwoFaEnabled] = useState(false);
+  const [passwordExpiration, setPasswordExpiration] = useState(true);
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -64,7 +69,7 @@ export default function AdminSecurity() {
                     <div className="text-sm text-muted-foreground">Secure account with mobile app</div>
                   </div>
                 </div>
-                <Switch />
+                <Switch checked={twoFaEnabled} onCheckedChange={setTwoFaEnabled} />
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -74,9 +79,82 @@ export default function AdminSecurity() {
                     <div className="text-sm text-muted-foreground">Force reset every 90 days</div>
                   </div>
                 </div>
-                <Switch defaultChecked />
+                <Switch checked={passwordExpiration} onCheckedChange={setPasswordExpiration} />
               </div>
               <Button variant="outline" className="w-full">Change Master Password</Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>reCAPTCHA Protection</CardTitle>
+              <CardDescription>Bot protection for forms and login</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="recaptcha" 
+                    value="google"
+                    checked={recaptcha === 'google'}
+                    onChange={(e) => setRecaptcha(e.target.value as any)}
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <div className="font-medium text-sm">Google reCAPTCHA v3</div>
+                    <div className="text-xs text-muted-foreground">Invisible, no user interaction required</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="recaptcha" 
+                    value="cloudflare"
+                    checked={recaptcha === 'cloudflare'}
+                    onChange={(e) => setRecaptcha(e.target.value as any)}
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <div className="font-medium text-sm">Cloudflare Turnstile</div>
+                    <div className="text-xs text-muted-foreground">Privacy-first, works with adblockers</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="recaptcha" 
+                    value="local"
+                    checked={recaptcha === 'local'}
+                    onChange={(e) => setRecaptcha(e.target.value as any)}
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <div className="font-medium text-sm">Local Verification</div>
+                    <div className="text-xs text-muted-foreground">Server-side validation only</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="recaptcha" 
+                    value="disabled"
+                    checked={recaptcha === 'disabled'}
+                    onChange={(e) => setRecaptcha(e.target.value as any)}
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <div className="font-medium text-sm">Disabled</div>
+                    <div className="text-xs text-muted-foreground">No protection enabled</div>
+                  </div>
+                </label>
+              </div>
+              {recaptcha !== 'disabled' && recaptcha !== 'local' && (
+                <Button variant="outline" className="w-full">
+                  Configure {recaptcha === 'google' ? 'Google' : 'Cloudflare'} Keys
+                </Button>
+              )}
+              <Button variant="outline" className="w-full">Save Settings</Button>
             </CardContent>
           </Card>
 

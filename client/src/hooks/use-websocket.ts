@@ -51,6 +51,7 @@ export function useWebSocket() {
 
             try {
               await refetchMessages();
+              queryClient.invalidateQueries({ queryKey: ['messages'] });
             } catch (err) {
               console.error("Failed to refetch messages:", err);
             }

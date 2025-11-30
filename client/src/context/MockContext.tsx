@@ -313,7 +313,8 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
   const markAsRead = async (id: number) => {
     try {
       await api.markMessageAsRead(id);
-      await refetchMessages();
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      toast({ title: "Marked as Read", description: "Message marked as read." });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -322,7 +323,7 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
   const deleteMessage = async (id: number) => {
     try {
       await api.deleteMessage(id);
-      await refetchMessages();
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
       toast({ title: "Message Deleted", description: "The message has been removed." });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
