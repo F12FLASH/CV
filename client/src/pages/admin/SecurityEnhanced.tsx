@@ -15,7 +15,8 @@ import {
   Shield, Key, Lock, Smartphone, Globe, AlertTriangle, Trash2, Filter,
   ShieldAlert, RefreshCw, Eye, EyeOff, Clock, Users,
   Fingerprint, Monitor, LogOut, Ban, CheckCircle, XCircle,
-  Server, AlertCircle, Plus, Loader2
+  Server, AlertCircle, Plus, Loader2, FileText, Code, BarChart3, 
+  Zap, Activity, Database, Link2, Layers
 } from "lucide-react";
 
 interface SecuritySettings {
@@ -71,6 +72,29 @@ interface SecuritySettings {
     enabled?: boolean;
     alertOnNewDevice?: boolean;
     blockSuspiciousDevices?: boolean;
+  };
+  compliance?: {
+    gdprEnabled?: boolean;
+    dataRetentionDays?: number;
+    privacyPolicyUrl?: string;
+    cookieConsentEnabled?: boolean;
+  };
+  apiSecurity?: {
+    apiKeyRotationDays?: number;
+    oauthEnabled?: boolean;
+    webhooksEnabled?: boolean;
+    rateLimitPerMin?: number;
+  };
+  cspSettings?: {
+    enabled?: boolean;
+    strictMode?: boolean;
+    reportUri?: string;
+  };
+  scannerSettings?: {
+    vulnerabilityScanEnabled?: boolean;
+    sslScanEnabled?: boolean;
+    malwareScanEnabled?: boolean;
+    scanFrequency?: string;
   };
 }
 
@@ -329,6 +353,11 @@ export default function AdminSecurityEnhanced() {
             <TabsTrigger value="firewall" data-testid="tab-firewall">Firewall</TabsTrigger>
             <TabsTrigger value="threat" data-testid="tab-threat">Threat Protection</TabsTrigger>
             <TabsTrigger value="sessions" data-testid="tab-sessions">Sessions</TabsTrigger>
+            <TabsTrigger value="compliance" data-testid="tab-compliance">Compliance</TabsTrigger>
+            <TabsTrigger value="api-security" data-testid="tab-api-security">API Security</TabsTrigger>
+            <TabsTrigger value="csp" data-testid="tab-csp">CSP</TabsTrigger>
+            <TabsTrigger value="scanner" data-testid="tab-scanner">Scanner</TabsTrigger>
+            <TabsTrigger value="activity" data-testid="tab-activity">Activity</TabsTrigger>
           </TabsList>
 
           {/* AUTHENTICATION TAB */}
@@ -1117,16 +1146,28 @@ export default function AdminSecurityEnhanced() {
                   </div>
                 )}
 
-                <Button 
-                  variant="destructive" 
-                  className="w-full"
-                  onClick={() => terminateAllSessionsMutation.mutate()}
-                  disabled={terminateAllSessionsMutation.isPending}
-                  data-testid="button-force-logout-all"
-                >
-                  {terminateAllSessionsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  <LogOut className="w-4 h-4 mr-2" /> Force Logout All Users
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => logoutAllDevicesMutation.mutate()}
+                    disabled={logoutAllDevicesMutation.isPending}
+                    data-testid="button-logout-all-devices"
+                  >
+                    {logoutAllDevicesMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    <LogOut className="w-4 h-4 mr-2" /> Logout All Devices
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    className="flex-1"
+                    onClick={() => terminateAllSessionsMutation.mutate()}
+                    disabled={terminateAllSessionsMutation.isPending}
+                    data-testid="button-force-logout-all"
+                  >
+                    {terminateAllSessionsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    <LogOut className="w-4 h-4 mr-2" /> Force Logout All Users
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -1247,6 +1288,298 @@ export default function AdminSecurityEnhanced() {
                 <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-fingerprinting">
                   {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save Device Settings
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* COMPLIANCE TAB */}
+          <TabsContent value="compliance" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" /> GDPR Compliance
+                </CardTitle>
+                <CardDescription>Manage data protection and privacy regulations</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">GDPR Enabled</p>
+                    <p className="text-xs text-muted-foreground">Enable GDPR compliance features</p>
+                  </div>
+                  <Switch 
+                    checked={localSettings.compliance?.gdprEnabled ?? true}
+                    onCheckedChange={(v) => updateNestedSetting('compliance', 'gdprEnabled', v)}
+                    data-testid="switch-gdpr"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Data Retention Period (days)</label>
+                  <Input 
+                    value={localSettings.compliance?.dataRetentionDays ?? 365}
+                    onChange={(e) => updateNestedSetting('compliance', 'dataRetentionDays', parseInt(e.target.value) || 365)}
+                    type="number" 
+                    className="mt-1"
+                    data-testid="input-retention-days"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Automatically delete user data after this period</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Privacy Policy URL</label>
+                  <Input 
+                    value={localSettings.compliance?.privacyPolicyUrl || ''}
+                    onChange={(e) => updateNestedSetting('compliance', 'privacyPolicyUrl', e.target.value)}
+                    placeholder="https://example.com/privacy"
+                    className="mt-1"
+                    data-testid="input-privacy-url"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Cookie Consent</p>
+                    <p className="text-xs text-muted-foreground">Require explicit cookie consent from users</p>
+                  </div>
+                  <Switch 
+                    checked={localSettings.compliance?.cookieConsentEnabled ?? true}
+                    onCheckedChange={(v) => updateNestedSetting('compliance', 'cookieConsentEnabled', v)}
+                    data-testid="switch-cookie-consent"
+                  />
+                </div>
+                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-compliance">
+                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save Compliance Settings
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* API SECURITY TAB */}
+          <TabsContent value="api-security" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Code className="w-5 h-5" /> API Protection
+                </CardTitle>
+                <CardDescription>Control API access and authentication</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">API Key Rotation (days)</label>
+                  <Input 
+                    value={localSettings.apiSecurity?.apiKeyRotationDays ?? 90}
+                    onChange={(e) => updateNestedSetting('apiSecurity', 'apiKeyRotationDays', parseInt(e.target.value) || 90)}
+                    type="number" 
+                    className="mt-1"
+                    data-testid="input-api-rotation"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Force API key rotation after this period</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">OAuth 2.0</p>
+                    <p className="text-xs text-muted-foreground">Enable OAuth authentication</p>
+                  </div>
+                  <Switch 
+                    checked={localSettings.apiSecurity?.oauthEnabled ?? false}
+                    onCheckedChange={(v) => updateNestedSetting('apiSecurity', 'oauthEnabled', v)}
+                    data-testid="switch-oauth"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Webhooks</p>
+                    <p className="text-xs text-muted-foreground">Allow outbound webhooks</p>
+                  </div>
+                  <Switch 
+                    checked={localSettings.apiSecurity?.webhooksEnabled ?? true}
+                    onCheckedChange={(v) => updateNestedSetting('apiSecurity', 'webhooksEnabled', v)}
+                    data-testid="switch-webhooks"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Rate Limit (requests/min)</label>
+                  <Input 
+                    value={localSettings.apiSecurity?.rateLimitPerMin ?? 60}
+                    onChange={(e) => updateNestedSetting('apiSecurity', 'rateLimitPerMin', parseInt(e.target.value) || 60)}
+                    type="number" 
+                    className="mt-1"
+                    data-testid="input-api-rate-limit"
+                  />
+                </div>
+                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-api-security">
+                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save API Security Settings
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* CSP TAB */}
+          <TabsContent value="csp" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Layers className="w-5 h-5" /> Content Security Policy
+                </CardTitle>
+                <CardDescription>Control resource loading and execution</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">CSP Enabled</p>
+                    <p className="text-xs text-muted-foreground">Apply content security policy headers</p>
+                  </div>
+                  <Switch 
+                    checked={localSettings.cspSettings?.enabled ?? true}
+                    onCheckedChange={(v) => updateNestedSetting('cspSettings', 'enabled', v)}
+                    data-testid="switch-csp-enabled"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Strict Mode</p>
+                    <p className="text-xs text-muted-foreground">Enforce strict CSP violations</p>
+                  </div>
+                  <Switch 
+                    checked={localSettings.cspSettings?.strictMode ?? false}
+                    onCheckedChange={(v) => updateNestedSetting('cspSettings', 'strictMode', v)}
+                    data-testid="switch-csp-strict"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Report URI</label>
+                  <Input 
+                    value={localSettings.cspSettings?.reportUri || ''}
+                    onChange={(e) => updateNestedSetting('cspSettings', 'reportUri', e.target.value)}
+                    placeholder="https://example.com/csp-report"
+                    className="mt-1"
+                    data-testid="input-csp-report-uri"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Endpoint to receive CSP violation reports</p>
+                </div>
+                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-csp">
+                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save CSP Settings
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* SCANNER TAB */}
+          <TabsContent value="scanner" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5" /> Security Scanning
+                </CardTitle>
+                <CardDescription>Automated security vulnerability scanning</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Vulnerability Scanning</p>
+                    <p className="text-xs text-muted-foreground">Scan for known vulnerabilities</p>
+                  </div>
+                  <Switch 
+                    checked={localSettings.scannerSettings?.vulnerabilityScanEnabled ?? true}
+                    onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'vulnerabilityScanEnabled', v)}
+                    data-testid="switch-vuln-scan"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">SSL Certificate Scanning</p>
+                    <p className="text-xs text-muted-foreground">Monitor SSL certificate validity</p>
+                  </div>
+                  <Switch 
+                    checked={localSettings.scannerSettings?.sslScanEnabled ?? true}
+                    onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'sslScanEnabled', v)}
+                    data-testid="switch-ssl-scan"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">Malware Scanning</p>
+                    <p className="text-xs text-muted-foreground">Scan uploaded files for malware</p>
+                  </div>
+                  <Switch 
+                    checked={localSettings.scannerSettings?.malwareScanEnabled ?? true}
+                    onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'malwareScanEnabled', v)}
+                    data-testid="switch-malware-scan"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Scan Frequency</label>
+                  <select 
+                    className="w-full p-2 rounded-md border border-input bg-background mt-1"
+                    value={localSettings.scannerSettings?.scanFrequency || 'weekly'}
+                    onChange={(e) => updateNestedSetting('scannerSettings', 'scanFrequency', e.target.value)}
+                    data-testid="select-scan-frequency"
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-scanner">
+                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save Scanner Settings
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ACTIVITY TAB */}
+          <TabsContent value="activity" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" /> Security Activity
+                </CardTitle>
+                <CardDescription>Monitor user actions and security events</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="p-3 border rounded-lg bg-blue-500/5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm">Last Login Activity</p>
+                        <p className="text-xs text-muted-foreground">Security events from last 24 hours</p>
+                      </div>
+                      <Badge variant="secondary">Active</Badge>
+                    </div>
+                  </div>
+                  <div className="p-3 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium">Login Attempts</p>
+                      <span className="text-lg font-bold">{stats?.byEventType?.find(e => e.type === 'login')?.count || 0}</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500 rounded-full" style={{ width: '60%' }} />
+                    </div>
+                  </div>
+                  <div className="p-3 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium">Failed Login Attempts</p>
+                      <span className="text-lg font-bold">{stats?.byEventType?.find(e => e.type === 'failed_login')?.count || 0}</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-red-500 rounded-full" style={{ width: '15%' }} />
+                    </div>
+                  </div>
+                  <div className="p-3 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium">Settings Changes</p>
+                      <span className="text-lg font-bold">{stats?.byEventType?.find(e => e.type === 'settings_change')?.count || 0}</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: '40%' }} />
+                    </div>
+                  </div>
+                </div>
+                <Button onClick={() => refetchSessions()} disabled={false} className="w-full" data-testid="button-refresh-activity">
+                  <RefreshCw className="w-4 h-4 mr-2" /> Refresh Activity Log
                 </Button>
               </CardContent>
             </Card>
