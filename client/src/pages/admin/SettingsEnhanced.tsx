@@ -145,8 +145,59 @@ export default function AdminSettingsEnhanced() {
                     data-testid="input-tagline"
                   />
                 </div>
+                <Separator />
+                <div className="flex items-center justify-between pt-2">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Maintenance Mode</Label>
+                    <p className="text-xs text-muted-foreground">Show maintenance page to all visitors</p>
+                  </div>
+                  <Switch
+                    checked={settings.maintenanceMode || false}
+                    onCheckedChange={(checked) => updateSettings({ maintenanceMode: checked })}
+                    data-testid="switch-maintenance-mode"
+                  />
+                </div>
               </CardContent>
             </Card>
+
+            {settings.maintenanceMode && (
+              <Card className="border-yellow-500/20 bg-yellow-500/5">
+                <CardHeader>
+                  <CardTitle>Maintenance Mode Settings</CardTitle>
+                  <CardDescription>Configure the message shown to visitors during maintenance</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Maintenance Title</Label>
+                    <Input 
+                      value={settings.maintenanceTitle || "Under Maintenance"}
+                      onChange={(e) => updateSettings({ maintenanceTitle: e.target.value })}
+                      placeholder="e.g., Under Maintenance"
+                      data-testid="input-maintenance-title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Maintenance Message</Label>
+                    <Textarea 
+                      value={settings.maintenanceMessage || "We're performing scheduled maintenance. Please check back soon."}
+                      onChange={(e) => updateSettings({ maintenanceMessage: e.target.value })}
+                      placeholder="Enter maintenance message..."
+                      rows={3}
+                      data-testid="input-maintenance-message"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Estimated Time</Label>
+                    <Input 
+                      value={settings.maintenanceEstimate || "We expect to be back online shortly."}
+                      onChange={(e) => updateSettings({ maintenanceEstimate: e.target.value })}
+                      placeholder="e.g., We expect to be back online shortly."
+                      data-testid="input-maintenance-estimate"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>

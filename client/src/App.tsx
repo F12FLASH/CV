@@ -4,9 +4,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MockProvider } from "@/context/MockContext";
-import { SiteProvider } from "@/context/SiteContext";
+import { SiteProvider, useSiteSettings } from "@/context/SiteContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import Home from "@/pages/Home";
+import Maintenance from "@/pages/Maintenance";
 import BlogPost from "@/pages/BlogPost";
 import Blog from "@/pages/Blog";
 import Projects from "@/pages/Projects";
@@ -58,6 +59,12 @@ function ThemeLoader() {
 }
 
 function Router() {
+  const { settings } = useSiteSettings();
+  
+  if (settings?.maintenanceMode) {
+    return <Maintenance />;
+  }
+
   return (
     <Switch>
       <Route path="/" component={Home} />

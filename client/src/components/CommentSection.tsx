@@ -74,7 +74,6 @@ export function CommentSection({ postId, projectId, title = "Comments" }: Commen
         projectId: projectId || null,
         status: 'Approved',
       };
-      console.log('Submitting comment:', payload);
       const response = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,14 +81,12 @@ export function CommentSection({ postId, projectId, title = "Comments" }: Commen
         body: JSON.stringify(payload),
       });
       const responseText = await response.text();
-      console.log('Response status:', response.status, 'Body:', responseText);
       if (!response.ok) {
         throw new Error(`Failed to submit comment: ${responseText}`);
       }
       return JSON.parse(responseText);
     },
     onSuccess: (data) => {
-      console.log('Comment created successfully:', data);
       toast({
         title: "Comment submitted",
         description: "Your comment is pending approval and will appear shortly.",
@@ -99,7 +96,6 @@ export function CommentSection({ postId, projectId, title = "Comments" }: Commen
       queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
     },
     onError: (error: any) => {
-      console.error('Comment submission error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to submit comment. Please try again.",

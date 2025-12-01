@@ -52,7 +52,6 @@ export default function AdminLogin() {
     e.preventDefault();
     
     if (honeypot) {
-      console.log('Honeypot triggered - bot detected');
       return;
     }
 
@@ -89,8 +88,6 @@ export default function AdminLogin() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        console.log("Login successful:", data);
         setTimeout(() => {
           window.location.href = "/admin";
         }, 100);
@@ -103,7 +100,6 @@ export default function AdminLogin() {
         });
       }
     } catch (error) {
-      console.error("Login error:", error);
       toast({
         title: "Error",
         description: "Failed to connect to server",

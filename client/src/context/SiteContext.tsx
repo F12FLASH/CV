@@ -5,6 +5,9 @@ export interface SiteSettings {
   siteTitle: string;
   tagline: string;
   maintenanceMode: boolean;
+  maintenanceTitle?: string;
+  maintenanceMessage?: string;
+  maintenanceEstimate?: string;
   heroTitle: string;
   heroSubtitle: string;
   heroCTA: string;
