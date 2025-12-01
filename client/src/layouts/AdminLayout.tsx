@@ -297,7 +297,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { icon: ImageIcon, label: "Media", href: "/admin/media" },
     { icon: Layers, label: "File Manager", href: "/admin/files" },
     { icon: Clock, label: "Activity", href: "/admin/activity" },
-    { icon: Key, label: "API Keys", href: "/admin/api-keys" },
     { icon: Download, label: "Export/Import", href: "/admin/export-import" },
     { icon: Code2, label: "Code Editor", href: "/admin/editor" },
     { icon: BarChart, label: "Analytics", href: "/admin/analytics" },

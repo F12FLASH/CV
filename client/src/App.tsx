@@ -34,7 +34,6 @@ import AdminThemeEnhanced from "@/pages/admin/ThemeEnhanced";
 import AdminSystem from "@/pages/admin/System";
 import AdminFileManager from "@/pages/admin/FileManager";
 import AdminActivityLog from "@/pages/admin/ActivityLog";
-import AdminAPIKeys from "@/pages/admin/APIKeys";
 import AdminExportImport from "@/pages/admin/ExportImport";
 import AdminPostsEnhanced from "@/pages/admin/PostsEnhanced";
 import AdminProjectsEnhanced from "@/pages/admin/ProjectsEnhanced";
@@ -83,7 +82,6 @@ function Router() {
       <Route path="/admin/media" component={lazy(() => import("@/pages/admin/Media"))} />
       <Route path="/admin/files" component={lazy(() => import("@/pages/admin/FileManager"))} />
       <Route path="/admin/activity" component={AdminActivityLog} />
-      <Route path="/admin/api-keys" component={AdminAPIKeys} />
       <Route path="/admin/export-import" component={AdminExportImport} />
       <Route path="/admin/inbox" component={AdminInbox} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
