@@ -1,134 +1,259 @@
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { 
-  Users, 
-  Mail, 
-  Send, 
-  BarChart, 
-  Plus,
-  MoreVertical,
-  Calendar,
-  MousePointerClick,
-  UserCheck,
-  Edit
-} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useState, useEffect } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Mail,
+  Send,
+  Plus,
+  Eye,
+  Save,
+  Loader2
+} from "lucide-react";
+
+interface NewsletterSettings {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  description: string;
+  placeholder: string;
+  buttonText: string;
+  successMessage: string;
+  backgroundImage?: string;
+}
 
 export default function AdminNewsletter() {
+  const { toast } = useToast();
+  const [showPreview, setShowPreview] = useState(false);
+  const [localSettings, setLocalSettings] = useState<NewsletterSettings>({
+    enabled: false,
+    title: "Subscribe to Our Newsletter",
+    subtitle: "Get the latest updates",
+    description: "Stay informed with our weekly newsletter",
+    placeholder: "Enter your email",
+    buttonText: "Subscribe",
+    successMessage: "Thanks for subscribing!",
+  });
+
+  const { data: settings = {}, isLoading } = useQuery<NewsletterSettings>({
+    queryKey: ['/api/newsletter/settings'],
+  });
+
+  useEffect(() => {
+    if (settings && Object.keys(settings).length > 0) {
+      setLocalSettings(settings);
+    }
+  }, [settings]);
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (newSettings: NewsletterSettings) => {
+      return apiRequest('POST', '/api/newsletter/settings', newSettings);
+    },
+    onSuccess: () => {
+      toast({ title: "Newsletter settings saved successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/newsletter/settings'] });
+    },
+    onError: () => {
+      toast({ title: "Failed to save settings", variant: "destructive" });
+    }
+  });
+
+  const handleSave = () => {
+    updateSettingsMutation.mutate(localSettings);
+  };
+
+  const handleInputChange = (field: keyof NewsletterSettings, value: any) => {
+    setLocalSettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-heading font-bold">Newsletter</h1>
-            <p className="text-muted-foreground">Manage subscribers and email campaigns</p>
+            <h1 className="text-3xl font-heading font-bold">Newsletter Management</h1>
+            <p className="text-muted-foreground">Configure and manage newsletter popup on homepage</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
-            <Plus className="w-4 h-4 mr-2" /> Create Campaign
+          <Button 
+            onClick={() => setShowPreview(!showPreview)}
+            variant="outline"
+          >
+            <Eye className="w-4 h-4 mr-2" /> {showPreview ? 'Hide' : 'Preview'}
           </Button>
         </div>
 
-        {/* Analytics Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-           {[
-             { label: "Total Subscribers", value: "2,543", change: "+12%", icon: Users, color: "text-blue-500" },
-             { label: "Avg. Open Rate", value: "45.2%", change: "+2.4%", icon: Mail, color: "text-green-500" },
-             { label: "Click Rate", value: "12.8%", change: "-0.5%", icon: MousePointerClick, color: "text-purple-500" },
-             { label: "Active Subs", value: "2,100", change: "+5%", icon: UserCheck, color: "text-yellow-500" },
-           ].map((stat, i) => (
-             <Card key={i}>
-               <CardContent className="p-6 flex items-center justify-between">
-                 <div>
-                   <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                   <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
-                   <span className={`text-xs ${stat.change.startsWith('+') ? 'text-green-500' : 'text-red-500'}`}>
-                     {stat.change} from last month
-                   </span>
-                 </div>
-                 <div className={`p-3 rounded-full bg-muted ${stat.color}`}>
-                   <stat.icon className="w-5 h-5" />
-                 </div>
-               </CardContent>
-             </Card>
-           ))}
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-           {/* Recent Campaigns */}
-           <div className="lg:col-span-2 space-y-6">
-              <h2 className="text-xl font-bold">Recent Campaigns</h2>
-              <div className="bg-card rounded-lg border border-border overflow-hidden">
-                 <Table>
-                    <TableHeader>
-                       <TableRow>
-                          <TableHead>Campaign Name</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Sent Date</TableHead>
-                          <TableHead>Open Rate</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                       {[
-                          { name: "March Newsletter", status: "Sent", date: "Mar 15, 2024", open: "48%" },
-                          { name: "Product Update v2.0", status: "Sent", date: "Mar 01, 2024", open: "52%" },
-                          { name: "Weekly Digest", status: "Draft", date: "-", open: "-" },
-                          { name: "Special Offer", status: "Scheduled", date: "Mar 25, 2024", open: "-" },
-                       ].map((row, i) => (
-                          <TableRow key={i}>
-                             <TableCell className="font-medium">{row.name}</TableCell>
-                             <TableCell>
-                                <span className={`px-2 py-1 rounded-full text-xs ${
-                                   row.status === 'Sent' ? 'bg-green-500/10 text-green-500' :
-                                   row.status === 'Draft' ? 'bg-gray-500/10 text-gray-500' :
-                                   'bg-blue-500/10 text-blue-500'
-                                }`}>
-                                   {row.status}
-                                </span>
-                             </TableCell>
-                             <TableCell>{row.date}</TableCell>
-                             <TableCell>{row.open}</TableCell>
-                             <TableCell className="text-right">
-                                <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
-                             </TableCell>
-                          </TableRow>
-                       ))}
-                    </TableBody>
-                 </Table>
-              </div>
-           </div>
+          {/* Settings Form */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5" /> Newsletter Popup Settings
+                </CardTitle>
+                <CardDescription>Configure the popup that appears on the homepage</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Activation Toggle */}
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Enable Newsletter Popup</p>
+                    <p className="text-xs text-muted-foreground">Show newsletter popup when users visit homepage</p>
+                  </div>
+                  <Switch
+                    checked={localSettings.enabled}
+                    onCheckedChange={(v) => handleInputChange('enabled', v)}
+                    data-testid="switch-newsletter-enabled"
+                  />
+                </div>
 
-           {/* Quick Actions / Templates */}
-           <div className="space-y-6">
-              <h2 className="text-xl font-bold">Email Templates</h2>
-              <div className="space-y-4">
-                 {["Welcome Email", "Monthly Newsletter", "Product Launch", "Simple Text"].map((template, i) => (
-                    <Card key={i} className="cursor-pointer hover:border-primary transition-colors group">
-                       <CardContent className="p-4 flex items-center gap-4">
-                          <div className="w-10 h-10 bg-primary/10 rounded flex items-center justify-center text-primary">
-                             <Mail className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1">
-                             <h4 className="font-medium">{template}</h4>
-                             <p className="text-xs text-muted-foreground">Last edited 2 days ago</p>
-                          </div>
-                          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100">
-                             <Edit className="w-4 h-4" />
-                          </Button>
-                       </CardContent>
-                    </Card>
-                 ))}
-              </div>
-           </div>
+                {localSettings.enabled && (
+                  <>
+                    {/* Title */}
+                    <div>
+                      <Label htmlFor="title">Popup Title</Label>
+                      <Input
+                        id="title"
+                        value={localSettings.title}
+                        onChange={(e) => handleInputChange('title', e.target.value)}
+                        placeholder="Subscribe to Our Newsletter"
+                        className="mt-2"
+                        data-testid="input-newsletter-title"
+                      />
+                    </div>
+
+                    {/* Subtitle */}
+                    <div>
+                      <Label htmlFor="subtitle">Subtitle</Label>
+                      <Input
+                        id="subtitle"
+                        value={localSettings.subtitle}
+                        onChange={(e) => handleInputChange('subtitle', e.target.value)}
+                        placeholder="Get the latest updates"
+                        className="mt-2"
+                        data-testid="input-newsletter-subtitle"
+                      />
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={localSettings.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        placeholder="Stay informed with our weekly newsletter"
+                        className="mt-2 min-h-20"
+                        data-testid="textarea-newsletter-description"
+                      />
+                    </div>
+
+                    {/* Email Placeholder */}
+                    <div>
+                      <Label htmlFor="placeholder">Email Input Placeholder</Label>
+                      <Input
+                        id="placeholder"
+                        value={localSettings.placeholder}
+                        onChange={(e) => handleInputChange('placeholder', e.target.value)}
+                        placeholder="Enter your email"
+                        className="mt-2"
+                        data-testid="input-newsletter-placeholder"
+                      />
+                    </div>
+
+                    {/* Button Text */}
+                    <div>
+                      <Label htmlFor="buttonText">Subscribe Button Text</Label>
+                      <Input
+                        id="buttonText"
+                        value={localSettings.buttonText}
+                        onChange={(e) => handleInputChange('buttonText', e.target.value)}
+                        placeholder="Subscribe"
+                        className="mt-2"
+                        data-testid="input-newsletter-button"
+                      />
+                    </div>
+
+                    {/* Success Message */}
+                    <div>
+                      <Label htmlFor="successMessage">Success Message</Label>
+                      <Input
+                        id="successMessage"
+                        value={localSettings.successMessage}
+                        onChange={(e) => handleInputChange('successMessage', e.target.value)}
+                        placeholder="Thanks for subscribing!"
+                        className="mt-2"
+                        data-testid="input-newsletter-success"
+                      />
+                    </div>
+
+                    {/* Save Button */}
+                    <Button 
+                      onClick={handleSave} 
+                      disabled={updateSettingsMutation.isPending}
+                      className="w-full"
+                      data-testid="button-save-newsletter"
+                    >
+                      {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      <Save className="w-4 h-4 mr-2" /> Save Newsletter Settings
+                    </Button>
+                  </>
+                )}
+
+                {!localSettings.enabled && (
+                  <div className="p-4 bg-muted rounded-lg text-center text-sm text-muted-foreground">
+                    Enable the toggle above to configure newsletter popup settings
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Preview */}
+          {showPreview && localSettings.enabled && (
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Preview</CardTitle>
+                  <CardDescription>How it will look on homepage</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 p-6 border rounded-lg bg-muted">
+                    <div>
+                      <h3 className="font-bold text-lg">{localSettings.title}</h3>
+                      <p className="text-sm font-medium text-muted-foreground">{localSettings.subtitle}</p>
+                    </div>
+                    <p className="text-sm">{localSettings.description}</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="email"
+                        placeholder={localSettings.placeholder}
+                        className="flex-1 px-3 py-2 rounded border border-input text-sm"
+                        disabled
+                      />
+                      <Button disabled>{localSettings.buttonText}</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>
