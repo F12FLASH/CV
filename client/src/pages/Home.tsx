@@ -13,6 +13,7 @@ import { Preloader } from "@/components/ui/Preloader";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { X, Mail } from "lucide-react";
+import type { HomepageSection } from "@shared/schema";
 
 interface NewsletterSettings {
   enabled: boolean;
@@ -34,6 +35,16 @@ export default function Home() {
     queryKey: ['/api/newsletter/settings'],
     enabled: !loading,
   });
+
+  const { data: sections = [] } = useQuery<HomepageSection[]>({
+    queryKey: ['/api/homepage/sections'],
+    enabled: !loading,
+  });
+
+  const isSectionVisible = (sectionName: string): boolean => {
+    const section = sections.find((s) => s.name === sectionName);
+    return section ? section.visible : true;
+  };
 
   // Lock scroll during loading
   useEffect(() => {
@@ -92,9 +103,9 @@ export default function Home() {
           <About />
           <Skills />
           <Services />
-          <Projects />
-          <Testimonials />
-          <Blog />
+          {isSectionVisible('projects') && <Projects />}
+          {isSectionVisible('testimonials') && <Testimonials />}
+          {isSectionVisible('blog') && <Blog />}
           <Contact />
         </main>
         <Footer />

@@ -18,7 +18,8 @@ import {
   trustedDevices, type TrustedDevice, type InsertTrustedDevice,
   userSessions, type UserSession, type InsertUserSession,
   ipRules, type IpRule, type InsertIpRule,
-  securityLogs, type SecurityLog, type InsertSecurityLog
+  securityLogs, type SecurityLog, type InsertSecurityLog,
+  homepageSections, type HomepageSection, type InsertHomepageSection
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
@@ -103,6 +104,11 @@ export interface IStorage {
   getAllNotifications(userId?: number): Promise<Notification[]>;
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(id: number): Promise<boolean>;
+
+  // Homepage Sections
+  getAllHomepageSections(): Promise<HomepageSection[]>;
+  getHomepageSectionByName(name: string): Promise<HomepageSection | undefined>;
+  updateHomepageSection(name: string, section: Partial<InsertHomepageSection>): Promise<HomepageSection | undefined>;
 
   // Site Settings
   getSetting(key: string): Promise<SiteSetting | undefined>;
@@ -976,6 +982,21 @@ export class DatabaseStorage implements IStorage {
   async createSecurityLog(log: InsertSecurityLog): Promise<SecurityLog> {
     const [created] = await db.insert(securityLogs).values(log).returning();
     return created;
+  }
+
+  // Homepage Sections
+  async getAllHomepageSections(): Promise<HomepageSection[]> {
+    return await db.select().from(homepageSections).orderBy(asc(homepageSections.order));
+  }
+
+  async getHomepageSectionByName(name: string): Promise<HomepageSection | undefined> {
+    const [section] = await db.select().from(homepageSections).where(eq(homepageSections.name, name));
+    return section || undefined;
+  }
+
+  async updateHomepageSection(name: string, section: Partial<InsertHomepageSection>): Promise<HomepageSection | undefined> {
+    const [updated] = await db.update(homepageSections).set({ ...section, updatedAt: new Date() }).where(eq(homepageSections.name, name)).returning();
+    return updated || undefined;
   }
 
   async getSecurityStats(): Promise<{

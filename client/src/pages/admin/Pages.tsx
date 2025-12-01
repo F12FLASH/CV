@@ -2,6 +2,8 @@ import { AdminLayout } from "@/layouts/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -16,13 +18,20 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import { 
   Plus, 
   Search, 
-  Filter, 
   Edit,
   Trash,
   FileText,
@@ -31,7 +40,7 @@ import {
   BookOpen,
   Layers
 } from "lucide-react";
-import { type Page } from "@shared/schema";
+import { type Page, type HomepageSection } from "@shared/schema";
 import { PageEditor } from "@/components/admin/page-editor";
 
 export default function AdminPages() {
@@ -71,6 +80,16 @@ export default function AdminPages() {
     },
   });
 
+  // Homepage Sections Query
+  const { data: sections = [], isLoading: sectionsLoading, refetch: refetchSections } = useQuery<HomepageSection[]>({
+    queryKey: ["/api/homepage/sections"],
+    queryFn: async () => {
+      const res = await fetch("/api/homepage/sections", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch sections");
+      return res.json();
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/pages/${id}`, {
@@ -103,6 +122,27 @@ export default function AdminPages() {
     onSuccess: () => {
       refetchPages();
       toast({ title: "Success", description: "Page status updated" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const toggleSectionMutation = useMutation({
+    mutationFn: async ({ name, visible }: { name: string; visible: boolean }) => {
+      const res = await fetch(`/api/homepage/sections/${name}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ visible }),
+      });
+      if (!res.ok) throw new Error("Failed to update section visibility");
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchSections();
+      queryClient.invalidateQueries({ queryKey: ["/api/homepage/sections"] });
+      toast({ title: "Success", description: "Section visibility updated" });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -146,7 +186,7 @@ export default function AdminPages() {
     project.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const isLoading = pagesLoading || postsLoading || projectsLoading;
+  const isLoading = pagesLoading || postsLoading || projectsLoading || sectionsLoading;
 
   if (isLoading) {
     return (
@@ -183,7 +223,7 @@ export default function AdminPages() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="pages" data-testid="tab-pages">
               <FileText className="w-4 h-4 mr-2" />
               Pages
@@ -195,6 +235,10 @@ export default function AdminPages() {
             <TabsTrigger value="projects" data-testid="tab-projects">
               <Layers className="w-4 h-4 mr-2" />
               Projects
+            </TabsTrigger>
+            <TabsTrigger value="visibility" data-testid="tab-visibility">
+              <Eye className="w-4 h-4 mr-2" />
+              Homepage
             </TabsTrigger>
           </TabsList>
 
@@ -423,6 +467,50 @@ export default function AdminPages() {
                   </TableBody>
                 </Table>
               )}
+            </div>
+          </TabsContent>
+
+          {/* Homepage Visibility Tab */}
+          <TabsContent value="visibility" className="space-y-6">
+            <div className="bg-card p-6 rounded-lg border border-border">
+              <h3 className="text-lg font-semibold mb-6">Homepage Sections Visibility</h3>
+              <div className="space-y-4">
+                {sections.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No sections available</p>
+                ) : (
+                  sections.map((section) => (
+                    <Card key={section.name}>
+                      <CardContent className="flex items-center justify-between p-4">
+                        <div className="flex-1">
+                          <h4 className="font-medium capitalize" data-testid={`text-section-${section.name}`}>
+                            {section.name.replace('-', ' ')}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {section.visible ? "Currently visible on homepage" : "Hidden from homepage"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Label htmlFor={`toggle-${section.name}`} className="cursor-pointer">
+                            {section.visible ? "Visible" : "Hidden"}
+                          </Label>
+                          <Switch
+                            id={`toggle-${section.name}`}
+                            checked={section.visible}
+                            onCheckedChange={(checked) => 
+                              toggleSectionMutation.mutate({ 
+                                name: section.name, 
+                                visible: checked 
+                              })
+                            }
+                            disabled={toggleSectionMutation.isPending}
+                            data-testid={`switch-section-${section.name}`}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
             </div>
           </TabsContent>
         </Tabs>

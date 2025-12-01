@@ -471,6 +471,24 @@ export const insertSecurityLogSchema = createInsertSchema(securityLogs).omit({
 export type InsertSecurityLog = z.infer<typeof insertSecurityLogSchema>;
 export type SecurityLog = typeof securityLogs.$inferSelect;
 
+// Homepage Sections - manage visibility of sections on homepage
+export const homepageSections = pgTable("homepage_sections", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // 'projects', 'blog', 'testimonials', etc.
+  visible: boolean("visible").notNull().default(true),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertHomepageSectionSchema = createInsertSchema(homepageSections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertHomepageSection = z.infer<typeof insertHomepageSectionSchema>;
+export type HomepageSection = typeof homepageSections.$inferSelect;
+
 // Relations for security tables
 export const trustedDevicesRelations = relations(trustedDevices, ({ one }) => ({
   user: one(users, {

@@ -1770,5 +1770,39 @@ export async function registerRoutes(
     }
   });
 
+  // Homepage Sections
+  app.get("/api/homepage/sections", async (req, res) => {
+    try {
+      const sections = await storage.getAllHomepageSections();
+      res.json(sections);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/homepage/sections/:name", async (req, res) => {
+    try {
+      const section = await storage.getHomepageSectionByName(req.params.name);
+      if (!section) {
+        return res.status(404).json({ message: "Section not found" });
+      }
+      res.json(section);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/homepage/sections/:name", requireAdmin, async (req, res) => {
+    try {
+      const updated = await storage.updateHomepageSection(req.params.name, req.body);
+      if (!updated) {
+        return res.status(404).json({ message: "Section not found" });
+      }
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 }
