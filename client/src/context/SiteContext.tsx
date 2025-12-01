@@ -35,6 +35,46 @@ export interface SiteSettings {
   footerCopyright: string;
   logoUrl: string;
   faviconUrl: string;
+  // SEO Settings
+  metaDescription?: string;
+  metaKeywords?: string;
+  googleAnalyticsId?: string;
+  ogImageUrl?: string;
+  twitterCardType?: string;
+  // Email/SMTP Settings
+  smtpHost?: string;
+  smtpPort?: string;
+  smtpUser?: string;
+  smtpPassword?: string;
+  smtpSecure?: boolean;
+  emailFromName?: string;
+  emailFromAddress?: string;
+  // Localization Settings
+  timezone?: string;
+  language?: string;
+  dateFormat?: string;
+  timeFormat?: string;
+  currency?: string;
+  currencySymbol?: string;
+  // Developer Settings
+  debugMode?: boolean;
+  apiRateLimit?: number;
+  corsEnabled?: boolean;
+  corsOrigins?: string;
+  customHeaders?: string;
+  // Logging Settings
+  logLevel?: string;
+  logRetentionDays?: number;
+  logToConsole?: boolean;
+  logToFile?: boolean;
+  // Notification Settings
+  emailNotifyNewContact?: boolean;
+  emailNotifyNewComment?: boolean;
+  emailNotifySecurityAlert?: boolean;
+  emailNotifyNewsletter?: boolean;
+  emailNotifyWeeklySummary?: boolean;
+  pushNotifyBrowser?: boolean;
+  pushNotifyMobile?: boolean;
 }
 
 interface SiteContextType {
@@ -76,6 +116,46 @@ const defaultSettings: SiteSettings = {
   footerCopyright: "2024 Loi Developer. All rights reserved.",
   logoUrl: "",
   faviconUrl: "",
+  // SEO Settings
+  metaDescription: "Full-stack Developer & Creative Coder",
+  metaKeywords: "web development, full-stack, react, node.js",
+  googleAnalyticsId: "",
+  ogImageUrl: "",
+  twitterCardType: "summary_large_image",
+  // Email/SMTP Settings
+  smtpHost: "",
+  smtpPort: "587",
+  smtpUser: "",
+  smtpPassword: "",
+  smtpSecure: true,
+  emailFromName: "",
+  emailFromAddress: "",
+  // Localization Settings
+  timezone: "Asia/Ho_Chi_Minh",
+  language: "en",
+  dateFormat: "MM/DD/YYYY",
+  timeFormat: "12h",
+  currency: "USD",
+  currencySymbol: "$",
+  // Developer Settings
+  debugMode: false,
+  apiRateLimit: 100,
+  corsEnabled: true,
+  corsOrigins: "*",
+  customHeaders: "",
+  // Logging Settings
+  logLevel: "info",
+  logRetentionDays: 30,
+  logToConsole: true,
+  logToFile: false,
+  // Notification Settings
+  emailNotifyNewContact: true,
+  emailNotifyNewComment: true,
+  emailNotifySecurityAlert: true,
+  emailNotifyNewsletter: false,
+  emailNotifyWeeklySummary: true,
+  pushNotifyBrowser: false,
+  pushNotifyMobile: false,
 };
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -93,6 +173,9 @@ export function SiteProvider({ children }: { children: ReactNode }) {
           siteTitle: data.siteTitle || defaultSettings.siteTitle,
           tagline: data.tagline || defaultSettings.tagline,
           maintenanceMode: data.maintenanceMode ?? defaultSettings.maintenanceMode,
+          maintenanceTitle: data.maintenanceTitle || defaultSettings.maintenanceTitle,
+          maintenanceMessage: data.maintenanceMessage || defaultSettings.maintenanceMessage,
+          maintenanceEstimate: data.maintenanceEstimate || defaultSettings.maintenanceEstimate,
           heroTitle: data.heroTitle || defaultSettings.heroTitle,
           heroSubtitle: data.heroSubtitle || defaultSettings.heroSubtitle,
           heroCTA: data.heroCTA || defaultSettings.heroCTA,
@@ -120,6 +203,46 @@ export function SiteProvider({ children }: { children: ReactNode }) {
           footerCopyright: data.footerCopyright || defaultSettings.footerCopyright,
           logoUrl: data.logoUrl || defaultSettings.logoUrl,
           faviconUrl: data.faviconUrl || defaultSettings.faviconUrl,
+          // SEO Settings
+          metaDescription: data.metaDescription || defaultSettings.metaDescription,
+          metaKeywords: data.metaKeywords || defaultSettings.metaKeywords,
+          googleAnalyticsId: data.googleAnalyticsId || defaultSettings.googleAnalyticsId,
+          ogImageUrl: data.ogImageUrl || defaultSettings.ogImageUrl,
+          twitterCardType: data.twitterCardType || defaultSettings.twitterCardType,
+          // Email/SMTP Settings
+          smtpHost: data.smtpHost || defaultSettings.smtpHost,
+          smtpPort: data.smtpPort || defaultSettings.smtpPort,
+          smtpUser: data.smtpUser || defaultSettings.smtpUser,
+          smtpPassword: data.smtpPassword || defaultSettings.smtpPassword,
+          smtpSecure: data.smtpSecure ?? defaultSettings.smtpSecure,
+          emailFromName: data.emailFromName || defaultSettings.emailFromName,
+          emailFromAddress: data.emailFromAddress || defaultSettings.emailFromAddress,
+          // Localization Settings
+          timezone: data.timezone || defaultSettings.timezone,
+          language: data.language || defaultSettings.language,
+          dateFormat: data.dateFormat || defaultSettings.dateFormat,
+          timeFormat: data.timeFormat || defaultSettings.timeFormat,
+          currency: data.currency || defaultSettings.currency,
+          currencySymbol: data.currencySymbol || defaultSettings.currencySymbol,
+          // Developer Settings
+          debugMode: data.debugMode ?? defaultSettings.debugMode,
+          apiRateLimit: data.apiRateLimit ?? defaultSettings.apiRateLimit,
+          corsEnabled: data.corsEnabled ?? defaultSettings.corsEnabled,
+          corsOrigins: data.corsOrigins || defaultSettings.corsOrigins,
+          customHeaders: data.customHeaders || defaultSettings.customHeaders,
+          // Logging Settings
+          logLevel: data.logLevel || defaultSettings.logLevel,
+          logRetentionDays: data.logRetentionDays ?? defaultSettings.logRetentionDays,
+          logToConsole: data.logToConsole ?? defaultSettings.logToConsole,
+          logToFile: data.logToFile ?? defaultSettings.logToFile,
+          // Notification Settings
+          emailNotifyNewContact: data.emailNotifyNewContact ?? defaultSettings.emailNotifyNewContact,
+          emailNotifyNewComment: data.emailNotifyNewComment ?? defaultSettings.emailNotifyNewComment,
+          emailNotifySecurityAlert: data.emailNotifySecurityAlert ?? defaultSettings.emailNotifySecurityAlert,
+          emailNotifyNewsletter: data.emailNotifyNewsletter ?? defaultSettings.emailNotifyNewsletter,
+          emailNotifyWeeklySummary: data.emailNotifyWeeklySummary ?? defaultSettings.emailNotifyWeeklySummary,
+          pushNotifyBrowser: data.pushNotifyBrowser ?? defaultSettings.pushNotifyBrowser,
+          pushNotifyMobile: data.pushNotifyMobile ?? defaultSettings.pushNotifyMobile,
         });
       }
     } catch (error) {

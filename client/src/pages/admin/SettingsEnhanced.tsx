@@ -695,15 +695,6 @@ export default function AdminSettingsEnhanced() {
 
           {/* SEO TAB */}
           <TabsContent value="seo" className="space-y-4">
-            <Card className="border-blue-500/20 bg-blue-500/5">
-              <CardContent className="flex items-center gap-3 py-3">
-                <Zap className="w-5 h-5 text-blue-500" />
-                <div>
-                  <p className="text-sm font-medium">Feature Preview</p>
-                  <p className="text-xs text-muted-foreground">SEO settings preview. Full implementation coming soon.</p>
-                </div>
-              </CardContent>
-            </Card>
             <Card>
               <CardHeader>
                 <CardTitle>SEO Configuration</CardTitle>
@@ -712,15 +703,30 @@ export default function AdminSettingsEnhanced() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Meta Description (Default)</Label>
-                  <Input placeholder="Describe your website..." defaultValue="Full-stack Developer & Creative Coder" />
+                  <Input 
+                    placeholder="Describe your website..." 
+                    value={settings.metaDescription || ""}
+                    onChange={(e) => updateSettings({ metaDescription: e.target.value })}
+                    data-testid="input-meta-description"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Default Keywords</Label>
-                  <Input placeholder="web development, full-stack, react, node.js" />
+                  <Input 
+                    placeholder="web development, full-stack, react, node.js" 
+                    value={settings.metaKeywords || ""}
+                    onChange={(e) => updateSettings({ metaKeywords: e.target.value })}
+                    data-testid="input-meta-keywords"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Google Analytics ID</Label>
-                  <Input placeholder="UA-XXXXXXXXX-X" />
+                  <Input 
+                    placeholder="G-XXXXXXXXXX or UA-XXXXXXXXX-X" 
+                    value={settings.googleAnalyticsId || ""}
+                    onChange={(e) => updateSettings({ googleAnalyticsId: e.target.value })}
+                    data-testid="input-google-analytics"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -733,14 +739,24 @@ export default function AdminSettingsEnhanced() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Open Graph Image URL</Label>
-                  <Input placeholder="https://example.com/og-image.png" />
+                  <Input 
+                    placeholder="https://example.com/og-image.png" 
+                    value={settings.ogImageUrl || ""}
+                    onChange={(e) => updateSettings({ ogImageUrl: e.target.value })}
+                    data-testid="input-og-image"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Twitter Card Type</Label>
-                  <select className="w-full p-2 rounded-md border border-input bg-background">
-                    <option>summary_large_image</option>
-                    <option>summary</option>
-                    <option>app</option>
+                  <select 
+                    className="w-full p-2 rounded-md border border-input bg-background"
+                    value={settings.twitterCardType || "summary_large_image"}
+                    onChange={(e) => updateSettings({ twitterCardType: e.target.value })}
+                    data-testid="select-twitter-card"
+                  >
+                    <option value="summary_large_image">summary_large_image</option>
+                    <option value="summary">summary</option>
+                    <option value="app">app</option>
                   </select>
                 </div>
               </CardContent>
@@ -751,20 +767,20 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle>Robots.txt & Sitemap</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">Edit robots.txt</Button>
-                <Button variant="outline" className="w-full justify-start">Regenerate Sitemap</Button>
+                <Button variant="outline" className="w-full justify-start" data-testid="button-edit-robots">Edit robots.txt</Button>
+                <Button variant="outline" className="w-full justify-start" data-testid="button-regenerate-sitemap">Regenerate Sitemap</Button>
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* EMAIL TAB */}
           <TabsContent value="email" className="space-y-4">
-            <Card className="border-blue-500/20 bg-blue-500/5">
+            <Card className="border-amber-500/20 bg-amber-500/5">
               <CardContent className="flex items-center gap-3 py-3">
-                <Zap className="w-5 h-5 text-blue-500" />
+                <AlertCircle className="w-5 h-5 text-amber-500" />
                 <div>
-                  <p className="text-sm font-medium">Feature Preview</p>
-                  <p className="text-xs text-muted-foreground">Email/SMTP configuration preview. Requires external mail server setup.</p>
+                  <p className="text-sm font-medium">Configuration Required</p>
+                  <p className="text-xs text-muted-foreground">SMTP settings are saved but email sending requires a mail server integration.</p>
                 </div>
               </CardContent>
             </Card>
@@ -776,40 +792,92 @@ export default function AdminSettingsEnhanced() {
                 <CardDescription>Configure email settings for notifications and newsletters.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>From Name</Label>
+                    <Input 
+                      placeholder="Loi Developer" 
+                      value={settings.emailFromName || ""}
+                      onChange={(e) => updateSettings({ emailFromName: e.target.value })}
+                      data-testid="input-email-from-name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>From Email Address</Label>
+                    <Input 
+                      placeholder="noreply@example.com" 
+                      value={settings.emailFromAddress || ""}
+                      onChange={(e) => updateSettings({ emailFromAddress: e.target.value })}
+                      data-testid="input-email-from-address"
+                    />
+                  </div>
+                </div>
+                <Separator />
                 <div className="space-y-2">
                   <Label>SMTP Host</Label>
-                  <Input placeholder="smtp.gmail.com" />
+                  <Input 
+                    placeholder="smtp.gmail.com" 
+                    value={settings.smtpHost || ""}
+                    onChange={(e) => updateSettings({ smtpHost: e.target.value })}
+                    data-testid="input-smtp-host"
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>SMTP Port</Label>
-                    <Input placeholder="587" />
+                    <Input 
+                      placeholder="587" 
+                      value={settings.smtpPort || ""}
+                      onChange={(e) => updateSettings({ smtpPort: e.target.value })}
+                      data-testid="input-smtp-port"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>SMTP User</Label>
-                    <Input placeholder="your-email@gmail.com" />
+                    <Input 
+                      placeholder="your-email@gmail.com" 
+                      value={settings.smtpUser || ""}
+                      onChange={(e) => updateSettings({ smtpUser: e.target.value })}
+                      data-testid="input-smtp-user"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>SMTP Password</Label>
-                  <Input type="password" placeholder="••••••••" />
+                  <Input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={settings.smtpPassword || ""}
+                    onChange={(e) => updateSettings({ smtpPassword: e.target.value })}
+                    data-testid="input-smtp-password"
+                  />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Switch />
-                  <Label>Use TLS/SSL</Label>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Use TLS/SSL</p>
+                    <p className="text-xs text-muted-foreground">Encrypt email transmission</p>
+                  </div>
+                  <Switch 
+                    checked={settings.smtpSecure ?? true}
+                    onCheckedChange={(checked) => updateSettings({ smtpSecure: checked })}
+                    data-testid="switch-smtp-secure"
+                  />
                 </div>
-                <Button variant="outline" className="w-full">Send Test Email</Button>
+                <Button variant="outline" className="w-full" data-testid="button-test-email">
+                  <Mail className="w-4 h-4 mr-2" /> Send Test Email
+                </Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle>Email Templates</CardTitle>
+                <CardDescription>Customize email templates for different notifications</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">Edit Welcome Email</Button>
-                <Button variant="outline" className="w-full justify-start">Edit Notification Email</Button>
-                <Button variant="outline" className="w-full justify-start">Edit Newsletter Template</Button>
+                <Button variant="outline" className="w-full justify-start" data-testid="button-edit-welcome-email">Edit Welcome Email</Button>
+                <Button variant="outline" className="w-full justify-start" data-testid="button-edit-notification-email">Edit Notification Email</Button>
+                <Button variant="outline" className="w-full justify-start" data-testid="button-edit-newsletter">Edit Newsletter Template</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -888,15 +956,6 @@ export default function AdminSettingsEnhanced() {
 
           {/* NOTIFICATIONS & ALERTS TAB */}
           <TabsContent value="notifications" className="space-y-4">
-            <Card className="border-blue-500/20 bg-blue-500/5">
-              <CardContent className="flex items-center gap-3 py-3">
-                <Zap className="w-5 h-5 text-blue-500" />
-                <div>
-                  <p className="text-sm font-medium">Feature Preview</p>
-                  <p className="text-xs text-muted-foreground">Notification system preview. Full push notifications coming soon.</p>
-                </div>
-              </CardContent>
-            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -908,21 +967,61 @@ export default function AdminSettingsEnhanced() {
                 <div className="space-y-4">
                   <h4 className="font-medium">Email Notifications</h4>
                   <div className="space-y-3">
-                    {[
-                      { label: "New contact form submissions", desc: "Receive email when someone contacts you", enabled: true },
-                      { label: "New comments", desc: "Get notified when comments are posted", enabled: true },
-                      { label: "Security alerts", desc: "Important security-related notifications", enabled: true },
-                      { label: "Newsletter subscriptions", desc: "When new users subscribe", enabled: false },
-                      { label: "Weekly analytics summary", desc: "Weekly report of site performance", enabled: true },
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium text-sm">{item.label}</p>
-                          <p className="text-xs text-muted-foreground">{item.desc}</p>
-                        </div>
-                        <Switch defaultChecked={item.enabled} />
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">New contact form submissions</p>
+                        <p className="text-xs text-muted-foreground">Receive email when someone contacts you</p>
                       </div>
-                    ))}
+                      <Switch 
+                        checked={settings.emailNotifyNewContact ?? true}
+                        onCheckedChange={(checked) => updateSettings({ emailNotifyNewContact: checked })}
+                        data-testid="switch-notify-contact"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">New comments</p>
+                        <p className="text-xs text-muted-foreground">Get notified when comments are posted</p>
+                      </div>
+                      <Switch 
+                        checked={settings.emailNotifyNewComment ?? true}
+                        onCheckedChange={(checked) => updateSettings({ emailNotifyNewComment: checked })}
+                        data-testid="switch-notify-comment"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Security alerts</p>
+                        <p className="text-xs text-muted-foreground">Important security-related notifications</p>
+                      </div>
+                      <Switch 
+                        checked={settings.emailNotifySecurityAlert ?? true}
+                        onCheckedChange={(checked) => updateSettings({ emailNotifySecurityAlert: checked })}
+                        data-testid="switch-notify-security"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Newsletter subscriptions</p>
+                        <p className="text-xs text-muted-foreground">When new users subscribe</p>
+                      </div>
+                      <Switch 
+                        checked={settings.emailNotifyNewsletter ?? false}
+                        onCheckedChange={(checked) => updateSettings({ emailNotifyNewsletter: checked })}
+                        data-testid="switch-notify-newsletter"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Weekly analytics summary</p>
+                        <p className="text-xs text-muted-foreground">Weekly report of site performance</p>
+                      </div>
+                      <Switch 
+                        checked={settings.emailNotifyWeeklySummary ?? true}
+                        onCheckedChange={(checked) => updateSettings({ emailNotifyWeeklySummary: checked })}
+                        data-testid="switch-notify-weekly"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -931,18 +1030,28 @@ export default function AdminSettingsEnhanced() {
                 <div className="space-y-4">
                   <h4 className="font-medium">Push Notifications</h4>
                   <div className="space-y-3">
-                    {[
-                      { label: "Browser notifications", desc: "Show desktop notifications", enabled: false },
-                      { label: "Mobile push", desc: "Send to mobile devices", enabled: false },
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium text-sm">{item.label}</p>
-                          <p className="text-xs text-muted-foreground">{item.desc}</p>
-                        </div>
-                        <Switch defaultChecked={item.enabled} />
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Browser notifications</p>
+                        <p className="text-xs text-muted-foreground">Show desktop notifications</p>
                       </div>
-                    ))}
+                      <Switch 
+                        checked={settings.pushNotifyBrowser ?? false}
+                        onCheckedChange={(checked) => updateSettings({ pushNotifyBrowser: checked })}
+                        data-testid="switch-push-browser"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Mobile push</p>
+                        <p className="text-xs text-muted-foreground">Send to mobile devices</p>
+                      </div>
+                      <Switch 
+                        checked={settings.pushNotifyMobile ?? false}
+                        onCheckedChange={(checked) => updateSettings({ pushNotifyMobile: checked })}
+                        data-testid="switch-push-mobile"
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -1146,15 +1255,6 @@ export default function AdminSettingsEnhanced() {
 
           {/* DEVELOPER SETTINGS TAB */}
           <TabsContent value="developer" className="space-y-4">
-            <Card className="border-blue-500/20 bg-blue-500/5">
-              <CardContent className="flex items-center gap-3 py-3">
-                <Zap className="w-5 h-5 text-blue-500" />
-                <div>
-                  <p className="text-sm font-medium">Feature Preview</p>
-                  <p className="text-xs text-muted-foreground">Developer tools preview. Advanced debugging coming soon.</p>
-                </div>
-              </CardContent>
-            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1168,21 +1268,33 @@ export default function AdminSettingsEnhanced() {
                     <p className="font-medium text-sm">Enable Debug Mode</p>
                     <p className="text-xs text-muted-foreground">Shows detailed error messages and stack traces</p>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={settings.debugMode ?? false}
+                    onCheckedChange={(checked) => updateSettings({ debugMode: checked })}
+                    data-testid="switch-debug-mode"
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-sm">Show Query Debug</p>
-                    <p className="text-xs text-muted-foreground">Display database queries in console</p>
+                    <p className="font-medium text-sm">Log to Console</p>
+                    <p className="text-xs text-muted-foreground">Output logs to browser/server console</p>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={settings.logToConsole ?? true}
+                    onCheckedChange={(checked) => updateSettings({ logToConsole: checked })}
+                    data-testid="switch-log-console"
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-sm">Performance Profiling</p>
-                    <p className="text-xs text-muted-foreground">Track execution time of functions</p>
+                    <p className="font-medium text-sm">Log to File</p>
+                    <p className="text-xs text-muted-foreground">Save logs to file system</p>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={settings.logToFile ?? false}
+                    onCheckedChange={(checked) => updateSettings({ logToFile: checked })}
+                    data-testid="switch-log-file"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -1195,18 +1307,18 @@ export default function AdminSettingsEnhanced() {
                 <CardDescription>Configure rate limiting for API endpoints</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Requests per minute (global)</Label>
-                    <Input type="number" defaultValue="60" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Requests per minute (per IP)</Label>
-                    <Input type="number" defaultValue="30" />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Requests per minute (global)</Label>
+                  <Input 
+                    type="number" 
+                    value={settings.apiRateLimit ?? 100}
+                    onChange={(e) => updateSettings({ apiRateLimit: parseInt(e.target.value) || 100 })}
+                    data-testid="input-api-rate-limit"
+                  />
+                  <p className="text-xs text-muted-foreground">Maximum API requests per minute across all endpoints</p>
                 </div>
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm">Endpoint-specific limits</h4>
+                  <h4 className="font-medium text-sm">Endpoint-specific limits (read-only)</h4>
                   {[
                     { endpoint: "/api/contact", limit: 5, window: "1 hour" },
                     { endpoint: "/api/auth/login", limit: 10, window: "15 mins" },
@@ -1228,31 +1340,38 @@ export default function AdminSettingsEnhanced() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">Enable CORS</p>
+                    <p className="text-xs text-muted-foreground">Allow cross-origin requests</p>
+                  </div>
+                  <Switch 
+                    checked={settings.corsEnabled ?? true}
+                    onCheckedChange={(checked) => updateSettings({ corsEnabled: checked })}
+                    data-testid="switch-cors-enabled"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Allowed Origins (CORS)</Label>
+                  <Input 
+                    placeholder="* (all origins) or https://example.com, https://app.example.com"
+                    value={settings.corsOrigins || ""}
+                    onChange={(e) => updateSettings({ corsOrigins: e.target.value })}
+                    data-testid="input-cors-origins"
+                  />
+                  <p className="text-xs text-muted-foreground">Use * to allow all origins, or specify comma-separated domains</p>
+                </div>
                 <div className="space-y-2">
                   <Label>Custom Headers</Label>
                   <Textarea 
                     placeholder="X-Custom-Header: value&#10;X-Another-Header: value"
                     className="font-mono text-sm"
                     rows={3}
+                    value={settings.customHeaders || ""}
+                    onChange={(e) => updateSettings({ customHeaders: e.target.value })}
+                    data-testid="input-custom-headers"
                   />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Enable CORS</p>
-                    <p className="text-xs text-muted-foreground">Allow cross-origin requests</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="space-y-2">
-                  <Label>Allowed Origins (CORS)</Label>
-                  <Input placeholder="https://example.com, https://app.example.com" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">GraphQL Introspection</p>
-                    <p className="text-xs text-muted-foreground">Allow schema introspection queries</p>
-                  </div>
-                  <Switch />
+                  <p className="text-xs text-muted-foreground">Add custom HTTP headers to all responses</p>
                 </div>
               </CardContent>
             </Card>
@@ -1260,15 +1379,6 @@ export default function AdminSettingsEnhanced() {
 
           {/* LOCALIZATION TAB (Enhanced) */}
           <TabsContent value="localization" className="space-y-4">
-            <Card className="border-blue-500/20 bg-blue-500/5">
-              <CardContent className="flex items-center gap-3 py-3">
-                <Zap className="w-5 h-5 text-blue-500" />
-                <div>
-                  <p className="text-sm font-medium">Feature Preview</p>
-                  <p className="text-xs text-muted-foreground">Localization settings preview. Multi-language support coming soon.</p>
-                </div>
-              </CardContent>
-            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1279,38 +1389,58 @@ export default function AdminSettingsEnhanced() {
               <CardContent className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Timezone</Label>
-                  <select className="w-full p-2 rounded-md border border-input bg-background">
-                    <option>UTC+07:00 (Vietnam)</option>
-                    <option>UTC+08:00 (Asia/Shanghai)</option>
-                    <option>UTC+09:00 (Asia/Tokyo)</option>
-                    <option>UTC+00:00 (London)</option>
-                    <option>UTC-05:00 (New York)</option>
-                    <option>UTC-08:00 (Los Angeles)</option>
+                  <select 
+                    className="w-full p-2 rounded-md border border-input bg-background"
+                    value={settings.timezone || "Asia/Ho_Chi_Minh"}
+                    onChange={(e) => updateSettings({ timezone: e.target.value })}
+                    data-testid="select-timezone"
+                  >
+                    <option value="Asia/Ho_Chi_Minh">UTC+07:00 (Vietnam)</option>
+                    <option value="Asia/Shanghai">UTC+08:00 (Shanghai)</option>
+                    <option value="Asia/Tokyo">UTC+09:00 (Tokyo)</option>
+                    <option value="Europe/London">UTC+00:00 (London)</option>
+                    <option value="America/New_York">UTC-05:00 (New York)</option>
+                    <option value="America/Los_Angeles">UTC-08:00 (Los Angeles)</option>
                   </select>
                 </div>
                 <div className="space-y-2">
                   <Label>Default Language</Label>
-                  <select className="w-full p-2 rounded-md border border-input bg-background">
-                    <option>English</option>
-                    <option>Tiếng Việt</option>
-                    <option>中文</option>
-                    <option>日本語</option>
-                    <option>한국어</option>
+                  <select 
+                    className="w-full p-2 rounded-md border border-input bg-background"
+                    value={settings.language || "en"}
+                    onChange={(e) => updateSettings({ language: e.target.value })}
+                    data-testid="select-language"
+                  >
+                    <option value="en">English</option>
+                    <option value="vi">Tiếng Việt</option>
+                    <option value="zh">中文</option>
+                    <option value="ja">日本語</option>
+                    <option value="ko">한국어</option>
                   </select>
                 </div>
                 <div className="space-y-2">
                   <Label>Date Format</Label>
-                  <select className="w-full p-2 rounded-md border border-input bg-background">
-                    <option>MM/DD/YYYY</option>
-                    <option>DD/MM/YYYY</option>
-                    <option>YYYY-MM-DD</option>
+                  <select 
+                    className="w-full p-2 rounded-md border border-input bg-background"
+                    value={settings.dateFormat || "MM/DD/YYYY"}
+                    onChange={(e) => updateSettings({ dateFormat: e.target.value })}
+                    data-testid="select-date-format"
+                  >
+                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
                   </select>
                 </div>
                 <div className="space-y-2">
                   <Label>Time Format</Label>
-                  <select className="w-full p-2 rounded-md border border-input bg-background">
-                    <option>12 Hour (AM/PM)</option>
-                    <option>24 Hour</option>
+                  <select 
+                    className="w-full p-2 rounded-md border border-input bg-background"
+                    value={settings.timeFormat || "12h"}
+                    onChange={(e) => updateSettings({ timeFormat: e.target.value })}
+                    data-testid="select-time-format"
+                  >
+                    <option value="12h">12 Hour (AM/PM)</option>
+                    <option value="24h">24 Hour</option>
                   </select>
                 </div>
               </CardContent>
@@ -1327,32 +1457,43 @@ export default function AdminSettingsEnhanced() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Default Currency</Label>
-                    <select className="w-full p-2 rounded-md border border-input bg-background">
-                      <option>USD ($)</option>
-                      <option>VND (₫)</option>
-                      <option>EUR (€)</option>
-                      <option>GBP (£)</option>
-                      <option>JPY (¥)</option>
-                      <option>CNY (¥)</option>
+                    <select 
+                      className="w-full p-2 rounded-md border border-input bg-background"
+                      value={settings.currency || "USD"}
+                      onChange={(e) => {
+                        const currencySymbols: Record<string, string> = {
+                          USD: "$", VND: "₫", EUR: "€", GBP: "£", JPY: "¥", CNY: "¥"
+                        };
+                        updateSettings({ 
+                          currency: e.target.value,
+                          currencySymbol: currencySymbols[e.target.value] || "$"
+                        });
+                      }}
+                      data-testid="select-currency"
+                    >
+                      <option value="USD">USD ($)</option>
+                      <option value="VND">VND (₫)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="GBP">GBP (£)</option>
+                      <option value="JPY">JPY (¥)</option>
+                      <option value="CNY">CNY (¥)</option>
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Currency Position</Label>
-                    <select className="w-full p-2 rounded-md border border-input bg-background">
-                      <option>Before amount ($100)</option>
-                      <option>After amount (100$)</option>
-                    </select>
+                    <Label>Currency Symbol</Label>
+                    <Input 
+                      value={settings.currencySymbol || "$"}
+                      onChange={(e) => updateSettings({ currencySymbol: e.target.value })}
+                      data-testid="input-currency-symbol"
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Decimal Separator</Label>
-                    <select className="w-full p-2 rounded-md border border-input bg-background">
-                      <option>Period (1,000.00)</option>
-                      <option>Comma (1.000,00)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Decimal Places</Label>
-                    <Input type="number" defaultValue="2" min="0" max="4" />
+                </div>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-2">Preview:</p>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div><span className="text-muted-foreground">Currency:</span> {settings.currencySymbol || "$"}1,234.56</div>
+                    <div><span className="text-muted-foreground">Date:</span> {new Date().toLocaleDateString()}</div>
+                    <div><span className="text-muted-foreground">Time:</span> {new Date().toLocaleTimeString()}</div>
                   </div>
                 </div>
               </CardContent>
