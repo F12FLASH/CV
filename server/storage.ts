@@ -110,6 +110,7 @@ export interface IStorage {
   getAllHomepageSections(): Promise<HomepageSection[]>;
   getHomepageSectionByName(name: string): Promise<HomepageSection | undefined>;
   updateHomepageSection(name: string, section: Partial<InsertHomepageSection>): Promise<HomepageSection | undefined>;
+  upsertHomepageSection(name: string, section: Partial<InsertHomepageSection>): Promise<HomepageSection>;
 
   // Site Settings
   getSetting(key: string): Promise<SiteSetting | undefined>;
@@ -1006,6 +1007,32 @@ export class DatabaseStorage implements IStorage {
   async updateHomepageSection(name: string, section: Partial<InsertHomepageSection>): Promise<HomepageSection | undefined> {
     const [updated] = await db.update(homepageSections).set({ ...section, updatedAt: new Date() }).where(eq(homepageSections.name, name)).returning();
     return updated || undefined;
+  }
+
+  async upsertHomepageSection(name: string, section: Partial<InsertHomepageSection>): Promise<HomepageSection> {
+    const existing = await this.getHomepageSectionByName(name);
+    if (existing) {
+      const mergedData = {
+        name: existing.name,
+        visible: section.visible !== undefined ? section.visible : existing.visible,
+        order: section.order !== undefined ? section.order : existing.order,
+        updatedAt: new Date()
+      };
+      
+      const [updated] = await db.update(homepageSections)
+        .set(mergedData)
+        .where(eq(homepageSections.name, name))
+        .returning();
+      return updated;
+    }
+    
+    const defaultOrder = await this.getAllHomepageSections().then(s => s.length);
+    const [created] = await db.insert(homepageSections).values({
+      name,
+      visible: section.visible ?? true,
+      order: section.order ?? defaultOrder
+    }).returning();
+    return created;
   }
 
   async getSecurityStats(): Promise<{

@@ -52,7 +52,7 @@ export function useWebSocket() {
               duration: 5000,
             });
 
-            queryClient.invalidateQueries({ queryKey: ['messages'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
           }
 
           const isNewComment = message.type === "NEW_COMMENT" || 

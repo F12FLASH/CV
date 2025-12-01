@@ -2018,10 +2018,7 @@ export async function registerRoutes(
 
   app.put("/api/homepage/sections/:name", requireAdmin, async (req, res) => {
     try {
-      const updated = await storage.updateHomepageSection(req.params.name, req.body);
-      if (!updated) {
-        return res.status(404).json({ message: "Section not found" });
-      }
+      const updated = await storage.upsertHomepageSection(req.params.name, req.body);
       res.json(updated);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
