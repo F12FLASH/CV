@@ -152,10 +152,7 @@ export default function AdminSecurityEnhanced() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (newSettings: SecuritySettings) => {
-      return apiRequest('/api/security/settings/bulk', {
-        method: 'POST',
-        body: JSON.stringify(newSettings),
-      });
+      return apiRequest('POST', '/api/security/settings/bulk', newSettings);
     },
     onSuccess: () => {
       toast({ title: "Settings saved successfully" });
@@ -168,7 +165,7 @@ export default function AdminSecurityEnhanced() {
 
   const deleteDeviceMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/security/devices/${id}`, { method: 'DELETE' });
+      return apiRequest('DELETE', `/api/security/devices/${id}`);
     },
     onSuccess: () => {
       toast({ title: "Device removed" });
@@ -178,7 +175,7 @@ export default function AdminSecurityEnhanced() {
 
   const terminateSessionMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/security/sessions/terminate/${id}`, { method: 'POST' });
+      return apiRequest('POST', `/api/security/sessions/terminate/${id}`);
     },
     onSuccess: () => {
       toast({ title: "Session terminated" });
@@ -188,7 +185,7 @@ export default function AdminSecurityEnhanced() {
 
   const terminateAllSessionsMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('/api/security/sessions/terminate-all', { method: 'POST' });
+      return apiRequest('POST', '/api/security/sessions/terminate-all');
     },
     onSuccess: () => {
       toast({ title: "All sessions terminated" });
@@ -198,7 +195,7 @@ export default function AdminSecurityEnhanced() {
 
   const logoutAllDevicesMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('/api/security/sessions/logout-all-devices', { method: 'POST' });
+      return apiRequest('POST', '/api/security/sessions/logout-all-devices');
     },
     onSuccess: () => {
       toast({ title: "Logged out from all devices" });
@@ -208,10 +205,7 @@ export default function AdminSecurityEnhanced() {
 
   const addIpRuleMutation = useMutation({
     mutationFn: async ({ ipAddress, type }: { ipAddress: string; type: 'whitelist' | 'blacklist' }) => {
-      return apiRequest('/api/security/ip-rules', {
-        method: 'POST',
-        body: JSON.stringify({ ipAddress, type }),
-      });
+      return apiRequest('POST', '/api/security/ip-rules', { ipAddress, type });
     },
     onSuccess: () => {
       toast({ title: "IP rule added" });
@@ -223,7 +217,7 @@ export default function AdminSecurityEnhanced() {
 
   const deleteIpRuleMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/security/ip-rules/${id}`, { method: 'DELETE' });
+      return apiRequest('DELETE', `/api/security/ip-rules/${id}`);
     },
     onSuccess: () => {
       toast({ title: "IP rule removed" });
