@@ -53,6 +53,7 @@ import { ThemeProvider } from "next-themes";
 import { lazy } from "react";
 import { useThemeSettings } from "@/hooks/useThemeSettings";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 
 function ThemeLoader() {
   useThemeSettings();
@@ -62,8 +63,12 @@ function ThemeLoader() {
 function Router() {
   const { settings } = useSiteSettings();
   const { isAuthenticated } = useAuth();
+  const [location] = useLocation();
   
-  if (settings?.maintenanceMode && !isAuthenticated) {
+  // Maintenance mode chỉ dành cho public pages, không dành cho admin
+  const isAdminPath = location.startsWith('/admin');
+  
+  if (settings?.maintenanceMode && !isAuthenticated && !isAdminPath) {
     return <Maintenance />;
   }
 
