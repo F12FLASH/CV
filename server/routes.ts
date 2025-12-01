@@ -13,7 +13,9 @@ import {
 } from "@shared/schema";
 import bcrypt from "bcrypt";
 import { broadcastNewMessage, broadcastNotification, broadcastNewComment, broadcastNewReview } from "./websocket";
+// @ts-ignore - speakeasy doesn't have type definitions
 import speakeasy from "speakeasy";
+// @ts-ignore - qrcode types may be incomplete  
 import QRCode from "qrcode";
 import { 
   generateRegistrationOptions, 
@@ -79,6 +81,11 @@ declare module "express-session" {
     userId: number;
     username: string;
     role: string;
+    pending2FA?: boolean;
+    pendingUserId?: number;
+    temp2FASecret?: string;
+    currentChallenge?: string;
+    tempUserId?: number;
   }
 }
 
@@ -183,12 +190,20 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.session.userId) {
     return res.status(401).json({ message: "Authentication required" });
   }
+  // Block access if 2FA verification is pending
+  if (req.session.pending2FA) {
+    return res.status(401).json({ message: "2FA verification required" });
+  }
   next();
 }
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.session.userId) {
     return res.status(401).json({ message: "Authentication required" });
+  }
+  // Block access if 2FA verification is pending
+  if (req.session.pending2FA) {
+    return res.status(401).json({ message: "2FA verification required" });
   }
   if (req.session.role !== "Super Admin" && req.session.role !== "Admin") {
     return res.status(403).json({ message: "Admin access required" });
@@ -255,10 +270,10 @@ export async function registerRoutes(
           action: `Failed login attempt - captcha failed`,
           userId: null,
           userName: username,
-          type: "error",
           ipAddress: clientIp,
           userAgent: userAgent,
-          eventType: "login_failed"
+          eventType: "login_failed",
+          blocked: true
         });
         return res.status(400).json({ message: captchaResult.error || "Captcha verification failed" });
       }
@@ -269,10 +284,10 @@ export async function registerRoutes(
           action: `Failed login attempt - user not found`,
           userId: null,
           userName: username,
-          type: "error",
           ipAddress: clientIp,
           userAgent: userAgent,
-          eventType: "login_failed"
+          eventType: "login_failed",
+          blocked: true
         });
         return res.status(401).json({ message: "Invalid credentials" });
       }
@@ -283,10 +298,10 @@ export async function registerRoutes(
           action: `Failed login attempt - invalid password`,
           userId: user.id,
           userName: user.username,
-          type: "error",
           ipAddress: clientIp,
           userAgent: userAgent,
-          eventType: "login_failed"
+          eventType: "login_failed",
+          blocked: true
         });
         return res.status(401).json({ message: "Invalid credentials" });
       }
@@ -294,11 +309,16 @@ export async function registerRoutes(
       // Check if 2FA is enabled for user
       const securitySettings = await storage.getSecuritySetting('twoFactorEnabled');
       if (user.twoFactorEnabled && securitySettings?.value === 'true') {
+        // Check if user has biometric credentials
+        const webAuthnCredentials = await storage.getWebAuthnCredentialsByUser(user.id);
+        const hasBiometric = webAuthnCredentials.length > 0;
+
         // Return partial auth requiring 2FA
         req.session.pending2FA = true;
         req.session.pendingUserId = user.id;
         return res.json({ 
           requires2FA: true,
+          hasBiometric,
           message: "Please enter your 2FA code"
         });
       }
@@ -313,10 +333,10 @@ export async function registerRoutes(
             action: `Login blocked - password expired`,
             userId: user.id,
             userName: user.username,
-            type: "warning",
             ipAddress: clientIp,
             userAgent: userAgent,
-            eventType: "password_expired"
+            eventType: "password_expired",
+            blocked: true
           });
           return res.status(403).json({ 
             passwordExpired: true,
@@ -340,10 +360,10 @@ export async function registerRoutes(
         action: `Successful login`,
         userId: user.id,
         userName: user.username,
-        type: "success",
         ipAddress: clientIp,
         userAgent: userAgent,
-        eventType: "login_success"
+        eventType: "login_success",
+        blocked: false
       });
 
       const { password: _, ...userWithoutPassword } = user;
@@ -1862,7 +1882,7 @@ export async function registerRoutes(
     }
   });
 
-  // Verify 2FA token during login
+  // Verify 2FA token during login (legacy)
   app.post("/api/auth/2fa/login", async (req, res) => {
     try {
       const { userId, token } = req.body;
@@ -1894,6 +1914,83 @@ export async function registerRoutes(
     }
   });
 
+  // Verify 2FA during login flow (session-based)
+  app.post("/api/auth/2fa/verify-login", async (req, res) => {
+    try {
+      const { code } = req.body;
+      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+      const userAgent = req.get('User-Agent') || 'unknown';
+
+      if (!req.session.pending2FA || !req.session.pendingUserId) {
+        return res.status(400).json({ message: "No pending 2FA verification" });
+      }
+
+      const user = await storage.getUser(req.session.pendingUserId);
+      if (!user || !user.twoFactorSecret) {
+        return res.status(400).json({ message: "User not found or 2FA not enabled" });
+      }
+
+      const verified = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: 'base32',
+        token: code,
+        window: 2
+      });
+
+      if (!verified) {
+        await storage.createSecurityLog({
+          action: "Failed 2FA verification",
+          userId: user.id,
+          userName: user.username,
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          eventType: "two_factor_failed",
+          blocked: false
+        });
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+
+      // Regenerate session to prevent session fixation attacks
+      // All session mutations must happen inside the callback
+      req.session.regenerate(async (err) => {
+        if (err) {
+          console.error('Session regeneration failed:', err);
+          return res.status(500).json({ message: "Session error, please try again" });
+        }
+
+        // Set full session after successful verification AND regeneration
+        req.session.userId = user.id;
+        req.session.username = user.username;
+        req.session.role = user.role;
+
+        // Create login log
+        await storage.createLoginLog({
+          userId: user.id,
+          userName: user.username,
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          status: "success",
+          location: "Unknown"
+        });
+
+        await storage.createSecurityLog({
+          action: "Successful 2FA login",
+          userId: user.id,
+          userName: user.username,
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          eventType: "login",
+          blocked: false
+        });
+
+        const { password: _, twoFactorSecret: __, ...userWithoutSensitive } = user;
+        res.json({ user: userWithoutSensitive, message: "Login successful" });
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ============ WEBAUTHN (BIOMETRIC) ENDPOINTS ============
 
   const rpName = "Loi Developer Portfolio";
@@ -1911,7 +2008,7 @@ export async function registerRoutes(
       const options = await generateRegistrationOptions({
         rpName,
         rpID,
-        userID: user.id.toString(),
+        userID: new TextEncoder().encode(user.id.toString()),
         userName: user.email,
         attestationType: 'none',
         authenticatorSelection: {
@@ -1949,12 +2046,16 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Verification failed" });
       }
 
-      const { credentialPublicKey, credentialID, counter } = verification.registrationInfo;
+      // Use the new API structure - credential contains id and publicKey
+      const { credential: webauthnCredential } = verification.registrationInfo;
+      const credentialId = Buffer.from(webauthnCredential.id).toString('base64');
+      const publicKey = Buffer.from(webauthnCredential.publicKey).toString('base64');
+      const counter = webauthnCredential.counter;
 
       await storage.createWebAuthnCredential({
         userId: req.session.userId!,
-        credentialId: Buffer.from(credentialID).toString('base64'),
-        publicKey: Buffer.from(credentialPublicKey).toString('base64'),
+        credentialId,
+        publicKey,
         counter,
         deviceName: deviceName || 'Biometric Device'
       });
@@ -1978,19 +2079,34 @@ export async function registerRoutes(
   app.post("/api/auth/webauthn/login/options", async (req, res) => {
     try {
       const { email } = req.body;
+      
+      // Only allow WebAuthn login options when 2FA is pending
+      // This prevents challenge farming with stolen session cookies
+      if (!req.session.pending2FA && !req.session.pendingUserId) {
+        return res.status(400).json({ message: "Please login with password first" });
+      }
+
       const user = await storage.getUserByEmail(email);
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Verify the user matches the pending session
+      if (req.session.pendingUserId && req.session.pendingUserId !== user.id) {
+        return res.status(400).json({ message: "Invalid session state" });
+      }
+
       const credentials = await storage.getWebAuthnCredentialsByUser(user.id);
+
+      if (credentials.length === 0) {
+        return res.status(400).json({ message: "No biometric credentials registered" });
+      }
 
       const options = await generateAuthenticationOptions({
         rpID,
         allowCredentials: credentials.map(cred => ({
-          id: Buffer.from(cred.credentialId, 'base64'),
-          type: 'public-key',
+          id: cred.credentialId, // Already base64 encoded string
         })),
         userVerification: 'preferred',
       });
@@ -2011,8 +2127,18 @@ export async function registerRoutes(
       const expectedChallenge = req.session.currentChallenge;
       const userId = req.session.tempUserId;
 
+      // Verify we're in a pending 2FA state
+      if (!req.session.pending2FA || !req.session.pendingUserId) {
+        return res.status(400).json({ message: "No pending 2FA verification" });
+      }
+
       if (!expectedChallenge || !userId) {
         return res.status(400).json({ message: "Invalid session" });
+      }
+
+      // Verify the user matches the pending session
+      if (userId !== req.session.pendingUserId) {
+        return res.status(400).json({ message: "Invalid session state" });
       }
 
       const credentialId = Buffer.from(credential.id, 'base64url').toString('base64');
@@ -2027,9 +2153,9 @@ export async function registerRoutes(
         expectedChallenge,
         expectedOrigin: origin,
         expectedRPID: rpID,
-        authenticator: {
-          credentialID: Buffer.from(dbCredential.credentialId, 'base64'),
-          credentialPublicKey: Buffer.from(dbCredential.publicKey, 'base64'),
+        credential: {
+          id: dbCredential.credentialId,
+          publicKey: new Uint8Array(Buffer.from(dbCredential.publicKey, 'base64')),
           counter: dbCredential.counter,
         },
       });
@@ -2048,15 +2174,22 @@ export async function registerRoutes(
         return res.status(404).json({ message: "User not found" });
       }
 
-      req.session.userId = user.id;
-      req.session.username = user.username;
-      req.session.role = user.role;
+      // Regenerate session to prevent session fixation attacks
+      // All session mutations must happen inside the callback
+      req.session.regenerate(async (err) => {
+        if (err) {
+          console.error('Session regeneration failed:', err);
+          return res.status(500).json({ message: "Session error, please try again" });
+        }
 
-      delete req.session.currentChallenge;
-      delete req.session.tempUserId;
+        // Set full session after successful biometric verification AND regeneration
+        req.session.userId = user.id;
+        req.session.username = user.username;
+        req.session.role = user.role;
 
-      const { password: _, twoFactorSecret: __, ...userWithoutSensitive } = user;
-      res.json({ user: userWithoutSensitive });
+        const { password: _, twoFactorSecret: __, ...userWithoutSensitive } = user;
+        res.json({ user: userWithoutSensitive });
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -2328,6 +2461,17 @@ export async function registerRoutes(
       const eventType = req.params.type;
       const logs = await storage.getSecurityLogsByType(eventType);
       res.json(logs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Login History - All login-related events
+  app.get("/api/security/login-history", requireAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const loginLogs = await storage.getLoginHistory(limit);
+      res.json(loginLogs);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

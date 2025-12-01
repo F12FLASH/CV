@@ -201,7 +201,7 @@ export default function AdminSecurityEnhanced() {
   });
 
   const { data: loginHistory = [], refetch: refetchLoginHistory } = useQuery<SecurityLog[]>({
-    queryKey: ['/api/security/logs'],
+    queryKey: ['/api/security/login-history'],
   });
 
   const { data: webauthnCredentials = [], refetch: refetchWebauthnCredentials } = useQuery<any[]>({

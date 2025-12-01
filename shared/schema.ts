@@ -15,6 +15,7 @@ export const users = pgTable("users", {
   avatar: text("avatar"),
   twoFactorSecret: text("two_factor_secret"),
   twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
+  passwordUpdatedAt: timestamp("password_updated_at").defaultNow(),
   lastActive: timestamp("last_active").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -453,10 +454,13 @@ export const insertPageSchema = createInsertSchema(pages).omit({
 export type InsertPage = z.infer<typeof insertPageSchema>;
 export type Page = typeof pages.$inferSelect;
 
-// Security Logs table (for bot detection, threat events)
+// Security Logs table (for bot detection, threat events, login history)
 export const securityLogs = pgTable("security_logs", {
   id: serial("id").primaryKey(),
-  eventType: text("event_type").notNull(), // 'bot_blocked', 'ddos_attempt', 'sql_injection', 'xss_attempt', 'login_failed'
+  eventType: text("event_type").notNull(), // 'bot_blocked', 'ddos_attempt', 'sql_injection', 'xss_attempt', 'login_failed', 'login_success'
+  action: text("action"), // Human readable description of the action
+  userId: integer("user_id"),
+  userName: text("user_name"),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   requestPath: text("request_path"),

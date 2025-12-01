@@ -24,7 +24,7 @@ import {
   webauthnCredentials, type WebAuthnCredential, type InsertWebAuthnCredential
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
+import { eq, desc, asc, and, or, ilike, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -210,6 +210,7 @@ export interface IStorage {
   getSecurityLog(id: number): Promise<SecurityLog | undefined>;
   getSecurityLogsByType(eventType: string): Promise<SecurityLog[]>;
   getRecentSecurityLogs(limit?: number): Promise<SecurityLog[]>;
+  getLoginHistory(limit?: number): Promise<SecurityLog[]>;
   createSecurityLog(log: InsertSecurityLog): Promise<SecurityLog>;
   getSecurityStats(): Promise<{
     totalBlocked: number;
@@ -911,7 +912,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTrustedDevice(id: number): Promise<boolean> {
     const result = await this.db.delete(trustedDevices).where(eq(trustedDevices.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // User Sessions
@@ -979,7 +980,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteIpRule(id: number): Promise<boolean> {
     const result = await this.db.delete(ipRules).where(eq(ipRules.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async isIpWhitelisted(ip: string): Promise<boolean> {
@@ -1004,6 +1005,20 @@ export class DatabaseStorage implements IStorage {
 
   async getRecentSecurityLogs(limit: number = 100): Promise<SecurityLog[]> {
     return await this.db.select().from(securityLogs).orderBy(desc(securityLogs.createdAt)).limit(limit);
+  }
+
+  async getLoginHistory(limit: number = 50): Promise<SecurityLog[]> {
+    return await this.db.select().from(securityLogs)
+      .where(
+        or(
+          eq(securityLogs.eventType, 'login_success'),
+          eq(securityLogs.eventType, 'login_failed'),
+          eq(securityLogs.eventType, 'login'),
+          eq(securityLogs.eventType, 'two_factor_failed')
+        )
+      )
+      .orderBy(desc(securityLogs.createdAt))
+      .limit(limit);
   }
 
   async createSecurityLog(log: InsertSecurityLog): Promise<SecurityLog> {
@@ -1127,7 +1142,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteWebAuthnCredential(id: number): Promise<boolean> {
     const result = await this.db.delete(webauthnCredentials).where(eq(webauthnCredentials.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // 2FA Methods
@@ -1169,19 +1184,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async enableBiometricLogin(userId: number, credentialId: string): Promise<User | undefined> {
-    const [user] = await this.db.update(users)
-      .set({ webAuthnCredentialId: credentialId })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
+    // WebAuthn credentials are stored in a separate table, not in users
+    // This method just returns the user to maintain interface compatibility
+    return await this.getUser(userId);
   }
 
   async disableBiometricLogin(userId: number): Promise<User | undefined> {
-    const [user] = await this.db.update(users)
-      .set({ webAuthnCredentialId: null })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
+    // Delete all WebAuthn credentials for this user
+    await this.db.delete(webauthnCredentials).where(eq(webauthnCredentials.userId, userId));
+    return await this.getUser(userId);
   }
 }
 

@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, User, Shield, ArrowRight, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Shield, ArrowRight, ShieldCheck, Fingerprint, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
 import { useRecaptcha } from "@/hooks/use-recaptcha";
+import { startAuthentication } from "@simplewebauthn/browser";
 import loginBg from "@assets/generated_images/admin_login_background.png";
 
 export default function AdminLogin() {
@@ -16,6 +19,10 @@ export default function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [honeypot, setHoneypot] = useState("");
+  const [show2FADialog, setShow2FADialog] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [tempSessionToken, setTempSessionToken] = useState("");
+  const [hasBiometric, setHasBiometric] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const turnstileRef = useRef<HTMLDivElement>(null);
@@ -87,12 +94,19 @@ export default function AdminLogin() {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setTimeout(() => {
-          window.location.href = "/admin";
-        }, 100);
+        if (data.requires2FA) {
+          setTempSessionToken(data.tempToken || "");
+          setHasBiometric(data.hasBiometric || false);
+          setShow2FADialog(true);
+        } else {
+          setTimeout(() => {
+            window.location.href = "/admin";
+          }, 100);
+        }
       } else {
-        const data = await response.json();
         toast({
           title: "Login Failed",
           description: data.message || "Invalid credentials",
@@ -103,6 +117,99 @@ export default function AdminLogin() {
       toast({
         title: "Error",
         description: "Failed to connect to server",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handle2FAVerify = async () => {
+    if (twoFactorCode.length !== 6) {
+      toast({
+        title: "Invalid Code",
+        description: "Please enter a 6-digit code",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/2fa/verify-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ code: twoFactorCode }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setShow2FADialog(false);
+        setTimeout(() => {
+          window.location.href = "/admin";
+        }, 100);
+      } else {
+        toast({
+          title: "Verification Failed",
+          description: data.message || "Invalid code",
+          variant: "destructive",
+        });
+        setTwoFactorCode("");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify code",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    setIsLoading(true);
+    try {
+      const optionsRes = await fetch("/api/auth/webauthn/login/options", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: username }),
+      });
+
+      if (!optionsRes.ok) {
+        throw new Error("Failed to get authentication options");
+      }
+
+      const options = await optionsRes.json();
+      const credential = await startAuthentication({ optionsJSON: options });
+
+      const verifyRes = await fetch("/api/auth/webauthn/login/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ credential }),
+      });
+
+      if (verifyRes.ok) {
+        setShow2FADialog(false);
+        setTimeout(() => {
+          window.location.href = "/admin";
+        }, 100);
+      } else {
+        const data = await verifyRes.json();
+        toast({
+          title: "Biometric Login Failed",
+          description: data.message || "Authentication failed",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Biometric Error",
+        description: error.message || "Failed to authenticate",
         variant: "destructive",
       });
     } finally {
@@ -240,6 +347,78 @@ export default function AdminLogin() {
           </CardFooter>
         </Card>
       </motion.div>
+
+      <Dialog open={show2FADialog} onOpenChange={setShow2FADialog}>
+        <DialogContent className="sm:max-w-md bg-black/90 border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-primary" />
+              Two-Factor Authentication
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Enter the 6-digit code from your authenticator app
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="flex justify-center">
+              <InputOTP
+                maxLength={6}
+                value={twoFactorCode}
+                onChange={setTwoFactorCode}
+                data-testid="input-2fa-code"
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} className="bg-white/5 border-white/20 text-white" />
+                  <InputOTPSlot index={1} className="bg-white/5 border-white/20 text-white" />
+                  <InputOTPSlot index={2} className="bg-white/5 border-white/20 text-white" />
+                  <InputOTPSlot index={3} className="bg-white/5 border-white/20 text-white" />
+                  <InputOTPSlot index={4} className="bg-white/5 border-white/20 text-white" />
+                  <InputOTPSlot index={5} className="bg-white/5 border-white/20 text-white" />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            {hasBiometric && (
+              <div className="text-center">
+                <p className="text-sm text-white/40 mb-3">Or use your registered biometric</p>
+                <Button
+                  variant="outline"
+                  onClick={handleBiometricLogin}
+                  disabled={isLoading}
+                  className="border-white/20 text-white/80"
+                  data-testid="button-biometric-login"
+                >
+                  <Fingerprint className="w-4 h-4 mr-2" />
+                  Use Biometric
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShow2FADialog(false);
+                setTwoFactorCode("");
+              }}
+              className="text-white/60"
+              data-testid="button-cancel-2fa"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handle2FAVerify}
+              disabled={isLoading || twoFactorCode.length !== 6}
+              className="bg-primary text-white"
+              data-testid="button-verify-2fa"
+            >
+              {isLoading ? "Verifying..." : "Verify"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
