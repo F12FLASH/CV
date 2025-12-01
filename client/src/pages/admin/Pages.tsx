@@ -92,9 +92,17 @@ export default function AdminPages() {
     updateStatusMutation.mutate({ id, status: newStatus });
   };
 
-  const startEdit = (id: number, title: string) => {
-    setEditingId(id);
-    setEditTitle(title);
+  const startEdit = (id: number) => {
+    const page = pages.find(p => p.id === id);
+    if (page) {
+      setSelectedPage(page);
+      setEditorOpen(true);
+    }
+  };
+
+  const handleCreatePage = () => {
+    setSelectedPage(undefined);
+    setEditorOpen(true);
   };
 
   const filteredPages = pages.filter(page =>
@@ -114,13 +122,22 @@ export default function AdminPages() {
 
   return (
     <AdminLayout>
+      <PageEditor 
+        page={selectedPage}
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+      />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-heading font-bold">Pages</h1>
             <p className="text-muted-foreground">Manage custom pages on your website</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90" data-testid="button-create-page">
+          <Button 
+            className="bg-primary hover:bg-primary/90" 
+            data-testid="button-create-page"
+            onClick={handleCreatePage}
+          >
             <Plus className="w-4 h-4 mr-2" /> New Page
           </Button>
         </div>
@@ -202,6 +219,7 @@ export default function AdminPages() {
                           variant="ghost"
                           size="icon"
                           data-testid={`button-edit-page-${page.id}`}
+                          onClick={() => startEdit(page.id)}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>

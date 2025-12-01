@@ -47,7 +47,7 @@ export function PageEditor({ page, open, onOpenChange }: PageEditorProps) {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data: any) => {
       const res = await fetch("/api/pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,7 +78,7 @@ export function PageEditor({ page, open, onOpenChange }: PageEditorProps) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data: any) => {
       const res = await fetch(`/api/pages/${page?.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -284,16 +284,16 @@ export function PageEditor({ page, open, onOpenChange }: PageEditorProps) {
                 <div>
                   <span className="text-muted-foreground">Created:</span>
                   <p className="font-medium">
-                    {page
-                      ? new Date(page.createdAt).toLocaleDateString()
+                    {page && page.createdAt
+                      ? new Date(page.createdAt as unknown as string).toLocaleDateString()
                       : "New"}
                   </p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Updated:</span>
                   <p className="font-medium">
-                    {page
-                      ? new Date(page.updatedAt).toLocaleDateString()
+                    {page && page.updatedAt
+                      ? new Date(page.updatedAt as unknown as string).toLocaleDateString()
                       : "New"}
                   </p>
                 </div>
