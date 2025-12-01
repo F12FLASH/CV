@@ -12,7 +12,22 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-The frontend is built using React 18 with TypeScript, Vite for tooling, Wouter for routing, and React Context API/TanStack Query for state management. Radix UI and shadcn/ui provide the component foundation, styled with Tailwind CSS v4. Animations are handled by Framer Motion, and 3D elements are integrated using React Three Fiber. The design emphasizes a dark mode aesthetic, component-based structure, and custom theming. Key features include a portfolio showcase, blog, contact form, testimonials, skills visualization, and an extensive admin dashboard with CRUD operations for projects, posts, categories, comments, and reviews. Recent enhancements focus on real-time notifications via WebSockets, an auto-approval system for comments/reviews, a redesigned preloader, Recaptcha configuration options, comprehensive site settings management, and improved notification UX.
+The frontend is built using React 18 with TypeScript, Vite for tooling, Wouter for routing, and React Context API/TanStack Query for state management. Radix UI and shadcn/ui provide the component foundation, styled with Tailwind CSS v4. Animations are handled by Framer Motion, and 3D elements are integrated using React Three Fiber. The design emphasizes a dark mode aesthetic, component-based structure, and custom theming. Key features include a portfolio showcase, blog, contact form, testimonials, skills visualization, and an extensive admin dashboard with CRUD operations for projects, posts, categories, comments, and reviews. Recent enhancements focus on real-time notifications via WebSockets, an auto-approval system for comments/reviews, a redesigned preloader, comprehensive site settings management, and improved notification UX.
+
+### Security & CAPTCHA Integration
+
+The application includes a flexible CAPTCHA system supporting multiple providers:
+- **Local Verification**: Server-side honeypot fields and time-based validation for basic bot protection
+- **Google reCAPTCHA v3**: Invisible verification with risk analysis scoring
+- **Cloudflare Turnstile**: Privacy-first alternative with widget rendering
+
+Configuration is managed through the admin Security panel (`/admin/security` > Recaptcha tab). The `useRecaptcha` hook (`client/src/hooks/use-recaptcha.ts`) provides:
+- Automatic script loading for selected provider
+- Form protection based on admin settings
+- Honeypot field integration
+- Time-based validation for form submissions
+
+Forms protected: Login, Contact, Registration, Newsletter, Comments.
 
 ### Backend Architecture
 

@@ -4,6 +4,7 @@ import session from "express-session";
 import { storage } from "./storage";
 import * as fs from "fs";
 import * as path from "path";
+import multer from "multer";
 import { 
   insertProjectSchema, insertPostSchema, insertPageSchema, insertSkillSchema,
   insertServiceSchema, insertTestimonialSchema, insertMessageSchema,
@@ -12,6 +13,56 @@ import {
 } from "@shared/schema";
 import bcrypt from "bcrypt";
 import { broadcastNewMessage, broadcastNotification, broadcastNewComment, broadcastNewReview } from "./websocket";
+
+// Configure multer for file uploads
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let subDir = "media";
+    if (file.mimetype.startsWith("image/")) {
+      subDir = "images";
+    } else if (file.mimetype === "application/pdf" || file.mimetype.startsWith("application/")) {
+      subDir = "documents";
+    }
+    
+    const targetDir = path.join(uploadsDir, subDir);
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    cb(null, targetDir);
+  },
+  filename: (req, file, cb) => {
+    const timestamp = Date.now();
+    const safeFilename = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    cb(null, `${timestamp}-${safeFilename}`);
+  }
+});
+
+const upload = multer({
+  storage: multerStorage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+      'application/pdf',
+      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain'
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`File type ${file.mimetype} not allowed`));
+    }
+  }
+});
 
 const SALT_ROUNDS = 12;
 
@@ -29,6 +80,95 @@ async function hashPassword(password: string): Promise<string> {
 
 async function verifyPassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
+}
+
+interface CaptchaVerifyResult {
+  success: boolean;
+  score?: number;
+  error?: string;
+}
+
+async function verifyCaptcha(
+  captchaToken: string | undefined, 
+  captchaType: string | undefined,
+  secretKey?: string
+): Promise<CaptchaVerifyResult> {
+  if (!captchaType || captchaType === 'disabled') {
+    return { success: true };
+  }
+
+  if (captchaType === 'local') {
+    try {
+      if (!captchaToken) return { success: true };
+      const data = JSON.parse(captchaToken);
+      if (data.type === 'local' && data.timeDiff && data.timeDiff >= 2000) {
+        return { success: true };
+      }
+      return { success: false, error: 'Form submitted too quickly' };
+    } catch {
+      return { success: true };
+    }
+  }
+
+  if (!captchaToken) {
+    return { success: false, error: 'Captcha token required' };
+  }
+
+  if (captchaType === 'google') {
+    const googleSecretKey = secretKey || process.env.RECAPTCHA_SECRET_KEY;
+    if (!googleSecretKey) {
+      console.warn('Google reCAPTCHA secret key not configured');
+      return { success: true };
+    }
+    
+    try {
+      const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `secret=${googleSecretKey}&response=${captchaToken}`
+      });
+      const result = await response.json() as { success: boolean; score?: number; 'error-codes'?: string[] };
+      
+      if (result.success && (result.score === undefined || result.score >= 0.5)) {
+        return { success: true, score: result.score };
+      }
+      return { success: false, error: 'reCAPTCHA verification failed', score: result.score };
+    } catch (error) {
+      console.error('reCAPTCHA verification error:', error);
+      return { success: true };
+    }
+  }
+
+  if (captchaType === 'cloudflare') {
+    const cfSecretKey = secretKey || process.env.TURNSTILE_SECRET_KEY;
+    if (!cfSecretKey) {
+      console.warn('Cloudflare Turnstile secret key not configured');
+      return { success: true };
+    }
+    
+    try {
+      const formData = new URLSearchParams();
+      formData.append('secret', cfSecretKey);
+      formData.append('response', captchaToken);
+      
+      const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+      });
+      const result = await response.json() as { success: boolean; 'error-codes'?: string[] };
+      
+      if (result.success) {
+        return { success: true };
+      }
+      return { success: false, error: 'Turnstile verification failed' };
+    } catch (error) {
+      console.error('Turnstile verification error:', error);
+      return { success: true };
+    }
+  }
+
+  return { success: true };
 }
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -93,10 +233,16 @@ export async function registerRoutes(
 
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { username, password } = req.body;
+      const { username, password, captchaToken, captchaType } = req.body;
       if (!username || !password) {
         return res.status(400).json({ message: "Username and password required" });
       }
+
+      const captchaResult = await verifyCaptcha(captchaToken, captchaType);
+      if (!captchaResult.success) {
+        return res.status(400).json({ message: captchaResult.error || "Captcha verification failed" });
+      }
+
       const user = await storage.getUserByUsernameOrEmail(username);
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
@@ -712,7 +858,14 @@ export async function registerRoutes(
 
   app.post("/api/messages", async (req, res) => {
     try {
-      const parsed = insertMessageSchema.safeParse(req.body);
+      const { captchaToken, captchaType, ...messageData } = req.body;
+
+      const captchaResult = await verifyCaptcha(captchaToken, captchaType);
+      if (!captchaResult.success) {
+        return res.status(400).json({ message: captchaResult.error || "Captcha verification failed" });
+      }
+
+      const parsed = insertMessageSchema.safeParse(messageData);
       if (!parsed.success) {
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
@@ -922,6 +1075,77 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Category not found" });
       }
       res.json({ message: "Category deleted" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // New file upload endpoint using multer (FormData)
+  app.post("/api/upload/file", requireAuth, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const file = req.file;
+      let subDir = "media";
+      if (file.mimetype.startsWith("image/")) {
+        subDir = "images";
+      } else if (file.mimetype === "application/pdf" || file.mimetype.startsWith("application/")) {
+        subDir = "documents";
+      }
+      
+      const fileUrl = `/uploads/${subDir}/${file.filename}`;
+      
+      // Create media record in database
+      const mediaItem = await storage.createMedia({
+        filename: file.filename,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size,
+        url: fileUrl,
+        alt: req.body.alt || null,
+      });
+      
+      res.status(201).json(mediaItem);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Multiple files upload endpoint
+  app.post("/api/upload/files", requireAuth, upload.array('files', 20), async (req, res) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+      
+      const mediaItems = [];
+      
+      for (const file of files) {
+        let subDir = "media";
+        if (file.mimetype.startsWith("image/")) {
+          subDir = "images";
+        } else if (file.mimetype === "application/pdf" || file.mimetype.startsWith("application/")) {
+          subDir = "documents";
+        }
+        
+        const fileUrl = `/uploads/${subDir}/${file.filename}`;
+        
+        const mediaItem = await storage.createMedia({
+          filename: file.filename,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
+          url: fileUrl,
+          alt: null,
+        });
+        
+        mediaItems.push(mediaItem);
+      }
+      
+      res.status(201).json(mediaItems);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

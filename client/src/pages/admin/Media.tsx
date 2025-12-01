@@ -102,30 +102,53 @@ export default function AdminMedia() {
 
     setUploading(true);
 
-    for (const file of Array.from(files)) {
-      try {
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const base64 = reader.result as string;
-          const timestamp = Date.now();
-          const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-          
-          await createMediaMutation.mutateAsync({
-            filename,
-            originalName: file.name,
-            mimeType: file.type,
-            size: file.size,
-            url: base64,
-            alt: file.name,
-          });
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        console.error('Upload error:', error);
+    try {
+      if (files.length === 1) {
+        // Single file upload
+        const formData = new FormData();
+        formData.append('file', files[0]);
+        
+        const response = await fetch('/api/upload/file', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Upload failed');
+        }
+        
+        toast({ title: "Success", description: "File uploaded successfully" });
+        queryClient.invalidateQueries({ queryKey: ['/api/media'] });
+      } else {
+        // Multiple files upload
+        const formData = new FormData();
+        Array.from(files).forEach(file => {
+          formData.append('files', file);
+        });
+        
+        const response = await fetch('/api/upload/files', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Upload failed');
+        }
+        
+        toast({ title: "Success", description: `${files.length} files uploaded successfully` });
+        queryClient.invalidateQueries({ queryKey: ['/api/media'] });
       }
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({ title: "Error", description: error.message || 'Upload failed', variant: "destructive" });
     }
 
     setUploading(false);
+    setUploadDialogOpen(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

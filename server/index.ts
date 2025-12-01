@@ -6,8 +6,22 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { setupWebSocket } from "./websocket";
 import { pool } from "./db";
+import path from "path";
+import fs from "fs";
 
 const app = express();
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Serve uploaded files statically
+app.use("/uploads", express.static(uploadsDir, {
+  maxAge: '7d',
+  etag: true,
+}));
 const PgSession = connectPgSimple(session);
 const httpServer = createServer(app);
 

@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone, Send, Loader2 } from "lucide-react";
+import { Mail, MapPin, Phone, Send, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useRecaptcha } from "@/hooks/use-recaptcha";
 
 const FloatingLabelInput = ({ 
   name, 
@@ -127,6 +128,19 @@ export function Contact() {
     subject: "",
     message: ""
   });
+  const [honeypot, setHoneypot] = useState("");
+  const turnstileRef = useRef<HTMLDivElement>(null);
+
+  const { 
+    isEnabled: captchaEnabled, 
+    isLoaded: captchaLoaded,
+    captchaType,
+    executeRecaptcha, 
+    renderTurnstile,
+    resetTurnstile,
+    honeypotFieldName,
+    error: captchaError 
+  } = useRecaptcha({ formType: 'contact', action: 'contact_form' });
 
   const { data: settings } = useQuery<Record<string, any>>({
     queryKey: ["/api/settings"],
@@ -175,16 +189,49 @@ export function Contact() {
     };
   }, []);
 
+  useEffect(() => {
+    if (captchaType === 'cloudflare' && captchaLoaded && turnstileRef.current) {
+      renderTurnstile('turnstile-container');
+    }
+  }, [captchaType, captchaLoaded, renderTurnstile]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (honeypot) {
+      console.log('Honeypot triggered - bot detected');
+      toast({
+        title: "Message sent!",
+        description: "Thank you for reaching out.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
+      let captchaToken: string | null = null;
+      
+      if (captchaEnabled) {
+        captchaToken = await executeRecaptcha();
+        if (captchaError) {
+          toast({
+            title: "Verification Failed",
+            description: captchaError,
+            variant: "destructive"
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       await api.createMessage({
         sender: formData.name,
         email: formData.email,
         subject: formData.subject,
-        message: formData.message
+        message: formData.message,
+        captchaToken: captchaToken || undefined,
+        captchaType: captchaType || undefined
       });
 
       toast({
@@ -192,6 +239,10 @@ export function Contact() {
         description: "Thank you for reaching out. I'll get back to you shortly.",
       });
       setFormData({ name: "", email: "", subject: "", message: "" });
+      
+      if (captchaType === 'cloudflare') {
+        resetTurnstile();
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -295,6 +346,17 @@ export function Contact() {
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
              
             <form onSubmit={handleSubmit} className="space-y-8 relative z-10" data-testid="form-contact">
+              <input
+                type="text"
+                name={honeypotFieldName}
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                autoComplete="off"
+                tabIndex={-1}
+                style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+                aria-hidden="true"
+              />
+              
               <div className="grid md:grid-cols-2 gap-8">
                 <FloatingLabelInput
                   name="name"
@@ -328,6 +390,26 @@ export function Contact() {
                 label="Message"
                 required
               />
+
+              {captchaType === 'cloudflare' && (
+                <div 
+                  id="turnstile-container" 
+                  ref={turnstileRef}
+                  className="flex justify-center"
+                  data-testid="turnstile-container"
+                />
+              )}
+
+              {captchaEnabled && captchaType !== 'disabled' && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>
+                    {captchaType === 'google' && 'Protected by reCAPTCHA'}
+                    {captchaType === 'cloudflare' && 'Protected by Cloudflare Turnstile'}
+                    {captchaType === 'local' && 'Protected by spam filter'}
+                  </span>
+                </div>
+              )}
 
               <Button 
                 type="submit" 
