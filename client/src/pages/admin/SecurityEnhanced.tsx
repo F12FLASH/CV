@@ -16,8 +16,17 @@ import {
   ShieldAlert, RefreshCw, Eye, EyeOff, Clock, Users,
   Fingerprint, Monitor, LogOut, Ban, CheckCircle, XCircle,
   Server, AlertCircle, Plus, Loader2, FileText, Code, BarChart3, 
-  Zap, Activity, Database, Link2, Layers
+  Zap, Activity, Database, Link2, Layers, QrCode, Copy, Check
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 interface SecuritySettings {
   twoFactorEnabled?: boolean;
@@ -155,6 +164,21 @@ export default function AdminSecurityEnhanced() {
   const [showGoogleSecret, setShowGoogleSecret] = useState(false);
   const [showCloudflareSecret, setShowCloudflareSecret] = useState(false);
   const [showLoginHistory, setShowLoginHistory] = useState(false);
+  
+  // 2FA Modal
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [show2FAVerify, setShow2FAVerify] = useState(false);
+  const [show2FADisable, setShow2FADisable] = useState(false);
+  const [qrCode, setQrCode] = useState("");
+  const [secret, setSecret] = useState("");
+  const [verifyCode, setVerifyCode] = useState("");
+  const [disableCode, setDisableCode] = useState("");
+  const [secretCopied, setSecretCopied] = useState(false);
+  
+  // Biometric Modal
+  const [showBiometricSetup, setShowBiometricSetup] = useState(false);
+  const [biometricDeviceName, setBiometricDeviceName] = useState("");
+  const [isBiometricRegistering, setIsBiometricRegistering] = useState(false);
 
   const { data: settings = {}, isLoading: settingsLoading, refetch: refetchSettings } = useQuery<SecuritySettings>({
     queryKey: ['/api/security/settings'],
@@ -178,6 +202,10 @@ export default function AdminSecurityEnhanced() {
 
   const { data: loginHistory = [], refetch: refetchLoginHistory } = useQuery<SecurityLog[]>({
     queryKey: ['/api/security/logs'],
+  });
+
+  const { data: webauthnCredentials = [], refetch: refetchWebauthnCredentials } = useQuery<any[]>({
+    queryKey: ['/api/auth/webauthn/credentials'],
   });
 
   const [localSettings, setLocalSettings] = useState<SecuritySettings>({});
@@ -263,6 +291,107 @@ export default function AdminSecurityEnhanced() {
     }
   });
 
+  // 2FA Mutations
+  const generate2FAMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', '/api/auth/2fa/generate');
+    },
+    onSuccess: (data: any) => {
+      setSecret(data.secret);
+      setQrCode(data.qrCode);
+      setShow2FASetup(true);
+    }
+  });
+
+  const verify2FAMutation = useMutation({
+    mutationFn: async (token: string) => {
+      return apiRequest('POST', '/api/auth/2fa/verify', { token });
+    },
+    onSuccess: () => {
+      toast({ title: "2FA enabled successfully" });
+      setShow2FASetup(false);
+      setShow2FAVerify(false);
+      setVerifyCode("");
+      refetchSettings();
+    },
+    onError: () => {
+      toast({ title: "Invalid verification code", variant: "destructive" });
+    }
+  });
+
+  const disable2FAMutation = useMutation({
+    mutationFn: async (token: string) => {
+      return apiRequest('POST', '/api/auth/2fa/disable', { token });
+    },
+    onSuccess: () => {
+      toast({ title: "2FA disabled successfully" });
+      setShow2FADisable(false);
+      setDisableCode("");
+      refetchSettings();
+    },
+    onError: () => {
+      toast({ title: "Invalid verification code", variant: "destructive" });
+    }
+  });
+
+  // Biometric Mutations
+  const registerBiometricMutation = useMutation({
+    mutationFn: async () => {
+      setIsBiometricRegistering(true);
+      try {
+        // Get registration options
+        const optionsRes = await apiRequest('GET', '/api/auth/webauthn/register/options');
+        
+        // Start WebAuthn registration
+        const credential = await (navigator as any).credentials.create({
+          publicKey: optionsRes
+        });
+
+        // Verify registration
+        await apiRequest('POST', '/api/auth/webauthn/register/verify', {
+          credential: {
+            id: credential.id,
+            rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
+            response: {
+              clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))),
+              attestationObject: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject)))
+            },
+            type: credential.type
+          },
+          deviceName: biometricDeviceName || 'Biometric Device'
+        });
+
+        return credential;
+      } finally {
+        setIsBiometricRegistering(false);
+      }
+    },
+    onSuccess: () => {
+      toast({ title: "Biometric device registered successfully" });
+      setShowBiometricSetup(false);
+      setBiometricDeviceName("");
+      refetchWebauthnCredentials();
+      refetchSettings();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Biometric registration failed", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    }
+  });
+
+  const deleteWebauthnCredentialMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest('DELETE', `/api/auth/webauthn/credentials/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Biometric device removed" });
+      refetchWebauthnCredentials();
+    }
+  });
+
   const updateLocalSetting = (key: string, value: any) => {
     setLocalSettings(prev => ({ ...prev, [key]: value }));
   };
@@ -279,6 +408,43 @@ export default function AdminSecurityEnhanced() {
 
   const saveAllSettings = () => {
     updateSettingsMutation.mutate(localSettings);
+  };
+
+  const handle2FAToggle = (enabled: boolean) => {
+    if (enabled) {
+      generate2FAMutation.mutate();
+    } else {
+      setShow2FADisable(true);
+    }
+  };
+
+  const handleBiometricToggle = (enabled: boolean) => {
+    if (enabled) {
+      if (!window.PublicKeyCredential) {
+        toast({ 
+          title: "Not supported", 
+          description: "Your browser doesn't support biometric authentication",
+          variant: "destructive" 
+        });
+        return;
+      }
+      setShowBiometricSetup(true);
+    } else {
+      // Disable by removing all credentials
+      if (webauthnCredentials.length > 0) {
+        toast({ 
+          title: "Remove all biometric devices first",
+          variant: "destructive" 
+        });
+      }
+    }
+  };
+
+  const copySecret = () => {
+    navigator.clipboard.writeText(secret);
+    setSecretCopied(true);
+    setTimeout(() => setSecretCopied(false), 2000);
+    toast({ title: "Secret copied to clipboard" });
   };
 
   const whitelistIps = ipRules.filter(r => r.type === 'whitelist');
@@ -393,24 +559,56 @@ export default function AdminSecurityEnhanced() {
                     </div>
                   </div>
                   <Switch 
-                    checked={localSettings.twoFactorEnabled || false}
-                    onCheckedChange={(v) => updateLocalSetting('twoFactorEnabled', v)}
+                    checked={settings.twoFactorEnabled || false}
+                    onCheckedChange={handle2FAToggle}
+                    disabled={generate2FAMutation.isPending}
                     data-testid="switch-2fa"
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Fingerprint className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">Biometric Login</div>
-                      <div className="text-sm text-muted-foreground">Touch ID / Face ID support</div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Fingerprint className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <div className="font-medium">Biometric Login</div>
+                        <div className="text-sm text-muted-foreground">Touch ID / Face ID support</div>
+                      </div>
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleBiometricToggle(true)}
+                      disabled={registerBiometricMutation.isPending}
+                      data-testid="button-add-biometric"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Device
+                    </Button>
                   </div>
-                  <Switch 
-                    checked={localSettings.biometricLogin || false}
-                    onCheckedChange={(v) => updateLocalSetting('biometricLogin', v)}
-                    data-testid="switch-biometric"
-                  />
+                  
+                  {webauthnCredentials.length > 0 && (
+                    <div className="space-y-2 pl-8">
+                      {webauthnCredentials.map((cred) => (
+                        <div key={cred.id} className="flex items-center justify-between p-2 border rounded-lg bg-muted/30">
+                          <div>
+                            <p className="font-medium text-sm">{cred.deviceName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Added {new Date(cred.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-destructive"
+                            onClick={() => deleteWebauthnCredentialMutation.mutate(cred.id)}
+                            data-testid={`button-remove-biometric-${cred.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -1687,6 +1885,179 @@ export default function AdminSecurityEnhanced() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* 2FA Setup Modal */}
+      <Dialog open={show2FASetup} onOpenChange={setShow2FASetup}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Set up Two-Factor Authentication</DialogTitle>
+            <DialogDescription>
+              Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {qrCode && (
+              <div className="flex justify-center p-4 bg-white rounded-lg">
+                <img src={qrCode} alt="2FA QR Code" className="w-48 h-48" />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Or enter this code manually:</Label>
+              <div className="flex gap-2">
+                <Input value={secret} readOnly className="font-mono text-sm" />
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={copySecret}
+                >
+                  {secretCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setShow2FASetup(false);
+                setShow2FAVerify(true);
+              }}
+            >
+              Continue to Verification
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2FA Verify Modal */}
+      <Dialog open={show2FAVerify} onOpenChange={setShow2FAVerify}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Verify 2FA Setup</DialogTitle>
+            <DialogDescription>
+              Enter the 6-digit code from your authenticator app
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center py-6">
+            <InputOTP maxLength={6} value={verifyCode} onChange={setVerifyCode}>
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShow2FAVerify(false);
+                setVerifyCode("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => verify2FAMutation.mutate(verifyCode)}
+              disabled={verifyCode.length !== 6 || verify2FAMutation.isPending}
+            >
+              {verify2FAMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Verify & Enable
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2FA Disable Modal */}
+      <Dialog open={show2FADisable} onOpenChange={setShow2FADisable}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Disable Two-Factor Authentication</DialogTitle>
+            <DialogDescription>
+              Enter your 6-digit code to confirm disabling 2FA
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center py-6">
+            <InputOTP maxLength={6} value={disableCode} onChange={setDisableCode}>
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShow2FADisable(false);
+                setDisableCode("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => disable2FAMutation.mutate(disableCode)}
+              disabled={disableCode.length !== 6 || disable2FAMutation.isPending}
+            >
+              {disable2FAMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Disable 2FA
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Biometric Setup Modal */}
+      <Dialog open={showBiometricSetup} onOpenChange={setShowBiometricSetup}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Biometric Device</DialogTitle>
+            <DialogDescription>
+              Register your fingerprint or face for quick login
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Device Name (Optional)</Label>
+              <Input 
+                placeholder="e.g., My iPhone, Work Laptop"
+                value={biometricDeviceName}
+                onChange={(e) => setBiometricDeviceName(e.target.value)}
+              />
+            </div>
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                <Fingerprint className="w-4 h-4 inline mr-2" />
+                You'll be prompted to use your device's biometric sensor
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowBiometricSetup(false);
+                setBiometricDeviceName("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => registerBiometricMutation.mutate()}
+              disabled={isBiometricRegistering}
+            >
+              {isBiometricRegistering && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Register Device
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
