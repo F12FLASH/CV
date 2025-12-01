@@ -139,12 +139,22 @@ interface SecurityStats {
   byEventType: { type: string; count: number }[];
 }
 
+interface SecurityLog {
+  id: number;
+  action: string;
+  userId?: number;
+  userName?: string;
+  type: string;
+  createdAt?: string;
+}
+
 export default function AdminSecurityEnhanced() {
   const { toast } = useToast();
   const [newWhitelistIp, setNewWhitelistIp] = useState("");
   const [newBlacklistIp, setNewBlacklistIp] = useState("");
   const [showGoogleSecret, setShowGoogleSecret] = useState(false);
   const [showCloudflareSecret, setShowCloudflareSecret] = useState(false);
+  const [showLoginHistory, setShowLoginHistory] = useState(false);
 
   const { data: settings = {}, isLoading: settingsLoading, refetch: refetchSettings } = useQuery<SecuritySettings>({
     queryKey: ['/api/security/settings'],
@@ -164,6 +174,10 @@ export default function AdminSecurityEnhanced() {
 
   const { data: stats } = useQuery<SecurityStats>({
     queryKey: ['/api/security/stats'],
+  });
+
+  const { data: loginHistory = [], refetch: refetchLoginHistory } = useQuery<SecurityLog[]>({
+    queryKey: ['/api/security/logs'],
   });
 
   const [localSettings, setLocalSettings] = useState<SecuritySettings>({});
@@ -1150,7 +1164,10 @@ export default function AdminSecurityEnhanced() {
                   <Button 
                     variant="outline" 
                     className="flex-1"
-                    onClick={() => logoutAllDevicesMutation.mutate()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      logoutAllDevicesMutation.mutate();
+                    }}
                     disabled={logoutAllDevicesMutation.isPending}
                     data-testid="button-logout-all-devices"
                   >
@@ -1160,7 +1177,10 @@ export default function AdminSecurityEnhanced() {
                   <Button 
                     variant="destructive" 
                     className="flex-1"
-                    onClick={() => terminateAllSessionsMutation.mutate()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      terminateAllSessionsMutation.mutate();
+                    }}
                     disabled={terminateAllSessionsMutation.isPending}
                     data-testid="button-force-logout-all"
                   >
@@ -1578,7 +1598,40 @@ export default function AdminSecurityEnhanced() {
                     </div>
                   </div>
                 </div>
-                <Button onClick={() => refetchSessions()} disabled={false} className="w-full" data-testid="button-refresh-activity">
+                <Button 
+                  onClick={() => setShowLoginHistory(!showLoginHistory)} 
+                  className="w-full" 
+                  data-testid="button-view-login-history"
+                >
+                  <FileText className="w-4 h-4 mr-2" /> {showLoginHistory ? 'Hide' : 'View'} Login History
+                </Button>
+                {showLoginHistory && (
+                  <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
+                    <p className="text-sm font-medium">Recent Login Activity</p>
+                    {loginHistory.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No login history found</p>
+                    ) : (
+                      loginHistory.map((log) => (
+                        <div key={log.id} className="p-2 text-xs border rounded bg-muted/50">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{log.userName || 'Unknown User'}</span>
+                            <span className="text-muted-foreground">{log.createdAt ? new Date(log.createdAt).toLocaleString() : 'N/A'}</span>
+                          </div>
+                          <p className="text-muted-foreground">{log.action}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+                <Button 
+                  onClick={() => {
+                    refetchLoginHistory();
+                    refetchSessions();
+                  }} 
+                  disabled={false} 
+                  className="w-full" 
+                  data-testid="button-refresh-activity"
+                >
                   <RefreshCw className="w-4 h-4 mr-2" /> Refresh Activity Log
                 </Button>
               </CardContent>
