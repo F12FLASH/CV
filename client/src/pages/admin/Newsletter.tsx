@@ -54,11 +54,14 @@ export default function AdminNewsletter() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (newSettings: NewsletterSettings) => {
-      return apiRequest('POST', '/api/newsletter/settings', newSettings);
+      const response = await apiRequest('POST', '/api/newsletter/settings', newSettings);
+      return response as unknown as NewsletterSettings;
     },
-    onSuccess: () => {
+    onSuccess: (data: NewsletterSettings) => {
+      setLocalSettings(data);
       toast({ title: "Newsletter settings saved successfully" });
       queryClient.invalidateQueries({ queryKey: ['/api/newsletter/settings'] });
+      queryClient.setQueryData(['/api/newsletter/settings'], data);
     },
     onError: () => {
       toast({ title: "Failed to save settings", variant: "destructive" });

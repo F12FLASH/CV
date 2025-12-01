@@ -1651,7 +1651,8 @@ export async function registerRoutes(
     try {
       const settings = await storage.getSetting("newsletter-settings");
       if (settings) {
-        res.json(JSON.parse(settings.value));
+        const parsedValue = JSON.parse(settings.value as string);
+        res.json(parsedValue);
       } else {
         res.json({
           enabled: false,
@@ -1671,7 +1672,8 @@ export async function registerRoutes(
   app.post("/api/newsletter/settings", requireAdmin, async (req, res) => {
     try {
       const settings = await storage.upsertSetting("newsletter-settings", JSON.stringify(req.body));
-      res.json(settings);
+      const parsedValue = JSON.parse(settings.value as string);
+      res.json(parsedValue);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
