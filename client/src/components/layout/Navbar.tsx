@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSiteSettings } from "@/context/SiteContext";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -14,6 +15,7 @@ export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { t } = useLanguage();
   const [location, setLocation] = useLocation();
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -82,9 +84,13 @@ export function Navbar() {
     >
       <div className="container mx-auto h-full flex items-center justify-between px-4 md:px-8">
         <div className="group cursor-pointer" onClick={handleLogoClick}>
-          <div className="relative w-10 h-10 flex items-center justify-center border-2 border-foreground rounded hover:bg-primary hover:border-primary transition-all duration-500 group-hover:rotate-90">
-            <span className="font-heading font-bold text-xl group-hover:text-white transition-colors">L</span>
-          </div>
+          {settings.logoUrl ? (
+            <img src={settings.logoUrl} alt="Logo" className="h-10 w-auto" data-testid="img-logo" />
+          ) : (
+            <div className="relative w-10 h-10 flex items-center justify-center border-2 border-foreground rounded hover:bg-primary hover:border-primary transition-all duration-500 group-hover:rotate-90">
+              <span className="font-heading font-bold text-xl group-hover:text-white transition-colors">L</span>
+            </div>
+          )}
         </div>
 
         <nav className="hidden md:flex items-center gap-8">
