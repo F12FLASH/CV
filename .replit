@@ -70,6 +70,15 @@ task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "Seed Database"
+author = 50476908
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run seed"
+
 [agent]
 mockupState = "FULLSTACK"
 integrations = ["javascript_database:1.0.0"]
