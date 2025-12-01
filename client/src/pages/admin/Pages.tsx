@@ -191,7 +191,7 @@ export default function AdminPages() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {new Date(page.updatedAt).toLocaleDateString()}
+                      {page.updatedAt ? new Date(page.updatedAt).toLocaleDateString() : "N/A"}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">

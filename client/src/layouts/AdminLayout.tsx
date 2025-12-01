@@ -267,12 +267,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   const navItems: any[] = [
+    // Main
+    { section: "main", label: "Main" },
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-    { icon: FileText, label: "Pages", href: "/admin/pages" },
+    
+    // Content Management
+    { section: "content", label: "Content" },
+    { icon: FileText, label: "Pages", href: "/admin/pages", badge: "NEW" },
     { 
       id: "posts",
       icon: FileText, 
-      label: "Posts", 
+      label: "Blog Posts", 
       children: [
         { icon: FileText, label: "Posts", href: "/admin/posts" },
         { icon: Folder, label: "Categories", href: "/admin/posts/categories" },
@@ -287,20 +292,35 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { icon: Folder, label: "Categories", href: "/admin/projects/categories" },
       ]
     },
+    
+    // Site Elements
+    { section: "elements", label: "Site Elements" },
     { icon: ShoppingBag, label: "Services", href: "/admin/services" },
-    { icon: MessageSquare, label: "Comments", href: "/admin/comments" },
-    { icon: Star, label: "Testimonials", href: "/admin/testimonials" },
     { icon: Code, label: "Skills", href: "/admin/skills" },
+    { icon: Star, label: "Testimonials", href: "/admin/testimonials" },
+    
+    // Community & Engagement
+    { section: "engagement", label: "Engagement" },
+    { icon: MessageSquare, label: "Comments", href: "/admin/comments" },
     { icon: Mail, label: "Newsletter", href: "/admin/newsletter" },
-    { icon: Inbox, label: "Inbox", href: "/admin/inbox" },
-    { icon: Palette, label: "Theme", href: "/admin/theme" },
-    { icon: Database, label: "System", href: "/admin/system" },
+    { icon: Inbox, label: "Messages", href: "/admin/inbox" },
+    { icon: BarChart, label: "Analytics", href: "/admin/analytics" },
+    
+    // Media & Assets
+    { section: "media", label: "Media & Assets" },
     { icon: ImageIcon, label: "Media", href: "/admin/media" },
     { icon: Layers, label: "File Manager", href: "/admin/files" },
-    { icon: Clock, label: "Activity", href: "/admin/activity" },
+    
+    // System & Tools
+    { section: "system", label: "System & Tools" },
+    { icon: Database, label: "System Info", href: "/admin/system" },
+    { icon: Clock, label: "Activity Log", href: "/admin/activity" },
     { icon: Download, label: "Export/Import", href: "/admin/export-import" },
     { icon: Code2, label: "Code Editor", href: "/admin/editor" },
-    { icon: BarChart, label: "Analytics", href: "/admin/analytics" },
+    
+    // Appearance & Settings
+    { section: "settings", label: "Appearance & Settings" },
+    { icon: Palette, label: "Theme", href: "/admin/theme" },
     { icon: Shield, label: "Security", href: "/admin/security" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
@@ -320,68 +340,92 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto py-4">
-          <nav className="px-2 space-y-1">
-            {navItems.map((item) => (
-              <div key={item.id || item.href}>
-                {item.children ? (
-                  <div>
-                    <button
-                      onClick={() => toggleMenu(item.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                        expandedMenus.includes(item.id)
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
-                      data-testid={`button-menu-${item.id}`}
-                    >
-                      <item.icon size={20} />
-                      {sidebarOpen && (
-                        <>
-                          <span className="flex-1">{item.label}</span>
-                          <ChevronDown 
-                            size={16} 
-                            className={`transition-transform ${expandedMenus.includes(item.id) ? "rotate-180" : ""}`}
-                          />
-                        </>
-                      )}
-                    </button>
-                    {expandedMenus.includes(item.id) && sidebarOpen && (
-                      <div className="ml-2 mt-1 space-y-1">
-                        {item.children.map((child: any) => (
-                          <Link key={child.href} href={child.href}>
-                            <div
-                              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer text-sm ${
-                                location === child.href
-                                  ? "bg-primary/10 text-primary"
-                                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                              }`}
-                              data-testid={`menu-item-${child.href}`}
-                            >
-                              <child.icon size={16} />
-                              <span>{child.label}</span>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
+          <nav className="px-2 space-y-6">
+            {navItems.map((item, idx) => {
+              if (item.section) {
+                return (
+                  <div key={`section-${item.section}`}>
+                    {idx > 0 && <div className="border-t border-border my-2" />}
+                    {sidebarOpen && (
+                      <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        {item.label}
+                      </p>
                     )}
                   </div>
-                ) : (
-                  <Link href={item.href}>
-                    <div 
-                      className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${
-                        location === item.href 
-                          ? "bg-primary/10 text-primary" 
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
-                      data-testid={`menu-item-${item.href}`}
-                    >
-                      <item.icon size={20} />
-                      {sidebarOpen && <span>{item.label}</span>}
+                );
+              }
+              
+              return (
+                <div key={item.id || item.href}>
+                  {item.children ? (
+                    <div>
+                      <button
+                        onClick={() => toggleMenu(item.id)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                          expandedMenus.includes(item.id)
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                        data-testid={`button-menu-${item.id}`}
+                      >
+                        <item.icon size={20} />
+                        {sidebarOpen && (
+                          <>
+                            <span className="flex-1">{item.label}</span>
+                            <ChevronDown 
+                              size={16} 
+                              className={`transition-transform ${expandedMenus.includes(item.id) ? "rotate-180" : ""}`}
+                            />
+                          </>
+                        )}
+                      </button>
+                      {expandedMenus.includes(item.id) && sidebarOpen && (
+                        <div className="ml-2 mt-1 space-y-1">
+                          {item.children.map((child: any) => (
+                            <Link key={child.href} href={child.href}>
+                              <div
+                                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer text-sm ${
+                                  location === child.href
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
+                                data-testid={`menu-item-${child.href}`}
+                              >
+                                <child.icon size={16} />
+                                <span>{child.label}</span>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </Link>
-                )}
-              </div>
-            ))}
+                  ) : (
+                    <Link href={item.href}>
+                      <div 
+                        className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${
+                          location === item.href 
+                            ? "bg-primary/10 text-primary" 
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                        data-testid={`menu-item-${item.href}`}
+                      >
+                        <item.icon size={20} />
+                        {sidebarOpen && (
+                          <div className="flex-1 flex items-center justify-between">
+                            <span>{item.label}</span>
+                            {item.badge && (
+                              <span className="ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full">
+                                {item.badge}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </nav>
         </div>
 
