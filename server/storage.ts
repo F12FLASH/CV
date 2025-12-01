@@ -1152,9 +1152,20 @@ export class DatabaseStorage implements IStorage {
     if (!user || !user.twoFactorSecret) {
       return false;
     }
-    // In a real app, you would use a library like speakeasy to verify the token
-    // For now, we'll just check if the token is not empty
-    return token.length > 0;
+    
+    // Import speakeasy dynamically to verify the token
+    try {
+      const speakeasy = require('speakeasy');
+      return speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: 'base32',
+        token,
+        window: 2
+      });
+    } catch (error) {
+      console.error('2FA verification error:', error);
+      return false;
+    }
   }
 
   async enableBiometricLogin(userId: number, credentialId: string): Promise<User | undefined> {
