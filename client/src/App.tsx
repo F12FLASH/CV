@@ -10,6 +10,8 @@ import Home from "@/pages/Home";
 import BlogPost from "@/pages/BlogPost";
 import Blog from "@/pages/Blog";
 import Projects from "@/pages/Projects";
+import Pages from "@/pages/Pages";
+import PageDetail from "@/pages/PageDetail";
 import NotFound from "@/pages/not-found";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminProjects from "@/pages/admin/Projects";
@@ -63,6 +65,8 @@ function Router() {
       <Route path="/blog" component={Blog} />
       <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/projects" component={Projects} />
+      <Route path="/pages" component={Pages} />
+      <Route path="/page/:slug" component={PageDetail} />
 
       {/* Admin Routes */}
       <Route path="/admin/login" component={AdminLogin} />
