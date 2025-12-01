@@ -24,7 +24,8 @@ export function useWebSocket() {
   }, []);
 
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN || isClosingRef.current) return;
+    if (isClosingRef.current) return;
+    if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -33,8 +34,9 @@ export function useWebSocket() {
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
-        setIsConnected(true);
-        console.log("WebSocket connected successfully");
+        if (!isClosingRef.current) {
+          setIsConnected(true);
+        }
       };
 
       wsRef.current.onmessage = async (event) => {
@@ -91,24 +93,22 @@ export function useWebSocket() {
             queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
           }
         } catch (error) {
-          console.error("Error parsing WebSocket message:", error);
+          // Silent error handling for message parsing
         }
       };
 
       wsRef.current.onclose = () => {
         setIsConnected(false);
         if (!isClosingRef.current) {
-          // Retry connection after 5 seconds instead of 3
           reconnectTimeoutRef.current = setTimeout(connect, 5000);
         }
       };
 
-      wsRef.current.onerror = () => {
-        // Silently handle WebSocket errors - not critical for core functionality
+      wsRef.current.onerror = (event) => {
         setIsConnected(false);
+        event.preventDefault?.();
       };
     } catch (error) {
-      // WebSocket connection failed, but app can still function
       setIsConnected(false);
       if (!isClosingRef.current) {
         reconnectTimeoutRef.current = setTimeout(connect, 5000);
