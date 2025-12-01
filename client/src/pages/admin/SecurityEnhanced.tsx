@@ -297,9 +297,16 @@ export default function AdminSecurityEnhanced() {
       return apiRequest('POST', '/api/auth/2fa/generate');
     },
     onSuccess: (data: any) => {
-      setSecret(data.secret);
-      setQrCode(data.qrCode);
-      setShow2FASetup(true);
+      if (data?.secret && data?.qrCode) {
+        setSecret(data.secret);
+        setQrCode(data.qrCode);
+        setShow2FASetup(true);
+      } else {
+        toast({ title: "Failed to generate 2FA setup", description: "Missing secret or QR code", variant: "destructive" });
+      }
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to generate 2FA setup", description: error.message || "Unknown error", variant: "destructive" });
     }
   });
 
