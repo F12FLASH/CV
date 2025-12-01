@@ -1,18 +1,16 @@
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { useState, useEffect } from "react";
 import {
   Mail,
-  Send,
-  Plus,
   Eye,
   Save,
   Loader2
@@ -157,14 +155,13 @@ export default function AdminNewsletter() {
                     {/* Description */}
                     <div>
                       <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={localSettings.description}
-                        onChange={(e) => handleInputChange('description', e.target.value)}
-                        placeholder="Stay informed with our weekly newsletter"
-                        className="mt-2 min-h-20"
-                        data-testid="textarea-newsletter-description"
-                      />
+                      <div className="mt-2" data-testid="editor-newsletter-description">
+                        <RichTextEditor
+                          value={localSettings.description}
+                          onChange={(value) => handleInputChange('description', value)}
+                          placeholder="Stay informed with our weekly newsletter"
+                        />
+                      </div>
                     </div>
 
                     {/* Email Placeholder */}
@@ -242,7 +239,7 @@ export default function AdminNewsletter() {
                       <h3 className="font-bold text-lg">{localSettings.title}</h3>
                       <p className="text-sm font-medium text-muted-foreground">{localSettings.subtitle}</p>
                     </div>
-                    <p className="text-sm">{localSettings.description}</p>
+                    <div className="text-sm prose prose-sm dark:prose-invert max-w-none [&_p]:my-0 [&_ul]:my-1 [&_ol]:my-1" dangerouslySetInnerHTML={{ __html: localSettings.description }} />
                     <div className="flex gap-2">
                       <input
                         type="email"
