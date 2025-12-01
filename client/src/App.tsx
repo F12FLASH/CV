@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -34,7 +34,6 @@ import AdminTools from "@/pages/admin/Tools";
 import AdminSkills from "@/pages/admin/Skills";
 import AdminThemeEnhanced from "@/pages/admin/ThemeEnhanced";
 import AdminSystem from "@/pages/admin/System";
-import AdminFileManager from "@/pages/admin/FileManager";
 import AdminActivityLog from "@/pages/admin/ActivityLog";
 import AdminExportImport from "@/pages/admin/ExportImport";
 import AdminPostsEnhanced from "@/pages/admin/PostsEnhanced";
@@ -86,7 +85,9 @@ function Router() {
       <Route path="/admin/theme" component={AdminThemeEnhanced} />
       <Route path="/admin/system" component={AdminSystem} />
       <Route path="/admin/media" component={lazy(() => import("@/pages/admin/Media"))} />
-      <Route path="/admin/files" component={lazy(() => import("@/pages/admin/FileManager"))} />
+      <Route path="/admin/files">
+        {() => <Redirect to="/admin/media" />}
+      </Route>
       <Route path="/admin/activity" component={AdminActivityLog} />
       <Route path="/admin/export-import" component={AdminExportImport} />
       <Route path="/admin/inbox" component={AdminInbox} />

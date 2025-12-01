@@ -26,7 +26,6 @@ import {
   Wrench,
   Palette,
   Database,
-  Layers,
   Key,
   Clock,
   Download,
@@ -308,8 +307,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     
     // Media & Assets
     { section: "media", label: "Media & Assets" },
-    { icon: ImageIcon, label: "Media", href: "/admin/media" },
-    { icon: Layers, label: "File Manager", href: "/admin/files" },
+    { icon: ImageIcon, label: "Media Library", href: "/admin/media" },
     
     // System & Tools
     { section: "system", label: "System & Tools" },

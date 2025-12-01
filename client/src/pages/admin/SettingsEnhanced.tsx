@@ -555,6 +555,15 @@ export default function AdminSettingsEnhanced() {
 
           {/* BRANDING TAB */}
           <TabsContent value="branding" className="space-y-4">
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="flex items-center gap-3 py-3">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Feature Preview</p>
+                  <p className="text-xs text-muted-foreground">This section shows planned features. Settings here are for preview only.</p>
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle>Logo & Favicon</CardTitle>
@@ -585,6 +594,15 @@ export default function AdminSettingsEnhanced() {
 
           {/* SEO TAB */}
           <TabsContent value="seo" className="space-y-4">
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="flex items-center gap-3 py-3">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Feature Preview</p>
+                  <p className="text-xs text-muted-foreground">SEO settings preview. Full implementation coming soon.</p>
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle>SEO Configuration</CardTitle>
@@ -640,6 +658,15 @@ export default function AdminSettingsEnhanced() {
 
           {/* EMAIL TAB */}
           <TabsContent value="email" className="space-y-4">
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="flex items-center gap-3 py-3">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Feature Preview</p>
+                  <p className="text-xs text-muted-foreground">Email/SMTP configuration preview. Requires external mail server setup.</p>
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -688,6 +715,15 @@ export default function AdminSettingsEnhanced() {
 
           {/* STORAGE TAB */}
           <TabsContent value="storage" className="space-y-4">
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="flex items-center gap-3 py-3">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Feature Preview</p>
+                  <p className="text-xs text-muted-foreground">Cloud storage integration preview. Requires cloud provider setup.</p>
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -751,6 +787,15 @@ export default function AdminSettingsEnhanced() {
 
           {/* NOTIFICATIONS & ALERTS TAB */}
           <TabsContent value="notifications" className="space-y-4">
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="flex items-center gap-3 py-3">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Feature Preview</p>
+                  <p className="text-xs text-muted-foreground">Notification system preview. Full push notifications coming soon.</p>
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -897,6 +942,15 @@ export default function AdminSettingsEnhanced() {
 
           {/* WEBHOOKS TAB */}
           <TabsContent value="webhooks" className="space-y-4">
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="flex items-center gap-3 py-3">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Feature Preview</p>
+                  <p className="text-xs text-muted-foreground">Webhook integration preview. Requires webhook dispatcher setup.</p>
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -991,6 +1045,15 @@ export default function AdminSettingsEnhanced() {
 
           {/* DEVELOPER SETTINGS TAB */}
           <TabsContent value="developer" className="space-y-4">
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="flex items-center gap-3 py-3">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Feature Preview</p>
+                  <p className="text-xs text-muted-foreground">Developer tools preview. Advanced debugging coming soon.</p>
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1096,6 +1159,15 @@ export default function AdminSettingsEnhanced() {
 
           {/* LOCALIZATION TAB (Enhanced) */}
           <TabsContent value="localization" className="space-y-4">
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="flex items-center gap-3 py-3">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Feature Preview</p>
+                  <p className="text-xs text-muted-foreground">Localization settings preview. Multi-language support coming soon.</p>
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1256,6 +1328,15 @@ export default function AdminSettingsEnhanced() {
 
           {/* DATABASE MANAGEMENT TAB */}
           <TabsContent value="database" className="space-y-4">
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="flex items-center gap-3 py-3">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Feature Preview</p>
+                  <p className="text-xs text-muted-foreground">Database management preview. Full backup/restore coming soon.</p>
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1381,6 +1462,15 @@ export default function AdminSettingsEnhanced() {
 
           {/* LOGGING CONFIGURATION TAB */}
           <TabsContent value="logging" className="space-y-4">
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="flex items-center gap-3 py-3">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">Feature Preview</p>
+                  <p className="text-xs text-muted-foreground">Logging configuration preview. Advanced log management coming soon.</p>
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

@@ -141,6 +141,13 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     loadCategories();
   }, [loadSettings]);
 
+  // Update document title when siteTitle changes
+  useEffect(() => {
+    if (settings.siteTitle) {
+      document.title = settings.siteTitle;
+    }
+  }, [settings.siteTitle]);
+
   const updateSettings = (newSettings: Partial<SiteSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };

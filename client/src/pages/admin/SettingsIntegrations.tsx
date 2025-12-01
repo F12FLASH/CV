@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plug, Plus, Trash2 } from "lucide-react";
+import { Plug, Plus, Trash2, Zap } from "lucide-react";
 
 const integrations = [
   { name: "Stripe", description: "Payment processing", status: "connected", icon: "💳" },
@@ -16,6 +16,15 @@ const integrations = [
 export function SettingsIntegrations() {
   return (
     <div className="space-y-4">
+      <Card className="border-blue-500/20 bg-blue-500/5">
+        <CardContent className="flex items-center gap-3 py-3">
+          <Zap className="w-5 h-5 text-blue-500" />
+          <div>
+            <p className="text-sm font-medium">Feature Preview</p>
+            <p className="text-xs text-muted-foreground">Integration settings preview. API connections coming soon.</p>
+          </div>
+        </CardContent>
+      </Card>
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-medium">Third-Party Services</h3>
