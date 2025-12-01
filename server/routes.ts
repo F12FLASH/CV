@@ -1651,8 +1651,8 @@ export async function registerRoutes(
     try {
       const settings = await storage.getSetting("newsletter-settings");
       if (settings) {
-        const parsedValue = JSON.parse(settings.value as string);
-        res.json(parsedValue);
+        const value = typeof settings.value === 'string' ? JSON.parse(settings.value) : settings.value;
+        res.json(value);
       } else {
         res.json({
           enabled: false,
@@ -1671,9 +1671,9 @@ export async function registerRoutes(
 
   app.post("/api/newsletter/settings", requireAdmin, async (req, res) => {
     try {
-      const settings = await storage.upsertSetting("newsletter-settings", JSON.stringify(req.body));
-      const parsedValue = JSON.parse(settings.value as string);
-      res.json(parsedValue);
+      const settings = await storage.upsertSetting("newsletter-settings", req.body);
+      const value = typeof settings.value === 'string' ? JSON.parse(settings.value) : settings.value;
+      res.json(value);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
