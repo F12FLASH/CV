@@ -1804,5 +1804,62 @@ export async function registerRoutes(
     }
   });
 
+  // FAQs API Routes
+  app.get("/api/faqs", async (req, res) => {
+    try {
+      const faqs = req.query.visible === "true"
+        ? await storage.getVisibleFAQs()
+        : await storage.getAllFAQs();
+      res.json(faqs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/faqs/:id", async (req, res) => {
+    try {
+      const faq = await storage.getFAQ(parseInt(req.params.id));
+      if (!faq) {
+        return res.status(404).json({ message: "FAQ not found" });
+      }
+      res.json(faq);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/faqs", requireAuth, async (req, res) => {
+    try {
+      const faq = await storage.createFAQ(req.body);
+      res.status(201).json(faq);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/faqs/:id", requireAuth, async (req, res) => {
+    try {
+      const faq = await storage.updateFAQ(parseInt(req.params.id), req.body);
+      if (!faq) {
+        return res.status(404).json({ message: "FAQ not found" });
+      }
+      res.json(faq);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/faqs/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteFAQ(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: "FAQ not found" });
+      }
+      res.json({ message: "FAQ deleted" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 }

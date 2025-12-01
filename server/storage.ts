@@ -19,7 +19,8 @@ import {
   userSessions, type UserSession, type InsertUserSession,
   ipRules, type IpRule, type InsertIpRule,
   securityLogs, type SecurityLog, type InsertSecurityLog,
-  homepageSections, type HomepageSection, type InsertHomepageSection
+  homepageSections, type HomepageSection, type InsertHomepageSection,
+  faqs, type FAQ, type InsertFAQ
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
@@ -213,6 +214,14 @@ export interface IStorage {
     totalAllowed: number;
     byEventType: { type: string; count: number }[];
   }>;
+
+  // FAQs
+  getFAQ(id: number): Promise<FAQ | undefined>;
+  getAllFAQs(): Promise<FAQ[]>;
+  getVisibleFAQs(): Promise<FAQ[]>;
+  createFAQ(faq: InsertFAQ): Promise<FAQ>;
+  updateFAQ(id: number, faq: Partial<InsertFAQ>): Promise<FAQ | undefined>;
+  deleteFAQ(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1020,6 +1029,35 @@ export class DatabaseStorage implements IStorage {
       totalAllowed: Number(allowedCount.count) || 0,
       byEventType: byType.map(t => ({ type: t.type, count: Number(t.count) })),
     };
+  }
+
+  // FAQs
+  async getFAQ(id: number): Promise<FAQ | undefined> {
+    const [faq] = await db.select().from(faqs).where(eq(faqs.id, id));
+    return faq || undefined;
+  }
+
+  async getAllFAQs(): Promise<FAQ[]> {
+    return await db.select().from(faqs).orderBy(asc(faqs.order));
+  }
+
+  async getVisibleFAQs(): Promise<FAQ[]> {
+    return await db.select().from(faqs).where(eq(faqs.visible, true)).orderBy(asc(faqs.order));
+  }
+
+  async createFAQ(insertFAQ: InsertFAQ): Promise<FAQ> {
+    const [faq] = await db.insert(faqs).values(insertFAQ).returning();
+    return faq;
+  }
+
+  async updateFAQ(id: number, faqData: Partial<InsertFAQ>): Promise<FAQ | undefined> {
+    const [faq] = await db.update(faqs).set({ ...faqData, updatedAt: new Date() }).where(eq(faqs.id, id)).returning();
+    return faq || undefined;
+  }
+
+  async deleteFAQ(id: number): Promise<boolean> {
+    const result = await db.delete(faqs).where(eq(faqs.id, id)).returning();
+    return result.length > 0;
   }
 }
 

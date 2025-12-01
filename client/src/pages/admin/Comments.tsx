@@ -1,34 +1,47 @@
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { 
   Search, 
-  ThumbsUp, 
-  Reply, 
   Trash, 
-  CheckCircle, 
-  AlertTriangle,
   GripVertical,
   Edit,
   Plus,
   Star,
   MessageSquare,
   Loader2,
-  Eye
+  Eye,
+  HelpCircle,
+  Save,
+  X
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
-import type { Comment, Review } from "@shared/schema";
+import type { Comment, Review, FAQ } from "@shared/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function AdminComments() {
   const [activeTab, setActiveTab] = useState("comments");
   const [searchQuery, setSearchQuery] = useState("");
+  const [faqDialogOpen, setFaqDialogOpen] = useState(false);
+  const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
+  const [faqForm, setFaqForm] = useState({ question: "", answer: "", visible: true, order: 0 });
   const { toast } = useToast();
 
   const { data: comments = [], isLoading: commentsLoading } = useQuery<Comment[]>({
@@ -37,6 +50,10 @@ export default function AdminComments() {
 
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery<Review[]>({
     queryKey: ['/api/reviews']
+  });
+
+  const { data: faqs = [], isLoading: faqsLoading } = useQuery<FAQ[]>({
+    queryKey: ['/api/faqs']
   });
 
   const { data: posts = [] } = useQuery<any[]>({
@@ -87,6 +104,81 @@ export default function AdminComments() {
     }
   });
 
+  const createFaqMutation = useMutation({
+    mutationFn: async (data: { question: string; answer: string; visible: boolean; order: number }) => {
+      return apiRequest("POST", "/api/faqs", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/faqs'] });
+      toast({ title: "FAQ created successfully" });
+      setFaqDialogOpen(false);
+      resetFaqForm();
+    },
+    onError: (error: any) => {
+      toast({ title: "Error creating FAQ", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const updateFaqMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Partial<FAQ> }) => {
+      return apiRequest("PUT", `/api/faqs/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/faqs'] });
+      toast({ title: "FAQ updated successfully" });
+      setFaqDialogOpen(false);
+      setEditingFaq(null);
+      resetFaqForm();
+    },
+    onError: (error: any) => {
+      toast({ title: "Error updating FAQ", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const deleteFaqMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/faqs/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/faqs'] });
+      toast({ title: "FAQ deleted" });
+    }
+  });
+
+  const resetFaqForm = () => {
+    setFaqForm({ question: "", answer: "", visible: true, order: faqs.length });
+    setEditingFaq(null);
+  };
+
+  const openFaqDialog = (faq?: FAQ) => {
+    if (faq) {
+      setEditingFaq(faq);
+      setFaqForm({
+        question: faq.question,
+        answer: faq.answer,
+        visible: faq.visible,
+        order: faq.order
+      });
+    } else {
+      resetFaqForm();
+      setFaqForm(prev => ({ ...prev, order: faqs.length }));
+    }
+    setFaqDialogOpen(true);
+  };
+
+  const handleFaqSubmit = () => {
+    if (!faqForm.question.trim() || !faqForm.answer.trim()) {
+      toast({ title: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+    
+    if (editingFaq) {
+      updateFaqMutation.mutate({ id: editingFaq.id, data: faqForm });
+    } else {
+      createFaqMutation.mutate(faqForm);
+    }
+  };
+
   const getPostTitle = (postId: number | null) => {
     if (!postId) return null;
     const post = posts.find((p: any) => p.id === postId);
@@ -107,6 +199,11 @@ export default function AdminComments() {
   const filteredReviews = reviews.filter(review =>
     review.authorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     review.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredFaqs = faqs.filter(faq =>
+    faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getStatusColor = (status: string) => {
@@ -146,7 +243,10 @@ export default function AdminComments() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="faqs" data-testid="tab-faqs">FAQs</TabsTrigger>
+            <TabsTrigger value="faqs" data-testid="tab-faqs">
+              FAQs
+              <Badge variant="secondary" className="ml-2">{faqs.length}</Badge>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="comments" className="space-y-6 mt-6">
@@ -328,34 +428,155 @@ export default function AdminComments() {
 
           <TabsContent value="faqs" className="space-y-6 mt-6">
             <div className="flex justify-between gap-4 flex-wrap">
-              <Input placeholder="Search FAQs..." className="max-w-sm" data-testid="input-search-faqs" />
-              <Button data-testid="button-add-faq"><Plus className="w-4 h-4 mr-2" /> Add Question</Button>
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search FAQs..." 
+                  className="pl-9" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  data-testid="input-search-faqs" 
+                />
+              </div>
+              <Button onClick={() => openFaqDialog()} data-testid="button-add-faq">
+                <Plus className="w-4 h-4 mr-2" /> Add Question
+              </Button>
             </div>
             
-            <div className="space-y-2">
-              {[
-                { q: "What technologies do you specialize in?", a: "I specialize in the React ecosystem, Node.js, and cloud architecture." },
-                { q: "Do you offer maintenance packages?", a: "Yes, I offer monthly maintenance packages to keep your site secure and updated." },
-                { q: "What is your typical turnaround time?", a: "It depends on the project scope, but typically 2-4 weeks for a standard website." },
-              ].map((faq, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 bg-card border border-border rounded-lg group" data-testid={`card-faq-${i}`}>
-                  <div className="cursor-grab text-muted-foreground hover:text-foreground">
-                    <GripVertical className="w-5 h-5" />
+            {faqsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredFaqs.length === 0 ? (
+              <div className="text-center py-12">
+                <HelpCircle className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold">No FAQs yet</h3>
+                <p className="text-muted-foreground">Add frequently asked questions to help your visitors.</p>
+                <Button onClick={() => openFaqDialog()} className="mt-4">
+                  <Plus className="w-4 h-4 mr-2" /> Add Your First FAQ
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredFaqs.map((faq) => (
+                  <div 
+                    key={faq.id} 
+                    className={`flex items-center gap-4 p-4 bg-card border border-border rounded-lg group ${!faq.visible ? 'opacity-60' : ''}`} 
+                    data-testid={`card-faq-${faq.id}`}
+                  >
+                    <div className="cursor-grab text-muted-foreground hover:text-foreground">
+                      <GripVertical className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">{faq.question}</h4>
+                        {!faq.visible && (
+                          <Badge variant="outline" className="text-xs">Hidden</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{faq.answer}</p>
+                    </div>
+                    <div className="invisible group-hover:visible flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => openFaqDialog(faq)}
+                        data-testid={`button-edit-faq-${faq.id}`}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-destructive"
+                        onClick={() => deleteFaqMutation.mutate(faq.id)}
+                        disabled={deleteFaqMutation.isPending}
+                        data-testid={`button-delete-faq-${faq.id}`}
+                      >
+                        <Trash className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold">{faq.q}</h4>
-                    <p className="text-sm text-muted-foreground">{faq.a}</p>
-                  </div>
-                  <div className="invisible group-hover:visible flex gap-2">
-                    <Button variant="ghost" size="icon" data-testid={`button-edit-faq-${i}`}><Edit className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive" data-testid={`button-delete-faq-${i}`}><Trash className="w-4 h-4" /></Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={faqDialogOpen} onOpenChange={setFaqDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{editingFaq ? "Edit FAQ" : "Add New FAQ"}</DialogTitle>
+            <DialogDescription>
+              {editingFaq ? "Update this frequently asked question." : "Add a new frequently asked question to help your visitors."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="question">Question</Label>
+              <Input
+                id="question"
+                placeholder="e.g., What technologies do you specialize in?"
+                value={faqForm.question}
+                onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })}
+                data-testid="input-faq-question"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="answer">Answer</Label>
+              <Textarea
+                id="answer"
+                placeholder="Provide a helpful answer..."
+                rows={4}
+                value={faqForm.answer}
+                onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })}
+                data-testid="input-faq-answer"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="visible"
+                  checked={faqForm.visible}
+                  onCheckedChange={(checked) => setFaqForm({ ...faqForm, visible: checked })}
+                  data-testid="switch-faq-visible"
+                />
+                <Label htmlFor="visible">Visible on website</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="order" className="text-sm">Order:</Label>
+                <Input
+                  id="order"
+                  type="number"
+                  className="w-20"
+                  min="0"
+                  value={faqForm.order}
+                  onChange={(e) => setFaqForm({ ...faqForm, order: parseInt(e.target.value) || 0 })}
+                  data-testid="input-faq-order"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFaqDialogOpen(false)}>
+              <X className="w-4 h-4 mr-2" /> Cancel
+            </Button>
+            <Button 
+              onClick={handleFaqSubmit}
+              disabled={createFaqMutation.isPending || updateFaqMutation.isPending}
+              data-testid="button-save-faq"
+            >
+              {(createFaqMutation.isPending || updateFaqMutation.isPending) ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              {editingFaq ? "Update" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

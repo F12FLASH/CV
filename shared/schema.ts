@@ -489,6 +489,25 @@ export const insertHomepageSectionSchema = createInsertSchema(homepageSections).
 export type InsertHomepageSection = z.infer<typeof insertHomepageSectionSchema>;
 export type HomepageSection = typeof homepageSections.$inferSelect;
 
+// FAQs table
+export const faqs = pgTable("faqs", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  visible: boolean("visible").notNull().default(true),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertFAQSchema = createInsertSchema(faqs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertFAQ = z.infer<typeof insertFAQSchema>;
+export type FAQ = typeof faqs.$inferSelect;
+
 // Relations for security tables
 export const trustedDevicesRelations = relations(trustedDevices, ({ one }) => ({
   user: one(users, {

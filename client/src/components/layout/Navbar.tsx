@@ -13,27 +13,29 @@ export function Navbar() {
   const [activeSection, setActiveSection] = useState("home");
   const { theme, toggleTheme } = useTheme();
   const { t } = useLanguage();
+  const [location, setLocation] = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
 
-      // Simple scroll spy
-      const sections = ["home", "about", "skills", "projects", "contact"];
-      const current = sections.find((section) => {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          return rect.top <= 100 && rect.bottom >= 100;
-        }
-        return false;
-      });
-      if (current) setActiveSection(current);
+      if (location === "/") {
+        const sections = ["home", "about", "skills", "projects", "contact"];
+        const current = sections.find((section) => {
+          const element = document.getElementById(section);
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            return rect.top <= 100 && rect.bottom >= 100;
+          }
+          return false;
+        });
+        if (current) setActiveSection(current);
+      }
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [location]);
 
   const navLinks = [
     { name: t("nav.home"), href: "#home" },
@@ -45,10 +47,30 @@ export function Navbar() {
   ];
 
   const scrollToSection = (id: string) => {
-    const element = document.getElementById(id.replace("#", ""));
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setMobileMenuOpen(false);
+    const sectionId = id.replace("#", "");
+    
+    if (location !== "/") {
+      setLocation("/");
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+    setMobileMenuOpen(false);
+  };
+
+  const handleLogoClick = () => {
+    if (location !== "/") {
+      setLocation("/");
+    } else {
+      scrollToSection("home");
     }
   };
 
@@ -59,26 +81,27 @@ export function Navbar() {
       }`}
     >
       <div className="container mx-auto h-full flex items-center justify-between px-4 md:px-8">
-        {/* Logo */}
-        <div className="group cursor-pointer" onClick={() => scrollToSection("home")}>
+        <div className="group cursor-pointer" onClick={handleLogoClick}>
           <div className="relative w-10 h-10 flex items-center justify-center border-2 border-foreground rounded hover:bg-primary hover:border-primary transition-all duration-500 group-hover:rotate-90">
             <span className="font-heading font-bold text-xl group-hover:text-white transition-colors">L</span>
           </div>
         </div>
 
-        {/* Desktop Menu */}
         <nav className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <button
               key={link.name}
               onClick={() => scrollToSection(link.href)}
               className={`group relative text-sm font-medium transition-colors ${
-                activeSection === link.href.replace("#", "") ? "text-primary" : "text-foreground/80 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-primary hover:to-secondary"
+                location === "/" && activeSection === link.href.replace("#", "") 
+                  ? "text-primary" 
+                  : "text-foreground/80 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-primary hover:to-secondary"
               }`}
+              data-testid={`nav-${link.href.replace("#", "")}`}
             >
               {link.name}
               <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all duration-300 group-hover:w-full" />
-              {activeSection === link.href.replace("#", "") && (
+              {location === "/" && activeSection === link.href.replace("#", "") && (
                 <motion.div
                   layoutId="activeSection"
                   className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary"
@@ -88,18 +111,19 @@ export function Navbar() {
           ))}
         </nav>
 
-        {/* Actions */}
         <div className="hidden md:flex items-center gap-4">
           <LanguageSwitcher />
           <button
             onClick={toggleTheme}
             className="p-2 rounded-full hover:bg-secondary/10 transition-colors"
+            data-testid="button-theme-toggle"
           >
             {theme === "dark" ? <Moon size={20} /> : <Sun size={20} />}
           </button>
           <Button
             variant="outline"
             className="hidden lg:flex gap-2 border-primary text-primary relative overflow-hidden group transition-all hover:text-white hover:border-transparent"
+            data-testid="button-resume"
           >
             <span className="absolute inset-0 bg-gradient-to-r from-primary to-secondary translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300 ease-out" />
             <span className="relative z-10 flex items-center gap-2">
@@ -108,16 +132,15 @@ export function Navbar() {
           </Button>
         </div>
 
-        {/* Mobile Toggle */}
         <button
           className="md:hidden p-2 text-foreground"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          data-testid="button-mobile-menu"
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
