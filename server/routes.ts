@@ -307,8 +307,7 @@ export async function registerRoutes(
       }
 
       // Check if 2FA is enabled for user
-      const securitySettings = await storage.getSecuritySetting('twoFactorEnabled');
-      if (user.twoFactorEnabled && securitySettings?.value === 'true') {
+      if (user.twoFactorEnabled) {
         // Check if user has biometric credentials
         const webAuthnCredentials = await storage.getWebAuthnCredentialsByUser(user.id);
         const hasBiometric = webAuthnCredentials.length > 0;
