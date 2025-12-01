@@ -147,6 +147,23 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     loadCategories();
   }, [loadSettings]);
 
+  // Update favicon when faviconUrl changes
+  useEffect(() => {
+    if (settings.faviconUrl) {
+      const link = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+      if (link) {
+        link.href = settings.faviconUrl;
+        link.type = "image/png";
+      } else {
+        const newLink = document.createElement('link');
+        newLink.rel = 'icon';
+        newLink.href = settings.faviconUrl;
+        newLink.type = "image/png";
+        document.head.appendChild(newLink);
+      }
+    }
+  }, [settings.faviconUrl]);
+
   // Update document title when siteTitle changes
   useEffect(() => {
     if (settings.siteTitle) {
