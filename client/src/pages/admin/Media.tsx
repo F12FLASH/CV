@@ -203,14 +203,20 @@ export default function AdminMedia() {
   }
 
   if (error) {
+    console.error('Media error:', error);
     return (
       <AdminLayout>
         <div className="flex flex-col items-center justify-center h-64">
-          <p className="text-destructive mb-4">Error loading media: {error.message}</p>
+          <p className="text-destructive mb-4">Error loading media: {error instanceof Error ? error.message : 'Unknown error'}</p>
           <Button onClick={() => window.location.reload()}>Reload Page</Button>
         </div>
       </AdminLayout>
     );
+  }
+
+  // Add explicit check for empty state
+  if (!isLoading && !error && mediaItems.length === 0) {
+    console.log('Media: No items found, showing empty state');
   }
 
   return (
