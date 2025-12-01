@@ -11,8 +11,6 @@ const app = express();
 const PgSession = connectPgSimple(session);
 const httpServer = createServer(app);
 
-setupWebSocket(httpServer);
-
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -107,10 +105,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(httpServer, app);
+  await registerRoutes(httpServer, app);
 
   // Initialize WebSocket server
-  setupWebSocket(server);
+  setupWebSocket(httpServer);
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
