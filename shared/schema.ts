@@ -425,6 +425,32 @@ export const insertIpRuleSchema = createInsertSchema(ipRules).omit({
 export type InsertIpRule = z.infer<typeof insertIpRuleSchema>;
 export type IpRule = typeof ipRules.$inferSelect;
 
+// Pages table - custom CMS pages
+export const pages = pgTable("pages", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  content: text("content"),
+  excerpt: text("excerpt"),
+  status: text("status").notNull().default("Draft"),
+  views: integer("views").notNull().default(0),
+  featuredImage: text("featured_image"),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  publishedAt: timestamp("published_at"),
+});
+
+export const insertPageSchema = createInsertSchema(pages).omit({
+  id: true,
+  views: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPage = z.infer<typeof insertPageSchema>;
+export type Page = typeof pages.$inferSelect;
+
 // Security Logs table (for bot detection, threat events)
 export const securityLogs = pgTable("security_logs", {
   id: serial("id").primaryKey(),
