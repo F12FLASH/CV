@@ -13,6 +13,8 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("Subscriber"),
   status: text("status").notNull().default("Active"),
   avatar: text("avatar"),
+  twoFactorSecret: text("two_factor_secret"),
+  twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
   lastActive: timestamp("last_active").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -508,10 +510,37 @@ export const insertFAQSchema = createInsertSchema(faqs).omit({
 export type InsertFAQ = z.infer<typeof insertFAQSchema>;
 export type FAQ = typeof faqs.$inferSelect;
 
+// WebAuthn Credentials table (for biometric login)
+export const webauthnCredentials = pgTable("webauthn_credentials", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  credentialId: text("credential_id").notNull().unique(),
+  publicKey: text("public_key").notNull(),
+  counter: integer("counter").notNull().default(0),
+  deviceName: text("device_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUsed: timestamp("last_used"),
+});
+
+export const insertWebAuthnCredentialSchema = createInsertSchema(webauthnCredentials).omit({
+  id: true,
+  createdAt: true,
+  lastUsed: true,
+});
+export type InsertWebAuthnCredential = z.infer<typeof insertWebAuthnCredentialSchema>;
+export type WebAuthnCredential = typeof webauthnCredentials.$inferSelect;
+
 // Relations for security tables
 export const trustedDevicesRelations = relations(trustedDevices, ({ one }) => ({
   user: one(users, {
     fields: [trustedDevices.userId],
+    references: [users.id],
+  }),
+}));
+
+export const webauthnCredentialsRelations = relations(webauthnCredentials, ({ one }) => ({
+  user: one(users, {
+    fields: [webauthnCredentials.userId],
     references: [users.id],
   }),
 }));

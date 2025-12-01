@@ -13,6 +13,14 @@ import {
 } from "@shared/schema";
 import bcrypt from "bcrypt";
 import { broadcastNewMessage, broadcastNotification, broadcastNewComment, broadcastNewReview } from "./websocket";
+import speakeasy from "speakeasy";
+import QRCode from "qrcode";
+import { 
+  generateRegistrationOptions, 
+  verifyRegistrationResponse,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse 
+} from "@simplewebauthn/server";
 
 // Configure multer for file uploads
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -1664,6 +1672,342 @@ export async function registerRoutes(
       });
       
       res.json({ message: "Debug settings saved", debugMode, showQueryDebug, performanceProfiling });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ 2FA ENDPOINTS ============
+
+  // Generate 2FA secret and QR code
+  app.post("/api/auth/2fa/generate", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const secret = speakeasy.generateSecret({
+        name: `Loi Developer (${user.email})`,
+        issuer: "Loi Developer Portfolio"
+      });
+
+      // Lưu secret tạm thời vào session
+      req.session.temp2FASecret = secret.base32;
+
+      // Generate QR code
+      const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url!);
+
+      res.json({
+        secret: secret.base32,
+        qrCode: qrCodeUrl
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Verify and enable 2FA
+  app.post("/api/auth/2fa/verify", requireAuth, async (req, res) => {
+    try {
+      const { token } = req.body;
+      const secret = req.session.temp2FASecret;
+
+      if (!secret) {
+        return res.status(400).json({ message: "No 2FA setup in progress" });
+      }
+
+      const verified = speakeasy.totp.verify({
+        secret,
+        encoding: 'base32',
+        token,
+        window: 2
+      });
+
+      if (!verified) {
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+
+      // Save secret to database
+      await storage.updateUser(req.session.userId!, {
+        twoFactorSecret: secret,
+        twoFactorEnabled: true
+      });
+
+      delete req.session.temp2FASecret;
+
+      await storage.createActivityLog({
+        action: "2FA enabled",
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "success"
+      });
+
+      res.json({ message: "2FA enabled successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Disable 2FA
+  app.post("/api/auth/2fa/disable", requireAuth, async (req, res) => {
+    try {
+      const { token } = req.body;
+      const user = await storage.getUser(req.session.userId!);
+
+      if (!user?.twoFactorSecret) {
+        return res.status(400).json({ message: "2FA not enabled" });
+      }
+
+      const verified = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: 'base32',
+        token,
+        window: 2
+      });
+
+      if (!verified) {
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+
+      await storage.updateUser(req.session.userId!, {
+        twoFactorSecret: null,
+        twoFactorEnabled: false
+      });
+
+      await storage.createActivityLog({
+        action: "2FA disabled",
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "warning"
+      });
+
+      res.json({ message: "2FA disabled successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Verify 2FA token during login
+  app.post("/api/auth/2fa/login", async (req, res) => {
+    try {
+      const { userId, token } = req.body;
+      const user = await storage.getUser(userId);
+
+      if (!user?.twoFactorSecret) {
+        return res.status(400).json({ message: "2FA not enabled for this user" });
+      }
+
+      const verified = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: 'base32',
+        token,
+        window: 2
+      });
+
+      if (!verified) {
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.role = user.role;
+
+      const { password: _, twoFactorSecret: __, ...userWithoutSensitive } = user;
+      res.json({ user: userWithoutSensitive });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ WEBAUTHN (BIOMETRIC) ENDPOINTS ============
+
+  const rpName = "Loi Developer Portfolio";
+  const rpID = process.env.RP_ID || "localhost";
+  const origin = process.env.ORIGIN || `http://localhost:5000`;
+
+  // Generate registration options
+  app.get("/api/auth/webauthn/register/options", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const options = await generateRegistrationOptions({
+        rpName,
+        rpID,
+        userID: user.id.toString(),
+        userName: user.email,
+        attestationType: 'none',
+        authenticatorSelection: {
+          residentKey: 'preferred',
+          userVerification: 'preferred',
+        },
+      });
+
+      req.session.currentChallenge = options.challenge;
+
+      res.json(options);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Verify registration
+  app.post("/api/auth/webauthn/register/verify", requireAuth, async (req, res) => {
+    try {
+      const { credential, deviceName } = req.body;
+      const expectedChallenge = req.session.currentChallenge;
+
+      if (!expectedChallenge) {
+        return res.status(400).json({ message: "No challenge in session" });
+      }
+
+      const verification = await verifyRegistrationResponse({
+        response: credential,
+        expectedChallenge,
+        expectedOrigin: origin,
+        expectedRPID: rpID,
+      });
+
+      if (!verification.verified || !verification.registrationInfo) {
+        return res.status(400).json({ message: "Verification failed" });
+      }
+
+      const { credentialPublicKey, credentialID, counter } = verification.registrationInfo;
+
+      await storage.createWebAuthnCredential({
+        userId: req.session.userId!,
+        credentialId: Buffer.from(credentialID).toString('base64'),
+        publicKey: Buffer.from(credentialPublicKey).toString('base64'),
+        counter,
+        deviceName: deviceName || 'Biometric Device'
+      });
+
+      delete req.session.currentChallenge;
+
+      await storage.createActivityLog({
+        action: `Biometric login registered: ${deviceName || 'Biometric Device'}`,
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "success"
+      });
+
+      res.json({ verified: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Generate authentication options
+  app.post("/api/auth/webauthn/login/options", async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await storage.getUserByEmail(email);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const credentials = await storage.getWebAuthnCredentialsByUser(user.id);
+
+      const options = await generateAuthenticationOptions({
+        rpID,
+        allowCredentials: credentials.map(cred => ({
+          id: Buffer.from(cred.credentialId, 'base64'),
+          type: 'public-key',
+        })),
+        userVerification: 'preferred',
+      });
+
+      req.session.currentChallenge = options.challenge;
+      req.session.tempUserId = user.id;
+
+      res.json(options);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Verify authentication
+  app.post("/api/auth/webauthn/login/verify", async (req, res) => {
+    try {
+      const { credential } = req.body;
+      const expectedChallenge = req.session.currentChallenge;
+      const userId = req.session.tempUserId;
+
+      if (!expectedChallenge || !userId) {
+        return res.status(400).json({ message: "Invalid session" });
+      }
+
+      const credentialId = Buffer.from(credential.id, 'base64url').toString('base64');
+      const dbCredential = await storage.getWebAuthnCredentialById(credentialId);
+
+      if (!dbCredential || dbCredential.userId !== userId) {
+        return res.status(400).json({ message: "Credential not found" });
+      }
+
+      const verification = await verifyAuthenticationResponse({
+        response: credential,
+        expectedChallenge,
+        expectedOrigin: origin,
+        expectedRPID: rpID,
+        authenticator: {
+          credentialID: Buffer.from(dbCredential.credentialId, 'base64'),
+          credentialPublicKey: Buffer.from(dbCredential.publicKey, 'base64'),
+          counter: dbCredential.counter,
+        },
+      });
+
+      if (!verification.verified) {
+        return res.status(400).json({ message: "Authentication failed" });
+      }
+
+      await storage.updateWebAuthnCredentialCounter(
+        dbCredential.id,
+        verification.authenticationInfo.newCounter
+      );
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.role = user.role;
+
+      delete req.session.currentChallenge;
+      delete req.session.tempUserId;
+
+      const { password: _, twoFactorSecret: __, ...userWithoutSensitive } = user;
+      res.json({ user: userWithoutSensitive });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get user's WebAuthn credentials
+  app.get("/api/auth/webauthn/credentials", requireAuth, async (req, res) => {
+    try {
+      const credentials = await storage.getWebAuthnCredentialsByUser(req.session.userId!);
+      res.json(credentials.map(c => ({
+        id: c.id,
+        deviceName: c.deviceName,
+        createdAt: c.createdAt,
+        lastUsed: c.lastUsed
+      })));
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Delete WebAuthn credential
+  app.delete("/api/auth/webauthn/credentials/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteWebAuthnCredential(parseInt(req.params.id));
+      res.json({ message: "Credential deleted" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
