@@ -239,7 +239,7 @@ export default function Maintenance() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-500 to-transparent animate-pulse"></div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes scan {
           0% {
             transform: translateY(-100%);
