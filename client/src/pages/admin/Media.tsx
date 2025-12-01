@@ -69,8 +69,16 @@ export default function AdminMedia() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: mediaItems = [], isLoading, refetch } = useQuery<MediaItem[]>({
+  const { data: mediaItems = [], isLoading, error } = useQuery<MediaItem[]>({
     queryKey: ['/api/media'],
+    retry: 3,
+  });
+
+  // Debug logging
+  console.log('Media page state:', { 
+    isLoading, 
+    error: error?.message, 
+    itemsCount: mediaItems.length 
   });
 
   const createMediaMutation = useMutation({
@@ -188,6 +196,18 @@ export default function AdminMedia() {
       <AdminLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <p className="ml-2 text-muted-foreground">Loading media...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center h-64">
+          <p className="text-destructive mb-4">Error loading media: {error.message}</p>
+          <Button onClick={() => window.location.reload()}>Reload Page</Button>
         </div>
       </AdminLayout>
     );
