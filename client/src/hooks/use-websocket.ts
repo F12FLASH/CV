@@ -34,6 +34,7 @@ export function useWebSocket() {
 
       wsRef.current.onopen = () => {
         setIsConnected(true);
+        console.log("WebSocket connected successfully");
       };
 
       wsRef.current.onmessage = async (event) => {
@@ -97,16 +98,21 @@ export function useWebSocket() {
       wsRef.current.onclose = () => {
         setIsConnected(false);
         if (!isClosingRef.current) {
-          reconnectTimeoutRef.current = setTimeout(connect, 3000);
+          // Retry connection after 5 seconds instead of 3
+          reconnectTimeoutRef.current = setTimeout(connect, 5000);
         }
       };
 
-      wsRef.current.onerror = (error) => {
-        console.error("WebSocket connection error:", error);
+      wsRef.current.onerror = () => {
+        // Silently handle WebSocket errors - not critical for core functionality
+        setIsConnected(false);
       };
     } catch (error) {
-      console.error("Failed to create WebSocket connection", error);
+      // WebSocket connection failed, but app can still function
       setIsConnected(false);
+      if (!isClosingRef.current) {
+        reconnectTimeoutRef.current = setTimeout(connect, 5000);
+      }
     }
   }, [playNotificationSound, toast, queryClient]);
 

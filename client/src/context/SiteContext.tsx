@@ -130,6 +130,15 @@ export function SiteProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     loadSettings();
+    // Suppress categories loading errors - not critical for site functionality
+    const loadCategories = async () => {
+      try {
+        await fetch("/api/categories", { credentials: "include" });
+      } catch (error) {
+        // Categories are optional, don't show error to user
+      }
+    };
+    loadCategories();
   }, [loadSettings]);
 
   const updateSettings = (newSettings: Partial<SiteSettings>) => {
