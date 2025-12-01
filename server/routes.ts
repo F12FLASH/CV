@@ -2082,7 +2082,8 @@ export async function registerRoutes(
       
       // Only allow WebAuthn login options when 2FA is pending
       // This prevents challenge farming with stolen session cookies
-      if (!req.session.pending2FA && !req.session.pendingUserId) {
+      // Require BOTH flags to be present
+      if (!req.session.pending2FA || !req.session.pendingUserId) {
         return res.status(400).json({ message: "Please login with password first" });
       }
 

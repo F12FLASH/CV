@@ -29,6 +29,27 @@ Configuration is managed through the admin Security panel (`/admin/security` > R
 
 Forms protected: Login, Contact, Registration, Newsletter, Comments.
 
+### Two-Factor Authentication (2FA)
+
+The application supports multiple 2FA methods:
+- **TOTP (Time-based One-Time Password)**: Uses `speakeasy` library for generating/verifying codes. Compatible with Google Authenticator, Authy, etc.
+- **WebAuthn/Biometric Login**: Uses `@simplewebauthn/server` for passwordless authentication with fingerprint, Face ID, or security keys.
+
+#### 2FA Session Flow (Security Architecture)
+1. **Password Login**: Sets only `pending2FA=true` and `pendingUserId` in session - no full access granted
+2. **Second Factor Verification**: 
+   - Both TOTP and WebAuthn endpoints require `pending2FA=true` AND `pendingUserId` to be set
+   - Session is regenerated INSIDE the callback to prevent session fixation attacks
+   - Full session (`userId`, `username`, `role`) set only after successful verification
+3. **Protected Routes**: `requireAuth` and `requireAdmin` middlewares block access if `pending2FA=true`
+
+#### Security Measures
+- Session regeneration prevents session fixation attacks
+- WebAuthn challenge farming prevented by requiring pending 2FA state
+- Login history stored in `securityLogs` table for audit trail
+- Password expiration enforcement configurable via admin settings
+- Trusted devices management for remembered authentication
+
 ### Backend Architecture
 
 The backend utilizes Node.js with Express.js and TypeScript. It follows a RESTful API design, with an abstraction layer for storage (currently in-memory, but prepared for PostgreSQL). `esbuild` handles server bundling for production, and `tsx` is used for development. The server is structured to separate concerns between routing, business logic, and data access, and includes custom logging and environment-based configuration. WebSocket integration provides real-time communication for notifications.
