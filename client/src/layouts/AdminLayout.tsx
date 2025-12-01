@@ -233,19 +233,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     setLocation("/admin/login");
   };
 
-  if (isChecking) {
+  if (isChecking || !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{isChecking ? 'Loading...' : 'Redirecting to login...'}</p>
         </div>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return null;
   }
 
   // Error fallback
