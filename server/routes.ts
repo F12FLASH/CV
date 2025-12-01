@@ -242,23 +242,87 @@ export async function registerRoutes(
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password, captchaToken, captchaType } = req.body;
+      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+      const userAgent = req.get('User-Agent') || 'unknown';
+
       if (!username || !password) {
         return res.status(400).json({ message: "Username and password required" });
       }
 
       const captchaResult = await verifyCaptcha(captchaToken, captchaType);
       if (!captchaResult.success) {
+        await storage.createSecurityLog({
+          action: `Failed login attempt - captcha failed`,
+          userId: null,
+          userName: username,
+          type: "error",
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          eventType: "login_failed"
+        });
         return res.status(400).json({ message: captchaResult.error || "Captcha verification failed" });
       }
 
       const user = await storage.getUserByUsernameOrEmail(username);
       if (!user) {
+        await storage.createSecurityLog({
+          action: `Failed login attempt - user not found`,
+          userId: null,
+          userName: username,
+          type: "error",
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          eventType: "login_failed"
+        });
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
       const isValid = await verifyPassword(password, user.password);
       if (!isValid) {
+        await storage.createSecurityLog({
+          action: `Failed login attempt - invalid password`,
+          userId: user.id,
+          userName: user.username,
+          type: "error",
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          eventType: "login_failed"
+        });
         return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Check if 2FA is enabled for user
+      const securitySettings = await storage.getSecuritySetting('twoFactorEnabled');
+      if (user.twoFactorEnabled && securitySettings?.value === 'true') {
+        // Return partial auth requiring 2FA
+        req.session.pending2FA = true;
+        req.session.pendingUserId = user.id;
+        return res.json({ 
+          requires2FA: true,
+          message: "Please enter your 2FA code"
+        });
+      }
+
+      // Check password expiration
+      const passwordExpirationSetting = await storage.getSecuritySetting('passwordExpiration');
+      if (passwordExpirationSetting?.value === 'true' && user.passwordUpdatedAt) {
+        const passwordAge = Date.now() - new Date(user.passwordUpdatedAt).getTime();
+        const maxAge = 90 * 24 * 60 * 60 * 1000; // 90 days
+        if (passwordAge > maxAge) {
+          await storage.createSecurityLog({
+            action: `Login blocked - password expired`,
+            userId: user.id,
+            userName: user.username,
+            type: "warning",
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            eventType: "password_expired"
+          });
+          return res.status(403).json({ 
+            passwordExpired: true,
+            message: "Your password has expired. Please reset it."
+          });
+        }
       }
 
       req.session.userId = user.id;
@@ -270,6 +334,16 @@ export async function registerRoutes(
         userId: user.id,
         userName: user.name,
         type: "success"
+      });
+
+      await storage.createSecurityLog({
+        action: `Successful login`,
+        userId: user.id,
+        userName: user.username,
+        type: "success",
+        ipAddress: clientIp,
+        userAgent: userAgent,
+        eventType: "login_success"
       });
 
       const { password: _, ...userWithoutPassword } = user;

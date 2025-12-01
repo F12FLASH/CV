@@ -351,10 +351,10 @@ export default function AdminSecurityEnhanced() {
         await apiRequest('POST', '/api/auth/webauthn/register/verify', {
           credential: {
             id: credential.id,
-            rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
+            rawId: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(credential.rawId)))),
             response: {
-              clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))),
-              attestationObject: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject)))
+              clientDataJSON: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(credential.response.clientDataJSON)))),
+              attestationObject: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(credential.response.attestationObject))))
             },
             type: credential.type
           },

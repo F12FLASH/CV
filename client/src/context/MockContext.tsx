@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -110,7 +110,7 @@ interface MockContextType {
 
 const MockContext = createContext<MockContextType | undefined>(undefined);
 
-export function MockProvider({ children }: { children: React.ReactNode }) {
+export function MockProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
