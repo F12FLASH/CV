@@ -43,7 +43,7 @@ export default function Maintenance() {
 
         <div className="mt-8 pt-6 border-t border-slate-700">
           <p className="text-xs text-slate-600">
-            © {new Date().getFullYear()} {settings.siteTitle || "Company"}. All rights reserved.
+            {settings.footerCopyright || "All rights reserved."}
           </p>
         </div>
       </div>
