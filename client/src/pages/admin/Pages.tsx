@@ -24,12 +24,15 @@ import {
   Loader2
 } from "lucide-react";
 import { type Page } from "@shared/schema";
+import { PageEditor } from "@/components/admin/page-editor";
 
 export default function AdminPages() {
   const { toast } = useToast();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [selectedPage, setSelectedPage] = useState<Page | undefined>();
 
   const { data: pages = [], isLoading, refetch } = useQuery<Page[]>({
     queryKey: ["/api/pages"],
