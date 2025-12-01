@@ -78,9 +78,9 @@ export default function AdminSystem() {
     refetchInterval: 30000,
   });
 
-  const { data: activityLogs, isLoading: logsLoading } = useQuery({
+  const { data: activityLogs = [], isLoading: logsLoading, refetch: refetchLogs } = useQuery({
     queryKey: ["/api/system/activity-logs"],
-    queryFn: () => api.getSystemActivityLogs(20, 0),
+    queryFn: () => api.getSystemActivityLogs(100, 0),
   });
 
   const clearLogsMutation = useMutation({
@@ -88,20 +88,24 @@ export default function AdminSystem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/system/activity-logs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system/stats"] });
+      refetchStats();
+      refetchLogs();
       toast({ title: "Success", description: "Activity logs cleared" });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to clear logs", variant: "destructive" });
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to clear logs", variant: "destructive" });
     },
   });
 
   const resetMutation = useMutation({
     mutationFn: () => api.resetSystem(),
     onSuccess: (data) => {
+      refetchStats();
+      refetchLogs();
       toast({ title: "Info", description: data.message });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to reset system", variant: "destructive" });
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to reset system", variant: "destructive" });
     },
   });
 

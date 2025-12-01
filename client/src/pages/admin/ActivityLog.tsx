@@ -93,9 +93,9 @@ export default function AdminActivityLog() {
   const pageSize = 20;
 
   const { data: logs = [], isLoading, refetch } = useQuery<ActivityLog[]>({
-    queryKey: ['/api/activity-logs'],
+    queryKey: ['/api/system/activity-logs'],
     queryFn: async () => {
-      const res = await fetch(`/api/activity-logs?limit=100`, { credentials: 'include' });
+      const res = await fetch(`/api/system/activity-logs?limit=1000&offset=0`, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch activity logs');
       return res.json();
     },
