@@ -111,11 +111,11 @@ interface MockContextType {
 const MockContext = createContext<MockContextType | undefined>(undefined);
 
 export function MockProvider({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     const verifySession = async () => {
