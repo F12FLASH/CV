@@ -268,6 +268,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const navItems: any[] = [
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
+    { icon: FileText, label: "Pages", href: "/admin/pages" },
     { 
       id: "posts",
       icon: FileText, 

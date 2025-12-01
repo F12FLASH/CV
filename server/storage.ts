@@ -2,6 +2,7 @@ import {
   users, type User, type InsertUser,
   projects, type Project, type InsertProject,
   posts, type Post, type InsertPost,
+  pages, type Page, type InsertPage,
   skills, type Skill, type InsertSkill,
   services, type Service, type InsertService,
   testimonials, type Testimonial, type InsertTestimonial,
@@ -51,6 +52,16 @@ export interface IStorage {
   updatePost(id: number, post: Partial<InsertPost>): Promise<Post | undefined>;
   deletePost(id: number): Promise<boolean>;
   incrementPostViews(id: number): Promise<void>;
+
+  // Pages
+  getPage(id: number): Promise<Page | undefined>;
+  getPageBySlug(slug: string): Promise<Page | undefined>;
+  getAllPages(): Promise<Page[]>;
+  getPublishedPages(): Promise<Page[]>;
+  createPage(page: InsertPage): Promise<Page>;
+  updatePage(id: number, page: Partial<InsertPage>): Promise<Page | undefined>;
+  deletePage(id: number): Promise<boolean>;
+  incrementPageViews(id: number): Promise<void>;
 
   // Skills
   getSkill(id: number): Promise<Skill | undefined>;
@@ -344,6 +355,67 @@ export class DatabaseStorage implements IStorage {
 
   async incrementPostViews(id: number): Promise<void> {
     await db.update(posts).set({ views: sql`${posts.views} + 1` }).where(eq(posts.id, id));
+  }
+
+  // Pages
+  async getPage(id: number): Promise<Page | undefined> {
+    const [page] = await db.select().from(pages).where(eq(pages.id, id));
+    return page || undefined;
+  }
+
+  async getPageBySlug(slug: string): Promise<Page | undefined> {
+    const [page] = await db.select().from(pages).where(eq(pages.slug, slug));
+    return page || undefined;
+  }
+
+  async getAllPages(): Promise<Page[]> {
+    return await db.select().from(pages).orderBy(desc(pages.createdAt));
+  }
+
+  async getPublishedPages(): Promise<Page[]> {
+    return await db.select().from(pages).where(eq(pages.status, "Published")).orderBy(desc(pages.publishedAt));
+  }
+
+  async createPage(insertPage: InsertPage): Promise<Page> {
+    let publishedAt = null;
+    if (insertPage.publishedAt) {
+      if (typeof insertPage.publishedAt === 'string') {
+        const date = new Date(insertPage.publishedAt);
+        publishedAt = isNaN(date.getTime()) ? null : date;
+      } else if (insertPage.publishedAt instanceof Date) {
+        publishedAt = insertPage.publishedAt;
+      }
+    }
+    const [page] = await db.insert(pages).values({
+      ...insertPage,
+      publishedAt
+    }).returning();
+    return page;
+  }
+
+  async updatePage(id: number, pageData: Partial<InsertPage>): Promise<Page | undefined> {
+    const updateData: any = { ...pageData, updatedAt: new Date() };
+    if ('publishedAt' in updateData) {
+      if (updateData.publishedAt === null || updateData.publishedAt === undefined) {
+        updateData.publishedAt = null;
+      } else if (typeof updateData.publishedAt === 'string') {
+        const date = new Date(updateData.publishedAt);
+        updateData.publishedAt = isNaN(date.getTime()) ? null : date;
+      } else if (!(updateData.publishedAt instanceof Date)) {
+        updateData.publishedAt = null;
+      }
+    }
+    const [page] = await db.update(pages).set(updateData).where(eq(pages.id, id)).returning();
+    return page || undefined;
+  }
+
+  async deletePage(id: number): Promise<boolean> {
+    const result = await db.delete(pages).where(eq(pages.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async incrementPageViews(id: number): Promise<void> {
+    await db.update(pages).set({ views: sql`${pages.views} + 1` }).where(eq(pages.id, id));
   }
 
   // Skills
