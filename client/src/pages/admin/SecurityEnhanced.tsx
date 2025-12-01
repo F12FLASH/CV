@@ -208,6 +208,10 @@ export default function AdminSecurityEnhanced() {
     queryKey: ['/api/auth/webauthn/credentials'],
   });
 
+  const { data: user = null, refetch: refetchUser } = useQuery<any>({
+    queryKey: ['/api/auth/me'],
+  });
+
   const [localSettings, setLocalSettings] = useState<SecuritySettings>({});
 
   useEffect(() => {
@@ -321,6 +325,7 @@ export default function AdminSecurityEnhanced() {
       setShow2FASetup(false);
       setShow2FAVerify(false);
       setVerifyCode("");
+      refetchUser();
       refetchSettings();
     },
     onError: () => {
@@ -337,6 +342,7 @@ export default function AdminSecurityEnhanced() {
       toast({ title: "2FA disabled successfully" });
       setShow2FADisable(false);
       setDisableCode("");
+      refetchUser();
       refetchSettings();
     },
     onError: () => {
@@ -570,7 +576,7 @@ export default function AdminSecurityEnhanced() {
                     </div>
                   </div>
                   <Switch 
-                    checked={settings.twoFactorEnabled || false}
+                    checked={user?.twoFactorEnabled || settings.twoFactorEnabled || false}
                     onCheckedChange={handle2FAToggle}
                     disabled={generate2FAMutation.isPending}
                     data-testid="switch-2fa"
