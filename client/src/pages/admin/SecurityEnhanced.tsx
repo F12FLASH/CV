@@ -473,7 +473,7 @@ export default function AdminSecurityEnhanced() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  Session
+                  Session & Login History
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -488,9 +488,57 @@ export default function AdminSecurityEnhanced() {
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout All Devices
                 </Button>
-                <Button variant="outline" className="w-full" data-testid="button-view-login-history">
-                  View Login History
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => setShowLoginHistory(!showLoginHistory)}
+                  data-testid="button-view-login-history"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  {showLoginHistory ? 'Hide' : 'View'} Login History
                 </Button>
+                
+                {showLoginHistory && (
+                  <div className="mt-4 space-y-2 max-h-96 overflow-y-auto border rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-medium">Recent Login Activity</p>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => refetchLoginHistory()}
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    {loginHistory.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">No login history found</p>
+                    ) : (
+                      loginHistory.map((log) => (
+                        <div key={log.id} className="p-2 text-xs border rounded bg-muted/50">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium flex items-center gap-1">
+                              {log.type === 'success' ? (
+                                <CheckCircle className="w-3 h-3 text-green-500" />
+                              ) : log.type === 'error' ? (
+                                <XCircle className="w-3 h-3 text-red-500" />
+                              ) : (
+                                <AlertCircle className="w-3 h-3 text-yellow-500" />
+                              )}
+                              {log.userName || 'Unknown User'}
+                            </span>
+                            <Badge variant={log.type === 'success' ? 'default' : 'destructive'} className="text-[10px]">
+                              {log.type}
+                            </Badge>
+                          </div>
+                          <p className="text-muted-foreground mb-1">{log.action}</p>
+                          <p className="text-muted-foreground/70">
+                            {log.createdAt ? new Date(log.createdAt).toLocaleString() : 'N/A'}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
