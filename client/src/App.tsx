@@ -18,7 +18,6 @@ import AdminNewsletter from "@/pages/admin/Newsletter";
 import AdminNotifications from "@/pages/admin/Notifications";
 import AdminProfile from "@/pages/admin/Profile";
 import AdminTheme from "@/pages/admin/Theme";
-import AdminSocial from "@/pages/admin/Social";
 import AdminMedia from "@/pages/admin/Media";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminLogin from "@/pages/admin/Login";
@@ -80,7 +79,6 @@ function Router() {
       <Route path="/admin/notifications" component={AdminNotifications} />
       <Route path="/admin/profile" component={AdminProfile} />
       <Route path="/admin/theme" component={AdminThemeEnhanced} />
-      <Route path="/admin/social" component={AdminSocial} />
       <Route path="/admin/system" component={AdminSystem} />
       <Route path="/admin/media" component={lazy(() => import("@/pages/admin/Media"))} />
       <Route path="/admin/files" component={lazy(() => import("@/pages/admin/FileManager"))} />
