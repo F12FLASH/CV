@@ -391,7 +391,7 @@ export function Contact() {
                 required
               />
 
-              {captchaType === 'cloudflare' && (
+              {captchaEnabled && captchaType === 'cloudflare' && (
                 <div 
                   id="turnstile-container" 
                   ref={turnstileRef}
@@ -400,7 +400,7 @@ export function Contact() {
                 />
               )}
 
-              {captchaEnabled && captchaType !== 'disabled' && (
+              {captchaEnabled && captchaType && captchaType !== 'disabled' && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <ShieldCheck className="w-4 h-4" />
                   <span>

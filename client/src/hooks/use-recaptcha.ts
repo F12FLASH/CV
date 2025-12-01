@@ -254,6 +254,31 @@ export function useRecaptcha({ formType, action }: UseRecaptchaOptions): UseReca
 
   const honeypotFieldName = 'website_url';
 
+  // This useEffect is for the Turnstile component.
+  // It handles rendering the Turnstile widget when captchaType is 'cloudflare'
+  // and ensures cleanup when the component unmounts or captchaType changes.
+  useEffect(() => {
+    // Assuming captchaLoaded is a state or derived value indicating if the captcha script is loaded.
+    // For this example, let's assume it's true if window.turnstile is available.
+    const captchaLoaded = !!window.turnstile;
+
+    if (captchaType === 'cloudflare' && captchaLoaded && turnstileWidgetId.current === null) {
+      // We need a container ID to render the widget. Assuming 'turnstile-container'
+      // is the ID of the element in your JSX where Turnstile should be rendered.
+      renderTurnstile('turnstile-container');
+    }
+
+    // Cleanup function
+    return () => {
+      if (turnstileWidgetId.current && window.turnstile) {
+        window.turnstile.remove(turnstileWidgetId.current);
+        turnstileWidgetId.current = null;
+        setTurnstileToken(null); // Clear the token as well
+      }
+    };
+  }, [captchaType, renderTurnstile]);
+
+
   return {
     isEnabled,
     isLoaded,
