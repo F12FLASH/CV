@@ -52,6 +52,7 @@ import AdminPages from "@/pages/admin/Pages";
 import { ThemeProvider } from "next-themes";
 import { lazy } from "react";
 import { useThemeSettings } from "@/hooks/useThemeSettings";
+import { useAuth } from "@/hooks/use-auth";
 
 function ThemeLoader() {
   useThemeSettings();
@@ -60,8 +61,9 @@ function ThemeLoader() {
 
 function Router() {
   const { settings } = useSiteSettings();
+  const { isAuthenticated } = useAuth();
   
-  if (settings?.maintenanceMode) {
+  if (settings?.maintenanceMode && !isAuthenticated) {
     return <Maintenance />;
   }
 
