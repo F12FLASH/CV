@@ -555,15 +555,6 @@ export default function AdminSettingsEnhanced() {
 
           {/* BRANDING TAB */}
           <TabsContent value="branding" className="space-y-4">
-            <Card className="border-blue-500/20 bg-blue-500/5">
-              <CardContent className="flex items-center gap-3 py-3">
-                <Zap className="w-5 h-5 text-blue-500" />
-                <div>
-                  <p className="text-sm font-medium">Feature Preview</p>
-                  <p className="text-xs text-muted-foreground">This section shows planned features. Settings here are for preview only.</p>
-                </div>
-              </CardContent>
-            </Card>
             <Card>
               <CardHeader>
                 <CardTitle>Logo & Favicon</CardTitle>
@@ -571,21 +562,80 @@ export default function AdminSettingsEnhanced() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
-                  <Label>Site Logo</Label>
-                  <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center">
-                    <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                    <p className="text-sm font-medium">Drop image or click to upload</p>
-                    <p className="text-xs text-muted-foreground">PNG, SVG, JPG (Max 2MB)</p>
+                  <Label htmlFor="logo-upload">Site Logo</Label>
+                  <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 transition">
+                    <input 
+                      id="logo-upload"
+                      type="file" 
+                      accept="image/*"
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const logoUrl = event.target?.result as string;
+                            settings.logoUrl = logoUrl;
+                            updateSettings({ logoUrl });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      data-testid="input-logo-upload"
+                    />
+                    {settings.logoUrl ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <img src={settings.logoUrl} alt="Logo" className="h-12 w-auto" />
+                        <p className="text-xs text-muted-foreground">Click to replace</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                        <p className="text-sm font-medium">Drop image or click to upload</p>
+                        <p className="text-xs text-muted-foreground">PNG, SVG, JPG (Max 2MB)</p>
+                      </>
+                    )}
                   </div>
+                  <label htmlFor="logo-upload" className="cursor-pointer">
+                    <Button type="button" variant="outline" className="w-full" asChild>
+                      <span>{settings.logoUrl ? "Change Logo" : "Select Logo"}</span>
+                    </Button>
+                  </label>
                 </div>
                 <Separator />
                 <div className="space-y-3">
-                  <Label>Favicon</Label>
+                  <Label htmlFor="favicon-upload">Favicon</Label>
                   <div className="flex gap-2">
-                    <div className="w-16 h-16 rounded-lg border border-border flex items-center justify-center bg-muted">
-                      <span className="text-2xl">🚀</span>
+                    <div className="w-16 h-16 rounded-lg border border-border flex items-center justify-center bg-muted overflow-hidden">
+                      {settings.faviconUrl ? (
+                        <img src={settings.faviconUrl} alt="Favicon" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-2xl">✨</span>
+                      )}
                     </div>
-                    <Button variant="outline">Change Favicon</Button>
+                    <input 
+                      id="favicon-upload"
+                      type="file" 
+                      accept="image/*"
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const faviconUrl = event.target?.result as string;
+                            updateSettings({ faviconUrl });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      data-testid="input-favicon-upload"
+                    />
+                    <label htmlFor="favicon-upload" className="flex-1">
+                      <Button variant="outline" className="w-full" asChild>
+                        <span>{settings.faviconUrl ? "Change Favicon" : "Upload Favicon"}</span>
+                      </Button>
+                    </label>
                   </div>
                 </div>
               </CardContent>

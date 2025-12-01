@@ -30,6 +30,8 @@ export interface SiteSettings {
   socialYoutube: string;
   footerText: string;
   footerCopyright: string;
+  logoUrl: string;
+  faviconUrl: string;
 }
 
 interface SiteContextType {
@@ -69,6 +71,8 @@ const defaultSettings: SiteSettings = {
   socialYoutube: "",
   footerText: "Crafted with love & countless cups of coffee",
   footerCopyright: "2024 Loi Developer. All rights reserved.",
+  logoUrl: "",
+  faviconUrl: "",
 };
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -111,6 +115,8 @@ export function SiteProvider({ children }: { children: ReactNode }) {
           socialYoutube: data.socialYoutube || defaultSettings.socialYoutube,
           footerText: data.footerText || defaultSettings.footerText,
           footerCopyright: data.footerCopyright || defaultSettings.footerCopyright,
+          logoUrl: data.logoUrl || defaultSettings.logoUrl,
+          faviconUrl: data.faviconUrl || defaultSettings.faviconUrl,
         });
       }
     } catch (error) {
