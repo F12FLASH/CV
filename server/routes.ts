@@ -1962,16 +1962,6 @@ export async function registerRoutes(
         req.session.username = user.username;
         req.session.role = user.role;
 
-        // Create login log
-        await storage.createLoginLog({
-          userId: user.id,
-          userName: user.username,
-          ipAddress: clientIp,
-          userAgent: userAgent,
-          status: "success",
-          location: "Unknown"
-        });
-
         await storage.createSecurityLog({
           action: "Successful 2FA login",
           userId: user.id,
