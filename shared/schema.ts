@@ -348,3 +348,121 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// Security Settings table
+export const securitySettings = pgTable("security_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: jsonb("value"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSecuritySettingSchema = createInsertSchema(securitySettings).omit({
+  id: true,
+  updatedAt: true,
+});
+export type InsertSecuritySetting = z.infer<typeof insertSecuritySettingSchema>;
+export type SecuritySetting = typeof securitySettings.$inferSelect;
+
+// Trusted Devices table
+export const trustedDevices = pgTable("trusted_devices", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  deviceName: text("device_name").notNull(),
+  deviceFingerprint: text("device_fingerprint"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  trusted: boolean("trusted").notNull().default(true),
+  lastUsed: timestamp("last_used").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTrustedDeviceSchema = createInsertSchema(trustedDevices).omit({
+  id: true,
+  createdAt: true,
+  lastUsed: true,
+});
+export type InsertTrustedDevice = z.infer<typeof insertTrustedDeviceSchema>;
+export type TrustedDevice = typeof trustedDevices.$inferSelect;
+
+// User Sessions table
+export const userSessions = pgTable("user_sessions", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull().unique(),
+  userId: integer("user_id").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  deviceInfo: text("device_info"),
+  location: text("location"),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  lastActivity: timestamp("last_activity").defaultNow(),
+});
+
+export const insertUserSessionSchema = createInsertSchema(userSessions).omit({
+  id: true,
+  createdAt: true,
+  lastActivity: true,
+});
+export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
+export type UserSession = typeof userSessions.$inferSelect;
+
+// IP Whitelist/Blacklist table
+export const ipRules = pgTable("ip_rules", {
+  id: serial("id").primaryKey(),
+  ipAddress: text("ip_address").notNull(),
+  type: text("type").notNull(), // 'whitelist' or 'blacklist'
+  reason: text("reason"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIpRuleSchema = createInsertSchema(ipRules).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertIpRule = z.infer<typeof insertIpRuleSchema>;
+export type IpRule = typeof ipRules.$inferSelect;
+
+// Security Logs table (for bot detection, threat events)
+export const securityLogs = pgTable("security_logs", {
+  id: serial("id").primaryKey(),
+  eventType: text("event_type").notNull(), // 'bot_blocked', 'ddos_attempt', 'sql_injection', 'xss_attempt', 'login_failed'
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  requestPath: text("request_path"),
+  requestBody: text("request_body"),
+  blocked: boolean("blocked").notNull().default(false),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSecurityLogSchema = createInsertSchema(securityLogs).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSecurityLog = z.infer<typeof insertSecurityLogSchema>;
+export type SecurityLog = typeof securityLogs.$inferSelect;
+
+// Relations for security tables
+export const trustedDevicesRelations = relations(trustedDevices, ({ one }) => ({
+  user: one(users, {
+    fields: [trustedDevices.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userSessionsRelations = relations(userSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [userSessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const ipRulesRelations = relations(ipRules, ({ one }) => ({
+  createdByUser: one(users, {
+    fields: [ipRules.createdBy],
+    references: [users.id],
+  }),
+}));

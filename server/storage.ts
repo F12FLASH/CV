@@ -12,7 +12,12 @@ import {
   categories, type Category, type InsertCategory,
   media, type Media, type InsertMedia,
   comments, type Comment, type InsertComment,
-  reviews, type Review, type InsertReview
+  reviews, type Review, type InsertReview,
+  securitySettings, type SecuritySetting, type InsertSecuritySetting,
+  trustedDevices, type TrustedDevice, type InsertTrustedDevice,
+  userSessions, type UserSession, type InsertUserSession,
+  ipRules, type IpRule, type InsertIpRule,
+  securityLogs, type SecurityLog, type InsertSecurityLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
@@ -148,6 +153,49 @@ export interface IStorage {
   }>;
   getActivityLogs(limit: number, offset: number): Promise<ActivityLog[]>;
   clearActivityLogs(): Promise<void>;
+
+  // Security Settings
+  getSecuritySetting(key: string): Promise<SecuritySetting | undefined>;
+  getAllSecuritySettings(): Promise<SecuritySetting[]>;
+  upsertSecuritySetting(key: string, value: any): Promise<SecuritySetting>;
+
+  // Trusted Devices
+  getTrustedDevice(id: number): Promise<TrustedDevice | undefined>;
+  getTrustedDevicesByUser(userId: number): Promise<TrustedDevice[]>;
+  createTrustedDevice(device: InsertTrustedDevice): Promise<TrustedDevice>;
+  updateTrustedDevice(id: number, device: Partial<InsertTrustedDevice>): Promise<TrustedDevice | undefined>;
+  deleteTrustedDevice(id: number): Promise<boolean>;
+
+  // User Sessions
+  getUserSession(id: number): Promise<UserSession | undefined>;
+  getUserSessionBySessionId(sessionId: string): Promise<UserSession | undefined>;
+  getActiveSessionsByUser(userId: number): Promise<UserSession[]>;
+  getAllActiveSessions(): Promise<UserSession[]>;
+  createUserSession(session: InsertUserSession): Promise<UserSession>;
+  updateUserSession(id: number, session: Partial<InsertUserSession>): Promise<UserSession | undefined>;
+  terminateSession(id: number): Promise<boolean>;
+  terminateAllUserSessions(userId: number): Promise<boolean>;
+  terminateAllSessions(): Promise<boolean>;
+
+  // IP Rules
+  getIpRule(id: number): Promise<IpRule | undefined>;
+  getIpRulesByType(type: string): Promise<IpRule[]>;
+  getAllIpRules(): Promise<IpRule[]>;
+  createIpRule(rule: InsertIpRule): Promise<IpRule>;
+  deleteIpRule(id: number): Promise<boolean>;
+  isIpWhitelisted(ip: string): Promise<boolean>;
+  isIpBlacklisted(ip: string): Promise<boolean>;
+
+  // Security Logs
+  getSecurityLog(id: number): Promise<SecurityLog | undefined>;
+  getSecurityLogsByType(eventType: string): Promise<SecurityLog[]>;
+  getRecentSecurityLogs(limit?: number): Promise<SecurityLog[]>;
+  createSecurityLog(log: InsertSecurityLog): Promise<SecurityLog>;
+  getSecurityStats(): Promise<{
+    totalBlocked: number;
+    totalAllowed: number;
+    byEventType: { type: string; count: number }[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -710,6 +758,175 @@ export class DatabaseStorage implements IStorage {
 
   async clearActivityLogs(): Promise<void> {
     await db.delete(activityLogs);
+  }
+
+  // Security Settings
+  async getSecuritySetting(key: string): Promise<SecuritySetting | undefined> {
+    const [setting] = await db.select().from(securitySettings).where(eq(securitySettings.key, key));
+    return setting || undefined;
+  }
+
+  async getAllSecuritySettings(): Promise<SecuritySetting[]> {
+    return await db.select().from(securitySettings);
+  }
+
+  async upsertSecuritySetting(key: string, value: any): Promise<SecuritySetting> {
+    const existing = await this.getSecuritySetting(key);
+    if (existing) {
+      const [updated] = await db
+        .update(securitySettings)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(securitySettings.key, key))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(securitySettings).values({ key, value }).returning();
+    return created;
+  }
+
+  // Trusted Devices
+  async getTrustedDevice(id: number): Promise<TrustedDevice | undefined> {
+    const [device] = await db.select().from(trustedDevices).where(eq(trustedDevices.id, id));
+    return device || undefined;
+  }
+
+  async getTrustedDevicesByUser(userId: number): Promise<TrustedDevice[]> {
+    return await db.select().from(trustedDevices).where(eq(trustedDevices.userId, userId)).orderBy(desc(trustedDevices.lastUsed));
+  }
+
+  async createTrustedDevice(device: InsertTrustedDevice): Promise<TrustedDevice> {
+    const [created] = await db.insert(trustedDevices).values(device).returning();
+    return created;
+  }
+
+  async updateTrustedDevice(id: number, device: Partial<InsertTrustedDevice>): Promise<TrustedDevice | undefined> {
+    const [updated] = await db.update(trustedDevices).set(device).where(eq(trustedDevices.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteTrustedDevice(id: number): Promise<boolean> {
+    const result = await db.delete(trustedDevices).where(eq(trustedDevices.id, id));
+    return true;
+  }
+
+  // User Sessions
+  async getUserSession(id: number): Promise<UserSession | undefined> {
+    const [session] = await db.select().from(userSessions).where(eq(userSessions.id, id));
+    return session || undefined;
+  }
+
+  async getUserSessionBySessionId(sessionId: string): Promise<UserSession | undefined> {
+    const [session] = await db.select().from(userSessions).where(eq(userSessions.sessionId, sessionId));
+    return session || undefined;
+  }
+
+  async getActiveSessionsByUser(userId: number): Promise<UserSession[]> {
+    return await db.select().from(userSessions).where(and(eq(userSessions.userId, userId), eq(userSessions.active, true))).orderBy(desc(userSessions.lastActivity));
+  }
+
+  async getAllActiveSessions(): Promise<UserSession[]> {
+    return await db.select().from(userSessions).where(eq(userSessions.active, true)).orderBy(desc(userSessions.lastActivity));
+  }
+
+  async createUserSession(session: InsertUserSession): Promise<UserSession> {
+    const [created] = await db.insert(userSessions).values(session).returning();
+    return created;
+  }
+
+  async updateUserSession(id: number, session: Partial<InsertUserSession>): Promise<UserSession | undefined> {
+    const [updated] = await db.update(userSessions).set({ ...session, lastActivity: new Date() }).where(eq(userSessions.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async terminateSession(id: number): Promise<boolean> {
+    await db.update(userSessions).set({ active: false }).where(eq(userSessions.id, id));
+    return true;
+  }
+
+  async terminateAllUserSessions(userId: number): Promise<boolean> {
+    await db.update(userSessions).set({ active: false }).where(eq(userSessions.userId, userId));
+    return true;
+  }
+
+  async terminateAllSessions(): Promise<boolean> {
+    await db.update(userSessions).set({ active: false });
+    return true;
+  }
+
+  // IP Rules
+  async getIpRule(id: number): Promise<IpRule | undefined> {
+    const [rule] = await db.select().from(ipRules).where(eq(ipRules.id, id));
+    return rule || undefined;
+  }
+
+  async getIpRulesByType(type: string): Promise<IpRule[]> {
+    return await db.select().from(ipRules).where(eq(ipRules.type, type)).orderBy(desc(ipRules.createdAt));
+  }
+
+  async getAllIpRules(): Promise<IpRule[]> {
+    return await db.select().from(ipRules).orderBy(desc(ipRules.createdAt));
+  }
+
+  async createIpRule(rule: InsertIpRule): Promise<IpRule> {
+    const [created] = await db.insert(ipRules).values(rule).returning();
+    return created;
+  }
+
+  async deleteIpRule(id: number): Promise<boolean> {
+    await db.delete(ipRules).where(eq(ipRules.id, id));
+    return true;
+  }
+
+  async isIpWhitelisted(ip: string): Promise<boolean> {
+    const [rule] = await db.select().from(ipRules).where(and(eq(ipRules.ipAddress, ip), eq(ipRules.type, "whitelist")));
+    return !!rule;
+  }
+
+  async isIpBlacklisted(ip: string): Promise<boolean> {
+    const [rule] = await db.select().from(ipRules).where(and(eq(ipRules.ipAddress, ip), eq(ipRules.type, "blacklist")));
+    return !!rule;
+  }
+
+  // Security Logs
+  async getSecurityLog(id: number): Promise<SecurityLog | undefined> {
+    const [log] = await db.select().from(securityLogs).where(eq(securityLogs.id, id));
+    return log || undefined;
+  }
+
+  async getSecurityLogsByType(eventType: string): Promise<SecurityLog[]> {
+    return await db.select().from(securityLogs).where(eq(securityLogs.eventType, eventType)).orderBy(desc(securityLogs.createdAt));
+  }
+
+  async getRecentSecurityLogs(limit: number = 100): Promise<SecurityLog[]> {
+    return await db.select().from(securityLogs).orderBy(desc(securityLogs.createdAt)).limit(limit);
+  }
+
+  async createSecurityLog(log: InsertSecurityLog): Promise<SecurityLog> {
+    const [created] = await db.insert(securityLogs).values(log).returning();
+    return created;
+  }
+
+  async getSecurityStats(): Promise<{
+    totalBlocked: number;
+    totalAllowed: number;
+    byEventType: { type: string; count: number }[];
+  }> {
+    const [blockedCount] = await db.select({ count: sql<number>`count(*)` }).from(securityLogs).where(eq(securityLogs.blocked, true));
+    const [allowedCount] = await db.select({ count: sql<number>`count(*)` }).from(securityLogs).where(eq(securityLogs.blocked, false));
+    
+    const byType = await db
+      .select({ 
+        type: securityLogs.eventType, 
+        count: sql<number>`count(*)` 
+      })
+      .from(securityLogs)
+      .groupBy(securityLogs.eventType);
+
+    return {
+      totalBlocked: Number(blockedCount.count) || 0,
+      totalAllowed: Number(allowedCount.count) || 0,
+      byEventType: byType.map(t => ({ type: t.type, count: Number(t.count) })),
+    };
   }
 }
 
