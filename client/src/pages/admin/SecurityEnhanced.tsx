@@ -294,7 +294,8 @@ export default function AdminSecurityEnhanced() {
   // 2FA Mutations
   const generate2FAMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('POST', '/api/auth/2fa/generate');
+      const res = await apiRequest('POST', '/api/auth/2fa/generate');
+      return await res.json();
     },
     onSuccess: (data: any) => {
       if (data?.secret && data?.qrCode) {
@@ -312,7 +313,8 @@ export default function AdminSecurityEnhanced() {
 
   const verify2FAMutation = useMutation({
     mutationFn: async (token: string) => {
-      return apiRequest('POST', '/api/auth/2fa/verify', { token });
+      const res = await apiRequest('POST', '/api/auth/2fa/verify', { token });
+      return await res.json();
     },
     onSuccess: () => {
       toast({ title: "2FA enabled successfully" });
@@ -328,7 +330,8 @@ export default function AdminSecurityEnhanced() {
 
   const disable2FAMutation = useMutation({
     mutationFn: async (token: string) => {
-      return apiRequest('POST', '/api/auth/2fa/disable', { token });
+      const res = await apiRequest('POST', '/api/auth/2fa/disable', { token });
+      return await res.json();
     },
     onSuccess: () => {
       toast({ title: "2FA disabled successfully" });
@@ -391,7 +394,8 @@ export default function AdminSecurityEnhanced() {
 
   const deleteWebauthnCredentialMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest('DELETE', `/api/auth/webauthn/credentials/${id}`);
+      const res = await apiRequest('DELETE', `/api/auth/webauthn/credentials/${id}`);
+      return await res.json();
     },
     onSuccess: () => {
       toast({ title: "Biometric device removed" });
