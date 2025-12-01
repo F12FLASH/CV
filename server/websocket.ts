@@ -8,10 +8,13 @@ export function setupWebSocket(server: Server) {
   wss = new WebSocketServer({ server, path: "/ws" });
 
   wss.on("connection", (ws: WebSocket) => {
-    ws.on("close", () => {
+    ws.on("close", (code: number, reason: Buffer) => {
+      // Connection closed - clients will automatically reconnect
     });
 
-    ws.on("error", () => {
+    ws.on("error", (error: Error) => {
+      // WebSocket error - connection will be terminated
+      ws.terminate();
     });
   });
 
