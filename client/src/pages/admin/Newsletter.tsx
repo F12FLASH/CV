@@ -42,13 +42,13 @@ export default function AdminNewsletter() {
     successMessage: "Thanks for subscribing!",
   });
 
-  const { data: settings = {}, isLoading } = useQuery<NewsletterSettings>({
+  const { data: settings, isLoading } = useQuery<NewsletterSettings>({
     queryKey: ['/api/newsletter/settings'],
   });
 
   useEffect(() => {
     if (settings && Object.keys(settings).length > 0) {
-      setLocalSettings(settings);
+      setLocalSettings(settings as NewsletterSettings);
     }
   }, [settings]);
 

@@ -1646,5 +1646,56 @@ export async function registerRoutes(
     }
   });
 
+  // Newsletter Settings
+  app.get("/api/newsletter/settings", async (req, res) => {
+    try {
+      const settings = await storage.getSetting("newsletter-settings");
+      if (settings) {
+        res.json(JSON.parse(settings.value));
+      } else {
+        res.json({
+          enabled: false,
+          title: "Subscribe to Our Newsletter",
+          subtitle: "Get the latest updates",
+          description: "Stay informed with our weekly newsletter",
+          placeholder: "Enter your email",
+          buttonText: "Subscribe",
+          successMessage: "Thanks for subscribing!",
+        });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/newsletter/settings", requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.upsertSetting("newsletter-settings", JSON.stringify(req.body));
+      res.json(settings);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/newsletter/subscribe", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      await storage.createActivityLog({
+        action: `User subscribed to newsletter: ${email}`,
+        userId: req.session.userId,
+        userName: req.session.username || "Guest",
+        type: "info"
+      });
+
+      res.json({ message: "Successfully subscribed to newsletter" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 }

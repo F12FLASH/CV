@@ -43,11 +43,7 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     allowedHosts: true,
-    hmr: process.env.REPL_ID ? false : {
-      protocol: "ws",
-      host: "localhost",
-      port: 5000,
-    },
+    hmr: false,
     fs: {
       strict: true,
       deny: ["**/.*"],
