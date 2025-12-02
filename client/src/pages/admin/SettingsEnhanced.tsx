@@ -49,6 +49,8 @@ import { SettingsIntegrations } from "./SettingsIntegrations";
 import { useSiteSettings } from "@/context/SiteContext";
 import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 export default function AdminSettingsEnhanced() {
   const [logoFile, setLogoFile] = useState<string | null>(null);
@@ -1949,11 +1951,56 @@ export default function AdminSettingsEnhanced() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2">
-                  <Button className="flex-1">
-                    <Download className="w-4 h-4 mr-2" /> Create Backup
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      try {
+                        const backup = await api.createBackup();
+                        toast({
+                          title: "Backup Created",
+                          description: backup.message,
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: "Error",
+                          description: error.message,
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" /> Download Backup
                   </Button>
-                  <Button variant="outline" className="flex-1">
-                    <Upload className="w-4 h-4 mr-2" /> Restore Backup
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      const input = document.createElement("input");
+                      input.type = "file";
+                      input.accept = ".json,.sql";
+                      input.onchange = async (e: any) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          try {
+                            const result = await api.restoreBackup(file);
+                            toast({
+                              title: "Info",
+                              description: result.message,
+                            });
+                          } catch (error: any) {
+                            toast({
+                              title: "Error",
+                              description: error.message,
+                              variant: "destructive",
+                            });
+                          }
+                        }
+                      };
+                      input.click();
+                    }}
+                  >
+                    <Upload className="w-4 h-4 mr-2" /> Restore from Backup
                   </Button>
                 </div>
 

@@ -5,8 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Zap, Globe, BarChart3 } from "lucide-react";
+import { api } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export function SettingsPerformance() {
+  const { toast } = useToast();
+  
   return (
     <div className="space-y-4">
       <Card className="border-blue-500/20 bg-blue-500/5">
@@ -45,7 +49,27 @@ export function SettingsPerformance() {
             </div>
             <Switch defaultChecked />
           </div>
-          <Button variant="outline" className="w-full">Clear All Cache</Button>
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={async () => {
+              try {
+                await api.clearCache();
+                toast({ 
+                  title: "Success", 
+                  description: "Cache cleared successfully" 
+                });
+              } catch (error: any) {
+                toast({ 
+                  title: "Error", 
+                  description: error.message,
+                  variant: "destructive"
+                });
+              }
+            }}
+          >
+            Clear All Cache
+          </Button>
         </CardContent>
       </Card>
 

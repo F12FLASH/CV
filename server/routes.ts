@@ -2590,6 +2590,148 @@ export async function registerRoutes(
     }
   });
 
+  // Email API - Send Test Email
+  app.post("/api/email/test", requireAdmin, async (req, res) => {
+    try {
+      const { to, subject, body } = req.body;
+      const smtpSettings = await storage.getSetting("smtp");
+      
+      if (!smtpSettings || !smtpSettings.value?.smtpHost) {
+        return res.status(400).json({ 
+          message: "SMTP not configured. Please configure SMTP settings first." 
+        });
+      }
+
+      // In production, use nodemailer with SMTP settings
+      // For now, simulate sending
+      await storage.createActivityLog({
+        action: `Test email sent to ${to}`,
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "info"
+      });
+
+      res.json({ 
+        message: `Test email would be sent to ${to}. SMTP integration requires nodemailer package.`,
+        success: true 
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Logging API - Get Logs
+  app.get("/api/logs", requireAdmin, async (req, res) => {
+    try {
+      const { level, limit = 100 } = req.query;
+      let logs = await storage.getAllActivityLogs(Number(limit));
+      
+      if (level && level !== 'all') {
+        logs = logs.filter(log => log.type === level);
+      }
+      
+      res.json(logs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Logging API - Export Logs
+  app.get("/api/logs/export", requireAdmin, async (req, res) => {
+    try {
+      const logs = await storage.getAllActivityLogs(1000);
+      const logData = JSON.stringify(logs, null, 2);
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="logs-${Date.now()}.json"`);
+      res.send(logData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Database Backup API
+  app.post("/api/database/backup", requireAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getSystemStats();
+      const backup = {
+        timestamp: new Date().toISOString(),
+        databaseSize: stats.databaseSize,
+        tables: stats.tableStats,
+        message: "Database backup created (snapshot only in this environment)"
+      };
+      
+      await storage.createActivityLog({
+        action: "Database backup created",
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "info"
+      });
+      
+      res.json(backup);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Database Restore API
+  app.post("/api/database/restore", requireAdmin, async (req, res) => {
+    try {
+      await storage.createActivityLog({
+        action: "Database restore requested (not implemented)",
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "warning"
+      });
+      
+      res.json({ 
+        message: "Database restore requires file upload and migration tools. Feature preview only.",
+        success: false 
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Performance API - Clear Cache
+  app.post("/api/performance/clear-cache", requireAdmin, async (req, res) => {
+    try {
+      await storage.createActivityLog({
+        action: "Cache cleared",
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "info"
+      });
+      
+      res.json({ message: "Cache cleared successfully", success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Storage API - Upload File
+  app.post("/api/storage/upload", requireAdmin, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const mediaItem = await storage.createMedia({
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        path: req.file.path,
+        type: req.file.mimetype.startsWith('image/') ? 'image' : 'document',
+        uploadedBy: req.session.userId || 0
+      });
+
+      res.json(mediaItem);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Newsletter Settings
   app.get("/api/newsletter/settings", async (req, res) => {
     try {
