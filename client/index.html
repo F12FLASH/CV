@@ -25,25 +25,39 @@
     <script>
       (function() {
         // Suppress Vite HMR WebSocket errors in Replit environment
+        // These errors are expected and don't affect application functionality
         window.addEventListener('unhandledrejection', function(event) {
           if (event.reason && event.reason.message) {
-            const msg = event.reason.message;
-            if (msg.includes('WebSocket') || msg.includes('vite') || msg.includes('HMR')) {
+            const msg = event.reason.message.toLowerCase();
+            if (msg.includes('websocket') || msg.includes('vite') || msg.includes('hmr') || msg.includes('closed without opened')) {
               event.preventDefault();
-              return;
+              event.stopPropagation();
+              return false;
             }
           }
-        });
-        
-        // Also suppress console errors for WebSocket
-        const originalError = console.error;
-        console.error = function(...args) {
-          const msg = args.join(' ');
-          if (msg.includes('[vite]') && (msg.includes('websocket') || msg.includes('WebSocket'))) {
-            return;
+        }, true);
+
+        window.addEventListener('error', function(event) {
+          if (event.message && (event.message.includes('WebSocket') || event.message.includes('[vite]'))) {
+            event.preventDefault();
+            return false;
           }
-          originalError.apply(console, args);
+        }, true);
+        
+        // Suppress console errors for WebSocket/Vite HMR
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const suppressor = function(original) {
+          return function(...args) {
+            const msg = args.map(a => String(a)).join(' ').toLowerCase();
+            if (msg.includes('[vite]') || (msg.includes('websocket') && !msg.includes('/ws'))) {
+              return;
+            }
+            original.apply(console, args);
+          };
         };
+        console.error = suppressor(originalError);
+        console.warn = suppressor(originalWarn);
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
