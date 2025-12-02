@@ -451,11 +451,28 @@ export default function AdminSecurityEnhanced() {
     }
   };
 
-  const copySecret = () => {
-    navigator.clipboard.writeText(secret);
-    setSecretCopied(true);
-    setTimeout(() => setSecretCopied(false), 2000);
-    toast({ title: "Secret copied to clipboard" });
+  const copySecret = async () => {
+    try {
+      await navigator.clipboard.writeText(secret);
+      setSecretCopied(true);
+      setTimeout(() => setSecretCopied(false), 2000);
+      toast({ title: "Secret copied to clipboard" });
+    } catch (err) {
+      // Fallback cho trình duyệt cũ
+      const textArea = document.createElement("textarea");
+      textArea.value = secret;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setSecretCopied(true);
+        setTimeout(() => setSecretCopied(false), 2000);
+        toast({ title: "Secret copied to clipboard" });
+      } catch (e) {
+        toast({ title: "Failed to copy secret", variant: "destructive" });
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   const whitelistIps = ipRules.filter(r => r.type === 'whitelist');
@@ -1088,11 +1105,14 @@ export default function AdminSecurityEnhanced() {
                       />
                       <Button 
                         onClick={() => {
-                          const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-                          if (newWhitelistIp && ipRegex.test(newWhitelistIp)) {
+                          // IPv4, IPv6, và CIDR validation
+                          const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/;
+                          const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/;
+                          
+                          if (newWhitelistIp && (ipv4Regex.test(newWhitelistIp) || ipv6Regex.test(newWhitelistIp))) {
                             addIpRuleMutation.mutate({ ipAddress: newWhitelistIp, type: 'whitelist' });
                           } else {
-                            toast({ title: "Invalid IP address format", variant: "destructive" });
+                            toast({ title: "Invalid IP address format. Use IPv4, IPv6, or CIDR notation", variant: "destructive" });
                           }
                         }}
                         disabled={!newWhitelistIp || addIpRuleMutation.isPending}
@@ -1101,8 +1121,9 @@ export default function AdminSecurityEnhanced() {
                         <Plus className="w-4 h-4 mr-1" /> Add
                       </Button>
                     </div>
-                    {newWhitelistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(newWhitelistIp) && (
-                      <p className="text-xs text-red-500">Please enter a valid IPv4 address</p>
+                    {newWhitelistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/.test(newWhitelistIp) && 
+                     !/^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/.test(newWhitelistIp) && (
+                      <p className="text-xs text-red-500">Please enter a valid IPv4/IPv6 address (CIDR notation supported)</p>
                     )}
                   </div>
                 </div>
@@ -1142,11 +1163,14 @@ export default function AdminSecurityEnhanced() {
                       />
                       <Button 
                         onClick={() => {
-                          const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-                          if (newBlacklistIp && ipRegex.test(newBlacklistIp)) {
+                          // IPv4, IPv6, và CIDR validation
+                          const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/;
+                          const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/;
+                          
+                          if (newBlacklistIp && (ipv4Regex.test(newBlacklistIp) || ipv6Regex.test(newBlacklistIp))) {
                             addIpRuleMutation.mutate({ ipAddress: newBlacklistIp, type: 'blacklist' });
                           } else {
-                            toast({ title: "Invalid IP address format", variant: "destructive" });
+                            toast({ title: "Invalid IP address format. Use IPv4, IPv6, or CIDR notation", variant: "destructive" });
                           }
                         }}
                         disabled={!newBlacklistIp || addIpRuleMutation.isPending}
@@ -1155,8 +1179,9 @@ export default function AdminSecurityEnhanced() {
                         <Ban className="w-4 h-4 mr-1" /> Block
                       </Button>
                     </div>
-                    {newBlacklistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(newBlacklistIp) && (
-                      <p className="text-xs text-red-500">Please enter a valid IPv4 address</p>
+                    {newBlacklistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/.test(newBlacklistIp) && 
+                     !/^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/.test(newBlacklistIp) && (
+                      <p className="text-xs text-red-500">Please enter a valid IPv4/IPv6 address (CIDR notation supported)</p>
                     )}
                   </div>
                 </div>
