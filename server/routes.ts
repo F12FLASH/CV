@@ -2593,6 +2593,14 @@ export async function registerRoutes(
   // Email API - Send Test Email
   app.post("/api/email/test", requireAdmin, async (req, res) => {
     try {
+      // Handle potential malformed JSON
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ 
+          message: "Invalid request body",
+          success: false 
+        });
+      }
+      
       const { to, subject, body } = req.body;
       
       if (!to || !subject || !body) {
