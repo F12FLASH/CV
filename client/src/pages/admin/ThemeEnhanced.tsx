@@ -782,12 +782,22 @@ export default function AdminThemeEnhanced() {
                     previewMode === 'tablet' ? 'max-w-[768px]' :
                     'max-w-[375px]'
                   }`}
+                  style={{
+                    fontFamily: theme.bodyFont,
+                    fontSize: `${parseFloat(theme.fontScale) * 16}px`,
+                    lineHeight: theme.lineHeight,
+                    letterSpacing: `${theme.letterSpacing}px`,
+                  }}
                 >
                   <div 
-                    className="border rounded-lg overflow-hidden shadow-lg bg-background"
+                    className="border overflow-hidden shadow-lg bg-background"
                     style={{ 
-                      fontFamily: theme.bodyFont,
-                      borderRadius: `${theme.borderRadius}px`
+                      borderRadius: `${theme.borderRadius}px`,
+                      transition: `all ${theme.animationSpeed}ms ease`,
+                      boxShadow: theme.shadowPreset === 'none' ? 'none' :
+                        theme.shadowPreset === 'soft' ? '0 1px 3px rgba(0,0,0,0.1)' :
+                        theme.shadowPreset === 'medium' ? '0 4px 6px rgba(0,0,0,0.1)' :
+                        '0 10px 15px rgba(0,0,0,0.1)'
                     }}
                   >
                     {/* Navbar */}
@@ -913,26 +923,83 @@ export default function AdminThemeEnhanced() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-3">
-                    <h4 className="text-sm font-medium">Buttons</h4>
+                    <h4 className="text-sm font-medium" style={{ fontFamily: theme.headingFont }}>Buttons</h4>
                     <div className="flex flex-wrap gap-2">
-                      <Button style={{ backgroundColor: theme.primaryColor }}>Primary</Button>
-                      <Button style={{ backgroundColor: theme.secondaryColor }}>Secondary</Button>
-                      <Button variant="outline">Outline</Button>
+                      <Button 
+                        style={{ 
+                          backgroundColor: theme.primaryColor,
+                          borderRadius: `${theme.borderRadius}px`,
+                          transition: `all ${theme.animationSpeed}ms ease`
+                        }}
+                        className="text-white"
+                      >
+                        Primary
+                      </Button>
+                      <Button 
+                        style={{ 
+                          backgroundColor: theme.secondaryColor,
+                          borderRadius: `${theme.borderRadius}px`,
+                          transition: `all ${theme.animationSpeed}ms ease`
+                        }}
+                        className="text-white"
+                      >
+                        Secondary
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        style={{ 
+                          borderRadius: `${theme.borderRadius}px`,
+                          transition: `all ${theme.animationSpeed}ms ease`
+                        }}
+                      >
+                        Outline
+                      </Button>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <h4 className="text-sm font-medium">Badges</h4>
+                    <h4 className="text-sm font-medium" style={{ fontFamily: theme.headingFont }}>Badges</h4>
                     <div className="flex flex-wrap gap-2">
-                      <Badge style={{ backgroundColor: theme.primaryColor }}>Primary</Badge>
-                      <Badge style={{ backgroundColor: theme.accentColor }}>Accent</Badge>
-                      <Badge variant="outline">Outline</Badge>
+                      <Badge 
+                        style={{ 
+                          backgroundColor: theme.primaryColor,
+                          borderRadius: `${theme.borderRadius}px`
+                        }}
+                        className="text-white"
+                      >
+                        Primary
+                      </Badge>
+                      <Badge 
+                        style={{ 
+                          backgroundColor: theme.accentColor,
+                          borderRadius: `${theme.borderRadius}px`
+                        }}
+                        className="text-white"
+                      >
+                        Accent
+                      </Badge>
+                      <Badge 
+                        variant="outline"
+                        style={{ borderRadius: `${theme.borderRadius}px` }}
+                      >
+                        Outline
+                      </Badge>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <h4 className="text-sm font-medium">Cards</h4>
-                    <Card style={{ borderRadius: `${theme.borderRadius}px` }}>
+                    <h4 className="text-sm font-medium" style={{ fontFamily: theme.headingFont }}>Cards</h4>
+                    <Card 
+                      style={{ 
+                        borderRadius: `${theme.borderRadius}px`,
+                        boxShadow: theme.shadowPreset === 'none' ? 'none' :
+                          theme.shadowPreset === 'soft' ? '0 1px 3px rgba(0,0,0,0.1)' :
+                          theme.shadowPreset === 'medium' ? '0 4px 6px rgba(0,0,0,0.1)' :
+                          '0 10px 15px rgba(0,0,0,0.1)'
+                      }}
+                    >
                       <CardContent className="p-4">
-                        <p className="text-sm">Sample card content</p>
+                        <p className="text-sm" style={{ lineHeight: theme.lineHeight }}>
+                          Sample card content
+                        </p>
                       </CardContent>
                     </Card>
                   </div>
