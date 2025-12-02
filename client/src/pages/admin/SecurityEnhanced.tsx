@@ -138,12 +138,29 @@ interface SecurityStats {
 
 interface SecurityLog {
   id: number;
+  eventType?: string;
   action: string;
   userId?: number;
   userName?: string;
+  ipAddress?: string;
+  userAgent?: string;
   type: string;
+  blocked?: boolean;
   createdAt?: string;
 }
+
+const flattenSettings = (obj: Record<string, any>, prefix = ''): Record<string, any> => {
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const newKey = prefix ? `${prefix}.${key}` : key;
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      Object.assign(result, flattenSettings(value, newKey));
+    } else {
+      result[newKey] = value;
+    }
+  }
+  return result;
+};
 
 export default function AdminSecurityEnhanced() {
   const { toast } = useToast();
@@ -202,7 +219,8 @@ export default function AdminSecurityEnhanced() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (newSettings: SecuritySettings) => {
-      return apiRequest('POST', '/api/security/settings/bulk', newSettings);
+      const flatSettings = flattenSettings(newSettings);
+      return apiRequest('POST', '/api/security/settings/bulk', flatSettings);
     },
     onSuccess: () => {
       toast({ title: "Settings saved successfully" });
@@ -1579,29 +1597,38 @@ export default function AdminSecurityEnhanced() {
                   </div>
                   <div className="p-3 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium">Login Attempts</p>
-                      <span className="text-lg font-bold">{stats?.byEventType?.find(e => e.type === 'login')?.count || 0}</span>
+                      <p className="text-sm font-medium">Successful Logins</p>
+                      <span className="text-lg font-bold">{loginHistory.filter(l => l.eventType === 'login_success').length}</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500 rounded-full" style={{ width: '60%' }} />
+                      <div 
+                        className="h-full bg-green-500 rounded-full transition-all" 
+                        style={{ width: `${loginHistory.length > 0 ? (loginHistory.filter(l => l.eventType === 'login_success').length / loginHistory.length * 100) : 0}%` }} 
+                      />
                     </div>
                   </div>
                   <div className="p-3 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-sm font-medium">Failed Login Attempts</p>
-                      <span className="text-lg font-bold">{stats?.byEventType?.find(e => e.type === 'failed_login')?.count || 0}</span>
+                      <span className="text-lg font-bold">{loginHistory.filter(l => l.eventType === 'login_failed' || l.blocked).length}</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-red-500 rounded-full" style={{ width: '15%' }} />
+                      <div 
+                        className="h-full bg-red-500 rounded-full transition-all" 
+                        style={{ width: `${loginHistory.length > 0 ? (loginHistory.filter(l => l.eventType === 'login_failed' || l.blocked).length / loginHistory.length * 100) : 0}%` }} 
+                      />
                     </div>
                   </div>
                   <div className="p-3 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium">Settings Changes</p>
-                      <span className="text-lg font-bold">{stats?.byEventType?.find(e => e.type === 'settings_change')?.count || 0}</span>
+                      <p className="text-sm font-medium">Total Events (Last 24h)</p>
+                      <span className="text-lg font-bold">{loginHistory.length}</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500 rounded-full" style={{ width: '40%' }} />
+                      <div 
+                        className="h-full bg-blue-500 rounded-full transition-all" 
+                        style={{ width: `${Math.min(100, loginHistory.length * 10)}%` }} 
+                      />
                     </div>
                   </div>
                 </div>
@@ -1619,12 +1646,36 @@ export default function AdminSecurityEnhanced() {
                       <p className="text-xs text-muted-foreground">No login history found</p>
                     ) : (
                       loginHistory.map((log) => (
-                        <div key={log.id} className="p-2 text-xs border rounded bg-muted/50">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">{log.userName || 'Unknown User'}</span>
+                        <div key={log.id} className={`p-3 text-xs border rounded ${log.blocked ? 'bg-red-500/5 border-red-500/30' : log.eventType === 'login_success' ? 'bg-green-500/5 border-green-500/30' : 'bg-muted/50'}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              {log.eventType === 'login_success' ? (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              ) : log.blocked ? (
+                                <Ban className="w-4 h-4 text-red-500" />
+                              ) : (
+                                <AlertCircle className="w-4 h-4 text-yellow-500" />
+                              )}
+                              <span className="font-medium">{log.userName || 'Unknown User'}</span>
+                              <Badge variant={log.eventType === 'login_success' ? 'secondary' : 'destructive'} className="text-[10px]">
+                                {log.eventType === 'login_success' ? 'Success' : log.eventType === 'login_failed' ? 'Failed' : log.eventType || 'Unknown'}
+                              </Badge>
+                            </div>
                             <span className="text-muted-foreground">{log.createdAt ? new Date(log.createdAt).toLocaleString() : 'N/A'}</span>
                           </div>
-                          <p className="text-muted-foreground">{log.action}</p>
+                          <p className="text-muted-foreground mb-1">{log.action}</p>
+                          <div className="flex items-center gap-3 text-muted-foreground">
+                            {log.ipAddress && (
+                              <span className="flex items-center gap-1">
+                                <Globe className="w-3 h-3" /> {log.ipAddress}
+                              </span>
+                            )}
+                            {log.userAgent && (
+                              <span className="flex items-center gap-1 truncate max-w-[200px]" title={log.userAgent}>
+                                <Monitor className="w-3 h-3" /> {log.userAgent.split(' ')[0]}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       ))
                     )}

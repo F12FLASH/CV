@@ -177,17 +177,31 @@ export default function AdminSettingsEnhanced() {
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList className="flex flex-wrap gap-1 h-auto p-1">
             <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="branding">Branding</TabsTrigger>
+            <TabsTrigger value="branding" className="flex items-center gap-1">
+              Branding <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">Preview</Badge>
+            </TabsTrigger>
             <TabsTrigger value="seo">SEO</TabsTrigger>
-            <TabsTrigger value="email">Email</TabsTrigger>
-            <TabsTrigger value="storage">Storage</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="integrations">Integrations</TabsTrigger>
+            <TabsTrigger value="email" className="flex items-center gap-1">
+              Email <Badge variant="destructive" className="text-[9px] px-1 py-0 h-4">Setup</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="storage" className="flex items-center gap-1">
+              Storage <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">Preview</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="flex items-center gap-1">
+              Performance <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">Preview</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="flex items-center gap-1">
+              Integrations <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">Preview</Badge>
+            </TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="developer">Developer</TabsTrigger>
             <TabsTrigger value="localization">Localization</TabsTrigger>
-            <TabsTrigger value="database">Database</TabsTrigger>
-            <TabsTrigger value="logging">Logging</TabsTrigger>
+            <TabsTrigger value="database" className="flex items-center gap-1">
+              Database <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">Preview</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="logging" className="flex items-center gap-1">
+              Logging <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">Preview</Badge>
+            </TabsTrigger>
           </TabsList>
 
           {/* GENERAL TAB */}
@@ -728,6 +742,13 @@ export default function AdminSettingsEnhanced() {
 
           {/* BRANDING TAB */}
           <TabsContent value="branding" className="space-y-4">
+            <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium text-yellow-700 dark:text-yellow-400">Feature Preview</p>
+                <p className="text-muted-foreground text-xs">Logo and favicon uploads are stored as base64. For production, consider using cloud storage for better performance.</p>
+              </div>
+            </div>
             <Card>
               <CardHeader>
                 <CardTitle>Logo & Favicon</CardTitle>
@@ -1225,6 +1246,13 @@ export default function AdminSettingsEnhanced() {
 
           {/* NOTIFICATIONS & ALERTS TAB */}
           <TabsContent value="notifications" className="space-y-4">
+            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium text-blue-700 dark:text-blue-400">Settings Only</p>
+                <p className="text-muted-foreground text-xs">Notification preferences are saved. Email notifications require SMTP configuration in the Email tab.</p>
+              </div>
+            </div>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1522,6 +1550,13 @@ export default function AdminSettingsEnhanced() {
 
           {/* DEVELOPER SETTINGS TAB */}
           <TabsContent value="developer" className="space-y-4">
+            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium text-blue-700 dark:text-blue-400">Settings Only</p>
+                <p className="text-muted-foreground text-xs">Developer settings are saved to database. Actual logic application requires backend implementation.</p>
+              </div>
+            </div>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
