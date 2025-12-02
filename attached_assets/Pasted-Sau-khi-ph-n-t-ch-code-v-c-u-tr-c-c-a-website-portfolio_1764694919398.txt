@@ -1,0 +1,62 @@
+Sau khi phân tích code và cấu trúc của website portfolio, đây là những chức năng còn thiếu hoặc chưa hoàn thiện:
+
+1. Chức năng Authentication & Security
+❌ Forgot Password / Reset Password: Chưa có tính năng khôi phục mật khẩu qua email
+❌ Account Varning: Chưa có cơ chế thông báo email tài khoản sau nhiều lần đăng nhập sai
+2. Chức năng Content Management
+❌ Draft Auto-save: Chưa tự động lưu bản nháp khi viết bài
+❌ Version Control: Chưa có lịch sử phiên bản cho posts/pages
+❌ Content Scheduling: Chưa hẹn giờ xuất bản tự động
+❌ Bulk Operations: Chưa có thao tác hàng loạt (delete, publish multiple items)
+❌ Content Templates: Chưa có templates cho posts/pages
+❌ SEO Preview: Chưa có preview SEO (Google/Facebook card preview)
+3. Chức năng Media Management
+❌ Image Cropping/Editing: Chưa có tool chỉnh sửa ảnh trong admin
+❌ Multiple File Upload: Chưa upload nhiều file cùng lúc
+❌ Media Library Search/Filter: Chưa tìm kiếm/lọc trong thư viện media
+❌ File Size Limits: Chưa rõ giới hạn kích thước file
+4. Chức năng Analytics & Reporting
+❌ Real-time Visitors: Chưa hiển thị số người online
+❌ Traffic Sources: Chưa phân tích nguồn traffic
+❌ Popular Content: Chưa ranking bài viết/dự án phổ biến
+❌ Export Reports: Chưa xuất báo cáo (PDF/CSV)
+❌ Custom Date Range: Chưa chọn khoảng thời gian tùy chỉnh
+5. Chức năng Comment & Review System
+❌ Reply to Comments: Chưa trả lời comment (nested comments)
+❌ Like/Dislike: Chưa có reaction cho comments
+❌ Report Spam: Chưa báo cáo spam
+❌ Email Notifications: Chưa thông báo email khi có comment mới
+6. Chức năng Newsletter
+❌ Email Campaigns: Chưa gửi campaign email hàng loạt
+❌ Subscriber Segmentation: Chưa phân nhóm subscribers
+❌ Email Templates Editor: Chưa editor cho email templates
+❌ Unsubscribe Management: Chưa quản lý hủy đăng ký
+❌ Analytics (Open rate, Click rate): Chưa theo dõi hiệu quả email
+7. Chức năng Search & Filter
+❌ Advanced Search: Chưa tìm kiếm nâng cao (multiple filters)
+❌ Search Autocomplete: Chưa gợi ý khi search
+❌ Search History: Chưa lưu lịch sử tìm kiếm
+8. Chức năng Internationalization (i18n)
+❌ Multi-language Content: Chưa quản lý nội dung đa ngôn ngữ
+❌ Translation Management: Chưa interface dịch thuật
+❌ Language Detection: Chưa tự động detect ngôn ngữ
+9. Chức năng Performance & Optimization
+❌ CDN Integration: Chưa tích hợp CDN
+❌ Database Backup Auto: Chưa backup database tự động
+❌ Performance Monitoring: Chưa monitor performance chi tiết
+❌ Error Tracking (Sentry): Chưa track lỗi production
+10. Chức năng API & Integration
+❌ API Rate Limiting: Có config nhưng chưa thấy implement chi tiết
+❌ API Documentation (Swagger): Route có nhưng chưa rõ content
+❌ Third-party Integrations: Chưa tích hợp nhiều service
+11. Chức năng File Manager
+❌ Folder Structure: Chưa tổ chức thư mục
+❌ File Permissions: Chưa phân quyền file
+❌ File Preview: Chưa xem trước file
+12. Chức năng Miscellaneous
+❌ Sitemap Generator: Chưa tự động tạo sitemap.xml
+❌ RSS Feed: Chưa có RSS feed cho blog
+❌ Contact Form with reCAPTCHA: Có code nhưng chưa rõ implementation
+❌ 404 Custom Pages: Có page nhưng chưa customize theo database
+❌ Breadcrumbs: Component có nhưng chưa dùng nhiều
+❌ Pagination: Component có nhưng chưa áp dụng đầy đủ
