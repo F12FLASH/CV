@@ -306,9 +306,11 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     try {
       await api.updateSettings(settings);
       localStorage.setItem("siteSettings", JSON.stringify(settings));
-    } catch (error) {
-      console.error("Failed to save settings to API, saving to localStorage");
+      return { success: true };
+    } catch (error: any) {
+      console.error("Failed to save settings to API:", error);
       localStorage.setItem("siteSettings", JSON.stringify(settings));
+      return { success: false, error: error?.message || "Failed to save settings" };
     } finally {
       setIsSaving(false);
     }

@@ -134,8 +134,16 @@ export default function AdminSettingsEnhanced() {
   };
 
   const handleSave = async () => {
-    await saveSettings();
-    toast({ title: "Saved", description: "Settings saved successfully" });
+    const result = await saveSettings();
+    if (result?.success) {
+      toast({ title: "Saved", description: "Settings saved successfully" });
+    } else {
+      toast({
+        title: "Error",
+        description: result?.error || "Failed to save settings",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
