@@ -75,6 +75,18 @@ export interface SiteSettings {
   emailNotifyWeeklySummary?: boolean;
   pushNotifyBrowser?: boolean;
   pushNotifyMobile?: boolean;
+  // Integrations Settings
+  disqusShortname?: string;
+  webhookUrl?: string;
+  enableWebhook?: boolean;
+  // Performance Settings
+  enableBrowserCache?: boolean;
+  staticCacheTTL?: number;
+  apiCacheTTL?: number;
+  enableCompression?: boolean;
+  lazyLoadImages?: boolean;
+  autoOptimizeImages?: boolean;
+  maxImageWidth?: number;
 }
 
 interface SiteSettingsContextType {
@@ -156,6 +168,18 @@ const defaultSettings: SiteSettings = {
   emailNotifyWeeklySummary: true,
   pushNotifyBrowser: false,
   pushNotifyMobile: false,
+  // Integrations Settings
+  disqusShortname: "",
+  webhookUrl: "",
+  enableWebhook: false,
+  // Performance Settings
+  enableBrowserCache: true,
+  staticCacheTTL: 86400,
+  apiCacheTTL: 300,
+  enableCompression: true,
+  lazyLoadImages: true,
+  autoOptimizeImages: false,
+  maxImageWidth: 1920,
 };
 
 const SiteContext = createContext<SiteSettingsContextType | undefined>(undefined);
@@ -243,6 +267,18 @@ export function SiteProvider({ children }: { children: ReactNode }) {
           emailNotifyWeeklySummary: data.emailNotifyWeeklySummary ?? defaultSettings.emailNotifyWeeklySummary,
           pushNotifyBrowser: data.pushNotifyBrowser ?? defaultSettings.pushNotifyBrowser,
           pushNotifyMobile: data.pushNotifyMobile ?? defaultSettings.pushNotifyMobile,
+          // Integrations Settings
+          disqusShortname: data.disqusShortname || defaultSettings.disqusShortname,
+          webhookUrl: data.webhookUrl || defaultSettings.webhookUrl,
+          enableWebhook: data.enableWebhook ?? defaultSettings.enableWebhook,
+          // Performance Settings
+          enableBrowserCache: data.enableBrowserCache ?? defaultSettings.enableBrowserCache,
+          staticCacheTTL: data.staticCacheTTL ?? defaultSettings.staticCacheTTL,
+          apiCacheTTL: data.apiCacheTTL ?? defaultSettings.apiCacheTTL,
+          enableCompression: data.enableCompression ?? defaultSettings.enableCompression,
+          lazyLoadImages: data.lazyLoadImages ?? defaultSettings.lazyLoadImages,
+          autoOptimizeImages: data.autoOptimizeImages ?? defaultSettings.autoOptimizeImages,
+          maxImageWidth: data.maxImageWidth ?? defaultSettings.maxImageWidth,
         });
       }
     } catch (error) {

@@ -45,9 +45,16 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { SettingsPerformance } from "./SettingsPerformance";
 import { SettingsIntegrations } from "./SettingsIntegrations";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { StorageTab } from "@/components/admin/StorageTab";
 import { DatabaseTab } from "@/components/admin/DatabaseTab";
 import { LoggingTab } from "@/components/admin/LoggingTab";
@@ -57,17 +64,74 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
+interface EmailTemplate {
+  subject: string;
+  body: string;
+}
+
 export default function AdminSettingsEnhanced() {
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [profileImageUploading, setProfileImageUploading] = useState(false);
   const [cvFileUploading, setCVFileUploading] = useState(false);
   const [brandingUploading, setBrandingUploading] = useState(false);
   const [showSmtpPassword, setShowSmtpPassword] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
+  const [templateSubject, setTemplateSubject] = useState("");
+  const [templateBody, setTemplateBody] = useState("");
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const cvFileInputRef = useRef<HTMLInputElement>(null);
   const { settings, updateSettings, saveSettings, isSaving } =
     useSiteSettings();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch email templates with TanStack Query
+  const { data: emailTemplates = {}, isLoading: templatesLoading } = useQuery({
+    queryKey: ['/api/email/templates'],
+    queryFn: () => api.getEmailTemplates()
+  });
+
+  // Mutation for updating email templates
+  const updateTemplateMutation = useMutation({
+    mutationFn: ({ name, data }: { name: string; data: { subject: string; body: string } }) =>
+      api.updateEmailTemplate(name, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/email/templates'] });
+      toast({ title: "Success", description: "Email template saved successfully" });
+      setEditingTemplate(null);
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const openTemplateEditor = (templateName: string) => {
+    const template = emailTemplates[templateName];
+    if (template) {
+      setTemplateSubject(template.subject);
+      setTemplateBody(template.body);
+    } else {
+      setTemplateSubject("");
+      setTemplateBody("");
+    }
+    setEditingTemplate(templateName);
+  };
+
+  const saveTemplate = () => {
+    if (!editingTemplate) return;
+    updateTemplateMutation.mutate({
+      name: editingTemplate,
+      data: { subject: templateSubject, body: templateBody }
+    });
+  };
+
+  const templateLabels: Record<string, string> = {
+    welcome: "Welcome Email",
+    notification: "Notification Email",
+    newsletter: "Newsletter Template",
+    contact: "Contact Form Email",
+    comment: "Comment Notification"
+  };
 
   const handleBrandingUpload = async (
     file: File,
@@ -1151,33 +1215,85 @@ export default function AdminSettingsEnhanced() {
               <CardHeader>
                 <CardTitle>Email Templates</CardTitle>
                 <CardDescription>
-                  Customize email templates for different notifications
+                  Customize email templates for different notifications. Use placeholders like {"{{siteName}}"}, {"{{userName}}"}, {"{{date}}"} etc.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  data-testid="button-edit-welcome-email"
-                >
-                  Edit Welcome Email
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  data-testid="button-edit-notification-email"
-                >
-                  Edit Notification Email
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  data-testid="button-edit-newsletter"
-                >
-                  Edit Newsletter Template
-                </Button>
+                {templatesLoading ? (
+                  <div className="text-center py-4 text-muted-foreground">Loading templates...</div>
+                ) : (
+                  Object.entries(templateLabels).map(([key, label]) => (
+                    <Button
+                      key={key}
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => openTemplateEditor(key)}
+                      data-testid={`button-edit-${key}-email`}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      {label}
+                      {emailTemplates[key] && (
+                        <Badge variant="secondary" className="ml-auto">Configured</Badge>
+                      )}
+                    </Button>
+                  ))
+                )}
               </CardContent>
             </Card>
+
+            {/* Email Template Editor Dialog */}
+            <Dialog open={!!editingTemplate} onOpenChange={(open) => !open && setEditingTemplate(null)}>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Edit {editingTemplate && templateLabels[editingTemplate]}</DialogTitle>
+                  <DialogDescription>
+                    Customize the email template. Use placeholders that will be replaced with actual values.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Subject</Label>
+                    <Input
+                      value={templateSubject}
+                      onChange={(e) => setTemplateSubject(e.target.value)}
+                      placeholder="Email subject..."
+                      data-testid="input-template-subject"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Body (HTML)</Label>
+                    <Textarea
+                      value={templateBody}
+                      onChange={(e) => setTemplateBody(e.target.value)}
+                      placeholder="<h1>Hello {{userName}}</h1>..."
+                      className="min-h-[300px] font-mono text-sm"
+                      data-testid="input-template-body"
+                    />
+                  </div>
+                  <div className="bg-muted p-3 rounded-lg">
+                    <p className="text-sm font-medium mb-2">Available Placeholders:</p>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <Badge variant="outline">{"{{siteName}}"}</Badge>
+                      <Badge variant="outline">{"{{userName}}"}</Badge>
+                      <Badge variant="outline">{"{{date}}"}</Badge>
+                      <Badge variant="outline">{"{{senderName}}"}</Badge>
+                      <Badge variant="outline">{"{{senderEmail}}"}</Badge>
+                      <Badge variant="outline">{"{{messageContent}}"}</Badge>
+                      <Badge variant="outline">{"{{postTitle}}"}</Badge>
+                      <Badge variant="outline">{"{{commentContent}}"}</Badge>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" onClick={() => setEditingTemplate(null)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={saveTemplate} disabled={updateTemplateMutation.isPending}>
+                      {updateTemplateMutation.isPending ? "Saving..." : "Save Template"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* STORAGE TAB */}
@@ -1889,45 +2005,82 @@ export default function AdminSettingsEnhanced() {
                   <Languages className="w-5 h-5" /> Custom Translations
                 </CardTitle>
                 <CardDescription>
-                  Manage custom translation strings
+                  Manage custom translation strings for multi-language support
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1">
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant="outline" size="sm">
                     Import Translations
                   </Button>
-                  <Button variant="outline" className="flex-1">
+                  <Button variant="outline" size="sm">
                     Export Translations
                   </Button>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Translation Keys</h4>
-                  {[
-                    {
-                      key: "site.title",
-                      en: "Loi Developer",
-                      vi: "Loi Developer",
-                    },
-                    { key: "nav.home", en: "Home", vi: "Trang chủ" },
-                    { key: "nav.about", en: "About", vi: "Giới thiệu" },
-                    { key: "nav.contact", en: "Contact", vi: "Liên hệ" },
-                  ].map((item, i) => (
-                    <div
-                      key={i}
-                      className="grid grid-cols-3 gap-2 p-2 border rounded text-sm"
-                    >
-                      <code className="text-xs bg-muted px-2 py-1 rounded">
-                        {item.key}
-                      </code>
-                      <Input defaultValue={item.en} className="h-8" />
-                      <Input defaultValue={item.vi} className="h-8" />
-                    </div>
-                  ))}
+                  <div className="grid grid-cols-3 gap-2 p-2 bg-muted rounded text-sm font-medium">
+                    <span>Key</span>
+                    <span>English</span>
+                    <span>Vietnamese</span>
+                  </div>
+                  <div className="max-h-[400px] overflow-y-auto space-y-1">
+                    {[
+                      { key: "site.title", en: "Loi Developer", vi: "Loi Developer" },
+                      { key: "site.tagline", en: "Full-stack Developer", vi: "Lập trình viên Full-stack" },
+                      { key: "nav.home", en: "Home", vi: "Trang chủ" },
+                      { key: "nav.about", en: "About", vi: "Giới thiệu" },
+                      { key: "nav.projects", en: "Projects", vi: "Dự án" },
+                      { key: "nav.blog", en: "Blog", vi: "Bài viết" },
+                      { key: "nav.services", en: "Services", vi: "Dịch vụ" },
+                      { key: "nav.contact", en: "Contact", vi: "Liên hệ" },
+                      { key: "hero.greeting", en: "Hello, I'm", vi: "Xin chào, tôi là" },
+                      { key: "hero.cta", en: "View My Work", vi: "Xem dự án" },
+                      { key: "hero.download_cv", en: "Download CV", vi: "Tải CV" },
+                      { key: "about.title", en: "About Me", vi: "Về tôi" },
+                      { key: "about.experience", en: "Years of Experience", vi: "Năm kinh nghiệm" },
+                      { key: "about.projects", en: "Projects Completed", vi: "Dự án hoàn thành" },
+                      { key: "projects.title", en: "My Projects", vi: "Dự án của tôi" },
+                      { key: "projects.view", en: "View Project", vi: "Xem dự án" },
+                      { key: "projects.all", en: "All Projects", vi: "Tất cả" },
+                      { key: "blog.title", en: "Latest Posts", vi: "Bài viết mới" },
+                      { key: "blog.read_more", en: "Read More", vi: "Đọc thêm" },
+                      { key: "services.title", en: "Services", vi: "Dịch vụ" },
+                      { key: "services.learn_more", en: "Learn More", vi: "Tìm hiểu thêm" },
+                      { key: "contact.title", en: "Get In Touch", vi: "Liên hệ" },
+                      { key: "contact.name", en: "Your Name", vi: "Họ tên" },
+                      { key: "contact.email", en: "Your Email", vi: "Email" },
+                      { key: "contact.message", en: "Your Message", vi: "Nội dung" },
+                      { key: "contact.send", en: "Send Message", vi: "Gửi tin nhắn" },
+                      { key: "contact.success", en: "Message sent successfully!", vi: "Gửi thành công!" },
+                      { key: "footer.copyright", en: "All rights reserved", vi: "Bản quyền thuộc về" },
+                      { key: "common.loading", en: "Loading...", vi: "Đang tải..." },
+                      { key: "common.error", en: "Something went wrong", vi: "Đã xảy ra lỗi" },
+                      { key: "common.save", en: "Save", vi: "Lưu" },
+                      { key: "common.cancel", en: "Cancel", vi: "Hủy" },
+                      { key: "common.delete", en: "Delete", vi: "Xóa" },
+                      { key: "common.edit", en: "Edit", vi: "Sửa" },
+                    ].map((item, i) => (
+                      <div
+                        key={i}
+                        className="grid grid-cols-3 gap-2 p-2 border rounded text-sm"
+                      >
+                        <code className="text-xs bg-muted px-2 py-1 rounded truncate">
+                          {item.key}
+                        </code>
+                        <Input defaultValue={item.en} className="h-8" />
+                        <Input defaultValue={item.vi} className="h-8" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <Button variant="outline" className="w-full">
-                  + Add Translation Key
-                </Button>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline">
+                    + Add Translation Key
+                  </Button>
+                  <Button>
+                    Save Translations
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

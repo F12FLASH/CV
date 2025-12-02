@@ -454,6 +454,21 @@ export const api = {
     return res.json();
   },
 
+  getEmailTemplates: async () => {
+    const res = await fetch(`${API_BASE}/email/templates`, { credentials: 'include' });
+    return handleResponse<Record<string, { subject: string; body: string }>>(res);
+  },
+
+  updateEmailTemplate: async (name: string, data: { subject: string; body: string }) => {
+    const res = await fetch(`${API_BASE}/email/templates/${name}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return handleResponse<{ message: string; template: { subject: string; body: string } }>(res);
+  },
+
   // ==================== STORAGE API ====================
   
   async getStorageStats() {

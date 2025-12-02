@@ -1049,6 +1049,14 @@ export async function registerRoutes(
       
       broadcastNewMessage(message);
       
+      // Send notification email asynchronously (don't wait for it)
+      sendNotificationEmail('contact', {
+        senderName: message.sender,
+        senderEmail: message.email,
+        messageSubject: message.subject || 'No subject',
+        messageContent: message.message
+      }).catch(err => console.error('Failed to send contact notification email:', err));
+      
       res.status(201).json(message);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1658,6 +1666,15 @@ export async function registerRoutes(
         message: `New comment from ${comment.authorName}`,
         data: comment
       });
+      
+      // Send notification email asynchronously
+      const postLink = post ? `/blog/${post.id}` : project ? `/projects/${project.id}` : '/';
+      sendNotificationEmail('comment', {
+        postTitle: target,
+        commenterName: comment.authorName,
+        commentContent: comment.content,
+        postLink: postLink
+      }).catch(err => console.error('Failed to send comment notification email:', err));
       
       res.status(201).json(comment);
     } catch (error: any) {
@@ -2796,6 +2813,198 @@ export async function registerRoutes(
       });
     }
   });
+
+  // Email Templates API
+  app.get("/api/email/templates", requireAdmin, async (req, res) => {
+    try {
+      const templates = await storage.getSetting("email-templates");
+      const defaultTemplates = {
+        welcome: {
+          subject: "Welcome to {{siteName}}",
+          body: `<h1>Welcome, {{userName}}!</h1>
+<p>Thank you for joining {{siteName}}. We're excited to have you on board.</p>
+<p>If you have any questions, feel free to reach out to us.</p>
+<p>Best regards,<br>{{siteName}} Team</p>`
+        },
+        notification: {
+          subject: "New notification from {{siteName}}",
+          body: `<h1>Hello, {{userName}}</h1>
+<p>{{notificationMessage}}</p>
+<p>Best regards,<br>{{siteName}} Team</p>`
+        },
+        newsletter: {
+          subject: "{{siteName}} Newsletter - {{date}}",
+          body: `<h1>{{siteName}} Newsletter</h1>
+<p>{{newsletterContent}}</p>
+<hr>
+<p style="font-size: 12px; color: #666;">
+You're receiving this because you subscribed to our newsletter.
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>`
+        },
+        contact: {
+          subject: "New Contact Form Submission - {{siteName}}",
+          body: `<h1>New Contact Message</h1>
+<p><strong>From:</strong> {{senderName}} ({{senderEmail}})</p>
+<p><strong>Subject:</strong> {{messageSubject}}</p>
+<hr>
+<p>{{messageContent}}</p>
+<hr>
+<p style="font-size: 12px; color: #666;">Received on {{date}}</p>`
+        },
+        comment: {
+          subject: "New Comment on {{postTitle}} - {{siteName}}",
+          body: `<h1>New Comment</h1>
+<p><strong>Post:</strong> {{postTitle}}</p>
+<p><strong>From:</strong> {{commenterName}}</p>
+<hr>
+<p>{{commentContent}}</p>
+<hr>
+<p><a href="{{postLink}}">View Post</a></p>`
+        }
+      };
+      
+      if (templates?.value) {
+        const value = typeof templates.value === 'string' ? JSON.parse(templates.value) : templates.value;
+        res.json({ ...defaultTemplates, ...value });
+      } else {
+        res.json(defaultTemplates);
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/email/templates/:name", requireAdmin, async (req, res) => {
+    try {
+      const { name } = req.params;
+      const { subject, body } = req.body;
+      
+      if (!subject || !body) {
+        return res.status(400).json({ message: "Subject and body are required" });
+      }
+      
+      const existingTemplates = await storage.getSetting("email-templates");
+      const templates = existingTemplates?.value 
+        ? (typeof existingTemplates.value === 'string' ? JSON.parse(existingTemplates.value) : existingTemplates.value)
+        : {};
+      
+      templates[name] = { subject, body };
+      
+      await storage.upsertSetting("email-templates", templates);
+      
+      await storage.createActivityLog({
+        action: `Email template "${name}" updated`,
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "info"
+      });
+      
+      res.json({ message: "Template updated successfully", template: templates[name] });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Send notification email (internal function used by other routes)
+  async function sendNotificationEmail(
+    type: 'contact' | 'comment' | 'newsletter' | 'security',
+    data: Record<string, string>
+  ) {
+    try {
+      // Check if email notifications are enabled for this type
+      const settingKey = type === 'contact' ? 'emailNotifyNewContact' 
+        : type === 'comment' ? 'emailNotifyNewComment'
+        : type === 'newsletter' ? 'emailNotifyNewsletter'
+        : 'emailNotifySecurityAlert';
+      
+      const notifySetting = await storage.getSetting(settingKey);
+      if (notifySetting?.value === false || notifySetting?.value === 'false') {
+        return { sent: false, reason: 'Notifications disabled for this type' };
+      }
+      
+      // Get SMTP settings
+      const smtpHost = await storage.getSetting("smtpHost");
+      const smtpPort = await storage.getSetting("smtpPort");
+      const smtpUser = await storage.getSetting("smtpUser");
+      const smtpPassword = await storage.getSetting("smtpPassword");
+      const smtpSecure = await storage.getSetting("smtpSecure");
+      const emailFromName = await storage.getSetting("emailFromName");
+      const emailFromAddress = await storage.getSetting("emailFromAddress");
+      const adminEmail = await storage.getSetting("contactEmail");
+      
+      if (!smtpHost?.value || !smtpPort?.value || !smtpUser?.value || !smtpPassword?.value) {
+        return { sent: false, reason: 'SMTP not configured' };
+      }
+      
+      // Get email template
+      const templates = await storage.getSetting("email-templates");
+      let template = { subject: '', body: '' };
+      
+      if (templates?.value) {
+        const allTemplates = typeof templates.value === 'string' ? JSON.parse(templates.value) : templates.value;
+        template = allTemplates[type] || template;
+      }
+      
+      // Default templates if not found
+      if (!template.subject || !template.body) {
+        const siteTitleForDefault = (await storage.getSetting("siteTitle"))?.value as string || 'Portfolio';
+        template = {
+          subject: `New ${type} notification from ${siteTitleForDefault}`,
+          body: `<h1>New ${type} notification</h1><p>${JSON.stringify(data)}</p>`
+        };
+      }
+      
+      // Replace placeholders in template
+      let subject = template.subject;
+      let body = template.body;
+      
+      const siteTitleSetting = await storage.getSetting("siteTitle");
+      const siteTitleValue = (siteTitleSetting?.value as string) || 'Portfolio';
+      const replacements: Record<string, string> = {
+        ...data,
+        siteName: siteTitleValue,
+        date: new Date().toLocaleDateString()
+      };
+      
+      for (const [key, value] of Object.entries(replacements)) {
+        const regex = new RegExp(`{{${key}}}`, 'g');
+        subject = subject.replace(regex, value);
+        body = body.replace(regex, value);
+      }
+      
+      // Send email
+      const port = typeof smtpPort.value === 'string' ? parseInt(smtpPort.value) : smtpPort.value;
+      const secure = smtpSecure?.value === true || smtpSecure?.value === 'true';
+      
+      const transporter = nodemailer.createTransport({
+        host: smtpHost.value as string,
+        port: port as number,
+        secure: secure,
+        auth: {
+          user: smtpUser.value as string,
+          pass: smtpPassword.value as string,
+        },
+        requireTLS: !secure,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
+      });
+      
+      const toEmail = (adminEmail?.value as string) || (smtpUser.value as string);
+      await transporter.sendMail({
+        from: `"${(emailFromName?.value as string) || 'Portfolio'}" <${(emailFromAddress?.value as string) || smtpUser.value}>`,
+        to: toEmail,
+        subject,
+        html: body,
+      });
+      
+      return { sent: true };
+    } catch (error: any) {
+      console.error('Failed to send notification email:', error.message);
+      return { sent: false, reason: error.message };
+    }
+  }
 
   // ==================== STORAGE MANAGEMENT API ====================
   
