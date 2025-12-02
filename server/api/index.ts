@@ -25,6 +25,7 @@ import newsletterRouter from "./newsletter";
 import homepageRouter from "./homepage";
 import faqsRouter from "./faqs";
 import performanceRouter from "./performance";
+import searchRouter from "./search";
 
 export function registerApiRoutes(app: Express) {
   app.use("/api/auth", authRouter);
@@ -53,4 +54,5 @@ export function registerApiRoutes(app: Express) {
   app.use("/api/homepage", homepageRouter);
   app.use("/api/faqs", faqsRouter);
   app.use("/api/performance", performanceRouter);
+  app.use("/api/search", searchRouter);
 }

@@ -21,6 +21,7 @@ import Blog from "@/pages/home/Blog";
 import Projects from "@/pages/home/Projects";
 import Pages from "@/pages/home/Pages";
 import PageDetail from "@/pages/home/PageDetail";
+import FAQs from "@/pages/home/FAQs";
 import NotFound from "@/pages/home/not-found";
 
 // Admin Login - loaded directly for fast access
@@ -126,6 +127,7 @@ function Router() {
       <Route path="/projects" component={Projects} />
       <Route path="/pages" component={Pages} />
       <Route path="/page/:slug" component={PageDetail} />
+      <Route path="/faqs" component={FAQs} />
 
       {/* Admin Login - not lazy loaded for fast access */}
       <Route path="/admin/login" component={AdminLogin} />

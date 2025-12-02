@@ -56,7 +56,7 @@ import type {
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 
 const trafficSourceData = [
   { name: "Organic", value: 400, color: "hsl(var(--primary))" },

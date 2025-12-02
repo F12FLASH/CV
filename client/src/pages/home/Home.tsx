@@ -9,6 +9,7 @@ import { Projects } from "@/components/sections/Projects";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { Blog } from "@/components/sections/Blog";
 import { Contact } from "@/components/sections/Contact";
+import { NewsletterSection } from "@/components/sections/NewsletterSection";
 import { Preloader } from "@/components/ui/Preloader";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -106,6 +107,7 @@ export default function Home() {
           {isSectionVisible('projects') && <Projects />}
           {isSectionVisible('testimonials') && <Testimonials />}
           {isSectionVisible('blog') && <Blog />}
+          {isSectionVisible('newsletter') && <NewsletterSection />}
           <Contact />
         </main>
         <Footer />

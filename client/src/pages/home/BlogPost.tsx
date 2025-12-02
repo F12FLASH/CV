@@ -2,13 +2,15 @@ import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { motion } from "framer-motion";
-import { ArrowLeft, Calendar, User, Tag, Eye, Clock, Share2 } from "lucide-react";
+import { ArrowLeft, Calendar, User, Tag, Eye, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CommentSection } from "@/components/sections/CommentSection";
+import { SocialShare } from "@/components/common/SocialShare";
+import { SEOHead } from "@/components/common/SEOHead";
 
 export default function BlogPost() {
   const [match, params] = useRoute("/blog/:slug");
@@ -93,6 +95,17 @@ export default function BlogPost() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${post.title} | Blog`}
+        description={post.excerpt || undefined}
+        image={post.featuredImage || undefined}
+        url={`/blog/${post.slug}`}
+        type="article"
+        author={post.author}
+        publishedTime={post.publishedAt?.toString() || post.createdAt?.toString()}
+        modifiedTime={post.updatedAt?.toString()}
+        tags={post.tags || undefined}
+      />
       <Navbar />
       
       <article className="pt-24 pb-16">
@@ -204,28 +217,18 @@ export default function BlogPost() {
 
             <Separator className="my-8" />
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <Link href="/#blog">
                 <Button variant="outline">
                   <ArrowLeft className="w-4 h-4 mr-2" /> More Articles
                 </Button>
               </Link>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: post.title,
-                      text: post.excerpt || "",
-                      url: window.location.href,
-                    });
-                  } else {
-                    navigator.clipboard.writeText(window.location.href);
-                  }
-                }}
-              >
-                <Share2 className="w-4 h-4 mr-2" /> Share
-              </Button>
+              <SocialShare
+                url={`/blog/${post.slug}`}
+                title={post.title}
+                description={post.excerpt || undefined}
+                image={post.featuredImage || undefined}
+              />
             </div>
 
             <CommentSection postId={post.id} title="Comments" />

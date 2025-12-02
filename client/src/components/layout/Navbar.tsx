@@ -5,6 +5,7 @@ import { Menu, X, Moon, Sun, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { GlobalSearch } from "@/components/layout/GlobalSearch";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSiteSettings } from "@/context/SiteContext";
 
@@ -46,6 +47,11 @@ export function Navbar() {
     { name: t("nav.projects"), href: "#projects" },
     { name: t("nav.blog"), href: "#blog" },
     { name: t("nav.contact"), href: "#contact" },
+  ];
+
+  const extraLinks = [
+    { name: t("nav.pages") || "Pages", href: "/pages" },
+    { name: t("nav.faqs") || "FAQs", href: "/faqs" },
   ];
 
   const scrollToSection = (id: string) => {
@@ -102,7 +108,7 @@ export function Navbar() {
           )}
         </div>
 
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
             <button
               key={link.name}
@@ -125,9 +131,35 @@ export function Navbar() {
                 )}
             </button>
           ))}
+          <span className="w-px h-4 bg-border" />
+          {extraLinks.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+            >
+              <button
+                className={`group relative text-sm font-medium transition-colors ${
+                  location === link.href
+                    ? "text-primary"
+                    : "text-foreground/80 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-primary hover:to-secondary"
+                }`}
+                data-testid={`nav-${link.href.replace("/", "")}`}
+              >
+                {link.name}
+                <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all duration-300 group-hover:w-full" />
+                {location === link.href && (
+                  <motion.div
+                    layoutId="activeSection"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary"
+                  />
+                )}
+              </button>
+            </Link>
+          ))}
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
+          <GlobalSearch />
           <LanguageSwitcher />
           <button
             onClick={toggleTheme}
@@ -186,6 +218,19 @@ export function Navbar() {
               >
                 {link.name}
               </button>
+            ))}
+            <div className="w-16 h-px bg-border my-4" />
+            {extraLinks.map((link) => (
+              <Link key={link.name} href={link.href}>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`text-xl font-heading font-bold transition-colors ${
+                    location === link.href ? "text-primary" : "text-foreground hover:text-primary"
+                  }`}
+                >
+                  {link.name}
+                </button>
+              </Link>
             ))}
             <div className="flex gap-6 mt-8 items-center">
               <LanguageSwitcher />
