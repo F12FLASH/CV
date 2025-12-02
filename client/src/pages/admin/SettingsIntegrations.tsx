@@ -188,14 +188,10 @@ export function SettingsIntegrations() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
-        <Button 
-          onClick={() => saveSettings()}
-          disabled={isSaving}
-          data-testid="button-save-integrations"
-        >
-          {isSaving ? "Saving..." : "Save All Settings"}
-        </Button>
+      <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+        <p className="text-xs text-blue-700 dark:text-blue-400">
+          All changes are automatically tracked and saved using the "Save Changes" button in the header.
+        </p>
       </div>
     </div>
   );

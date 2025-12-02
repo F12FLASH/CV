@@ -8,7 +8,7 @@ import { Zap, Globe, BarChart3, Activity, Server, HardDrive, RefreshCw } from "l
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteSettings } from "@/context/SiteContext";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface PerformanceMetrics {
   pageLoadTime: string;
@@ -172,14 +172,10 @@ export function SettingsPerformance() {
             >
               {isClearing ? "Clearing..." : "Clear All Cache"}
             </Button>
-            <Button 
-              onClick={() => saveSettings()}
-              disabled={isSaving}
-              data-testid="button-save-performance"
-            >
-              {isSaving ? "Saving..." : "Save Settings"}
-            </Button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Changes are automatically tracked and saved using the "Save Changes" button in the header.
+          </p>
         </CardContent>
       </Card>
 
