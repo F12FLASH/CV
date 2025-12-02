@@ -607,7 +607,7 @@ export function Hero() {
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
               />
               <Download size={20} className="group-hover:-translate-y-1 transition-transform relative z-10" /> 
-              <span className="relative z-10">DOWNLOAD_CV.exe</span>
+              <span className="relative z-10">Tải CV</span>
             </Button>
             <Button 
               size="lg" 

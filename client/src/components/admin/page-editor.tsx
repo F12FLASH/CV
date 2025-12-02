@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -32,19 +32,27 @@ interface PageEditorProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const getDefaultFormData = (page?: Page) => ({
+  title: page?.title || "",
+  slug: page?.slug || "",
+  content: page?.content || "",
+  excerpt: page?.excerpt || "",
+  status: page?.status || "Draft",
+  metaTitle: page?.metaTitle || "",
+  metaDescription: page?.metaDescription || "",
+  featuredImage: page?.featuredImage || "",
+});
+
 export function PageEditor({ page, open, onOpenChange }: PageEditorProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState({
-    title: page?.title || "",
-    slug: page?.slug || "",
-    content: page?.content || "",
-    excerpt: page?.excerpt || "",
-    status: page?.status || "Draft",
-    metaTitle: page?.metaTitle || "",
-    metaDescription: page?.metaDescription || "",
-    featuredImage: page?.featuredImage || "",
-  });
+  const [formData, setFormData] = useState(getDefaultFormData(page));
+
+  useEffect(() => {
+    if (open) {
+      setFormData(getDefaultFormData(page));
+    }
+  }, [page, open]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {

@@ -57,7 +57,6 @@ import {
 } from "@/components/ui/dialog";
 import { StorageTab } from "@/components/admin/StorageTab";
 import { DatabaseTab } from "@/components/admin/DatabaseTab";
-import { LoggingTab } from "@/components/admin/LoggingTab";
 import { useSiteSettings } from "@/context/SiteContext";
 import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -330,7 +329,6 @@ export default function AdminSettingsEnhanced() {
               <TabsTrigger value="developer">Developer</TabsTrigger>
               <TabsTrigger value="localization">Localization</TabsTrigger>
               <TabsTrigger value="database">Database</TabsTrigger>
-              <TabsTrigger value="logging">Logging</TabsTrigger>
             </TabsList>
           </div>
 
@@ -1997,10 +1995,6 @@ export default function AdminSettingsEnhanced() {
             <DatabaseTab />
           </TabsContent>
 
-          {/* LOGGING CONFIGURATION TAB */}
-          <TabsContent value="logging" className="space-y-4">
-            <LoggingTab />
-          </TabsContent>
         </Tabs>
       </div>
     </AdminLayout>

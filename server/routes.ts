@@ -4032,12 +4032,27 @@ You're receiving this because you subscribed to our newsletter.
         return res.status(400).json({ message: "No file uploaded" });
       }
 
+      // Determine subdirectory based on mime type
+      let subDir = "media";
+      if (req.file.mimetype.startsWith("image/")) {
+        subDir = "images";
+      } else if (
+        req.file.mimetype === "application/pdf" ||
+        req.file.mimetype.includes("document") ||
+        req.file.mimetype.includes("msword") ||
+        req.file.mimetype.includes("spreadsheet") ||
+        req.file.mimetype.includes("presentation") ||
+        req.file.mimetype === "text/plain"
+      ) {
+        subDir = "documents";
+      }
+
       const mediaItem = await storage.createMedia({
         filename: req.file.filename,
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,
         size: req.file.size,
-        url: `/uploads/${req.file.filename}`
+        url: `/uploads/${subDir}/${req.file.filename}`
       });
 
       res.json(mediaItem);
