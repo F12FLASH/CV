@@ -23,12 +23,28 @@
   <body>
     <div id="root"></div>
     <script>
-      window.addEventListener('unhandledrejection', function(event) {
-        if (event.reason && event.reason.message && event.reason.message.includes('WebSocket')) {
-          console.warn('Suppressed WebSocket error:', event.reason.message);
-          event.preventDefault();
-        }
-      });
+      (function() {
+        // Suppress Vite HMR WebSocket errors in Replit environment
+        window.addEventListener('unhandledrejection', function(event) {
+          if (event.reason && event.reason.message) {
+            const msg = event.reason.message;
+            if (msg.includes('WebSocket') || msg.includes('vite') || msg.includes('HMR')) {
+              event.preventDefault();
+              return;
+            }
+          }
+        });
+        
+        // Also suppress console errors for WebSocket
+        const originalError = console.error;
+        console.error = function(...args) {
+          const msg = args.join(' ');
+          if (msg.includes('[vite]') && (msg.includes('websocket') || msg.includes('WebSocket'))) {
+            return;
+          }
+          originalError.apply(console, args);
+        };
+      })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
