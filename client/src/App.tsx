@@ -13,53 +13,81 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 
-// Public pages - loaded directly for best UX
-import Home from "@/pages/Home";
-import Maintenance from "@/pages/Maintenance";
-import BlogPost from "@/pages/BlogPost";
-import Blog from "@/pages/Blog";
-import Projects from "@/pages/Projects";
-import Pages from "@/pages/Pages";
-import PageDetail from "@/pages/PageDetail";
-import NotFound from "@/pages/not-found";
+// Public pages - loaded directly for best UX (from home folder)
+import Home from "@/pages/home/Home";
+import Maintenance from "@/pages/home/Maintenance";
+import BlogPost from "@/pages/home/BlogPost";
+import Blog from "@/pages/home/Blog";
+import Projects from "@/pages/home/Projects";
+import Pages from "@/pages/home/Pages";
+import PageDetail from "@/pages/home/PageDetail";
+import NotFound from "@/pages/home/not-found";
 
 // Admin Login - loaded directly for fast access
-import AdminLogin from "@/pages/admin/Login";
+import AdminLogin from "@/pages/admin/auth/Login";
 
-// Admin pages - lazy loaded for better initial bundle size
-const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
-const AdminPostsEnhanced = lazy(() => import("@/pages/admin/PostsEnhanced"));
-const AdminPostCategories = lazy(() => import("@/pages/admin/PostCategories"));
-const AdminPages = lazy(() => import("@/pages/admin/Pages"));
-const AdminProjectsEnhanced = lazy(() => import("@/pages/admin/ProjectsEnhanced"));
-const AdminProjectCategories = lazy(() => import("@/pages/admin/ProjectCategories"));
-const AdminServicesEnhanced = lazy(() => import("@/pages/admin/ServicesEnhanced"));
-const AdminComments = lazy(() => import("@/pages/admin/Comments"));
-const AdminFAQs = lazy(() => import("@/pages/admin/FAQs"));
-const AdminSkills = lazy(() => import("@/pages/admin/Skills"));
-const AdminNewsletter = lazy(() => import("@/pages/admin/Newsletter"));
-const AdminNotifications = lazy(() => import("@/pages/admin/Notifications"));
-const AdminProfile = lazy(() => import("@/pages/admin/Profile"));
-const AdminThemeEnhanced = lazy(() => import("@/pages/admin/ThemeEnhanced"));
-const AdminSystem = lazy(() => import("@/pages/admin/System"));
-const AdminMedia = lazy(() => import("@/pages/admin/Media"));
-const AdminActivityLog = lazy(() => import("@/pages/admin/ActivityLog"));
-const AdminExportImport = lazy(() => import("@/pages/admin/ExportImport"));
-const AdminInbox = lazy(() => import("@/pages/admin/Inbox"));
-const AdminAnalytics = lazy(() => import("@/pages/admin/Analytics"));
-const AdminEditor = lazy(() => import("@/pages/admin/Editor"));
-const AdminSecurityEnhanced = lazy(() => import("@/pages/admin/SecurityEnhanced"));
-const AdminSettingsEnhanced = lazy(() => import("@/pages/admin/SettingsEnhanced"));
-const AdminTools = lazy(() => import("@/pages/admin/Tools"));
-const AdminTestimonials = lazy(() => import("@/pages/admin/Testimonials"));
-const AdminEmailTemplates = lazy(() => import("@/pages/admin/EmailTemplates"));
-const AdminCache = lazy(() => import("@/pages/admin/Cache"));
-const AdminLanguageManager = lazy(() => import("@/pages/admin/LanguageManager"));
-const AdminWebhooks = lazy(() => import("@/pages/admin/Webhooks"));
-const AdminImageOptimizer = lazy(() => import("@/pages/admin/ImageOptimizer"));
-const AdminPageBuilder = lazy(() => import("@/pages/admin/PageBuilder"));
-const AdminAPIDocs = lazy(() => import("@/pages/admin/APIDocs"));
-const AdminScheduler = lazy(() => import("@/pages/admin/Scheduler"));
+// Admin Dashboard
+const AdminDashboard = lazy(() => import("@/pages/admin/dashboard/Dashboard"));
+const AdminAnalytics = lazy(() => import("@/pages/admin/dashboard/Analytics"));
+
+// Admin Content - Posts
+const AdminPostsEnhanced = lazy(() => import("@/pages/admin/content/posts/PostsEnhanced"));
+const AdminPostCategories = lazy(() => import("@/pages/admin/content/posts/PostCategories"));
+
+// Admin Content - Projects
+const AdminProjectsEnhanced = lazy(() => import("@/pages/admin/content/projects/ProjectsEnhanced"));
+const AdminProjectCategories = lazy(() => import("@/pages/admin/content/projects/ProjectCategories"));
+
+// Admin Content - Services
+const AdminServicesEnhanced = lazy(() => import("@/pages/admin/content/services/ServicesEnhanced"));
+
+// Admin Content - Skills
+const AdminSkills = lazy(() => import("@/pages/admin/content/skills/Skills"));
+
+// Admin Content - Testimonials
+const AdminTestimonials = lazy(() => import("@/pages/admin/content/testimonials/Testimonials"));
+
+// Admin Communications
+const AdminComments = lazy(() => import("@/pages/admin/communications/Comments"));
+const AdminInbox = lazy(() => import("@/pages/admin/communications/Inbox"));
+const AdminNotifications = lazy(() => import("@/pages/admin/communications/Notifications"));
+const AdminNewsletter = lazy(() => import("@/pages/admin/communications/Newsletter"));
+const AdminEmailTemplates = lazy(() => import("@/pages/admin/communications/EmailTemplates"));
+
+// Admin Settings
+const AdminSettingsEnhanced = lazy(() => import("@/pages/admin/settings/SettingsEnhanced"));
+const AdminThemeEnhanced = lazy(() => import("@/pages/admin/settings/ThemeEnhanced"));
+const AdminLanguageManager = lazy(() => import("@/pages/admin/settings/LanguageManager"));
+
+// Admin Security
+const AdminSecurityEnhanced = lazy(() => import("@/pages/admin/security/SecurityEnhanced"));
+const AdminWebhooks = lazy(() => import("@/pages/admin/security/Webhooks"));
+
+// Admin System
+const AdminSystem = lazy(() => import("@/pages/admin/system/System"));
+const AdminActivityLog = lazy(() => import("@/pages/admin/system/ActivityLog"));
+const AdminExportImport = lazy(() => import("@/pages/admin/system/ExportImport"));
+const AdminCache = lazy(() => import("@/pages/admin/system/Cache"));
+const AdminAPIDocs = lazy(() => import("@/pages/admin/system/APIDocs"));
+const AdminLogs = lazy(() => import("@/pages/admin/system/Logs"));
+
+// Admin Tools
+const AdminTools = lazy(() => import("@/pages/admin/tools/Tools"));
+const AdminMedia = lazy(() => import("@/pages/admin/tools/Media"));
+const AdminImageOptimizer = lazy(() => import("@/pages/admin/tools/ImageOptimizer"));
+const AdminScheduler = lazy(() => import("@/pages/admin/tools/Scheduler"));
+const AdminFileManager = lazy(() => import("@/pages/admin/tools/FileManager"));
+
+// Admin Pages
+const AdminPages = lazy(() => import("@/pages/admin/pages/Pages"));
+const AdminPageBuilder = lazy(() => import("@/pages/admin/pages/PageBuilder"));
+const AdminFAQs = lazy(() => import("@/pages/admin/pages/FAQs"));
+const AdminEditor = lazy(() => import("@/pages/admin/pages/Editor"));
+
+// Admin Users
+const AdminProfile = lazy(() => import("@/pages/admin/users/Profile"));
+const AdminUsers = lazy(() => import("@/pages/admin/users/Users"));
+const AdminRoles = lazy(() => import("@/pages/admin/users/Roles"));
 
 // Loading fallback component
 function PageLoader() {
