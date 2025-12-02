@@ -5,7 +5,13 @@ import type { Message, Comment, Review } from "@shared/schema";
 let wss: WebSocketServer | null = null;
 
 export function setupWebSocket(server: Server) {
-  wss = new WebSocketServer({ server, path: "/ws" });
+  // Use the same port as the HTTP server, no separate port needed
+  wss = new WebSocketServer({ 
+    server, 
+    path: "/ws",
+    perMessageDeflate: false,
+    clientTracking: true
+  });
 
   wss.on("connection", (ws: WebSocket) => {
     ws.on("close", (code: number, reason: Buffer) => {

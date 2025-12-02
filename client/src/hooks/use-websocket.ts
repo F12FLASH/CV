@@ -31,6 +31,12 @@ export function useWebSocket() {
     const wsUrl = `${protocol}//${window.location.host}/ws`;
 
     try {
+      // Close existing connection if any
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {

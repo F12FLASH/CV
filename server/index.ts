@@ -24,6 +24,8 @@ app.use("/uploads", express.static(uploadsDir, {
   etag: true,
 }));
 const PgSession = connectPgSimple(session);
+
+// Create HTTP server without specifying WebSocket port - let it use the same port
 const httpServer = createServer(app);
 
 declare module "http" {
@@ -140,11 +142,15 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
+  
+  // Close any existing listeners before starting
+  httpServer.closeAllConnections?.();
+  
   httpServer.listen(
     {
       port,
       host: "0.0.0.0",
-      reusePort: true,
+      reusePort: false,
     },
     () => {
       log(`serving on port ${port}`);
