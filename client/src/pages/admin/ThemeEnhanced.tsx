@@ -751,41 +751,41 @@ export default function AdminThemeEnhanced() {
           </TabsContent>
 
           <TabsContent value="preview" className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <div>
                 <h3 className="font-medium">Live Preview</h3>
                 <p className="text-sm text-muted-foreground">Changes are applied in real-time</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   variant={previewMode === "desktop" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setPreviewMode("desktop")}
                   data-testid="button-preview-desktop"
-                  className="gap-2"
+                  className="gap-2 flex-1 sm:flex-initial"
                 >
                   <Monitor className="w-4 h-4" />
-                  <span className="hidden sm:inline">Desktop</span>
+                  <span>Desktop</span>
                 </Button>
                 <Button
                   variant={previewMode === "tablet" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setPreviewMode("tablet")}
                   data-testid="button-preview-tablet"
-                  className="gap-2"
+                  className="gap-2 flex-1 sm:flex-initial"
                 >
                   <Tablet className="w-4 h-4" />
-                  <span className="hidden sm:inline">Tablet</span>
+                  <span>Tablet</span>
                 </Button>
                 <Button
                   variant={previewMode === "mobile" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setPreviewMode("mobile")}
                   data-testid="button-preview-mobile"
-                  className="gap-2"
+                  className="gap-2 flex-1 sm:flex-initial"
                 >
                   <Smartphone className="w-4 h-4" />
-                  <span className="hidden sm:inline">Mobile</span>
+                  <span>Mobile</span>
                 </Button>
               </div>
             </div>
