@@ -42,6 +42,8 @@ import {
   Server,
   X,
   ImageIcon,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { SettingsPerformance } from "./SettingsPerformance";
@@ -56,6 +58,7 @@ export default function AdminSettingsEnhanced() {
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [profileImageUploading, setProfileImageUploading] = useState(false);
   const [cvFileUploading, setCVFileUploading] = useState(false);
+  const [showSmtpPassword, setShowSmtpPassword] = useState(false);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const cvFileInputRef = useRef<HTMLInputElement>(null);
   const { settings, updateSettings, saveSettings, isSaving } =
@@ -1028,15 +1031,29 @@ export default function AdminSettingsEnhanced() {
                 </div>
                 <div className="space-y-2">
                   <Label>SMTP Password</Label>
-                  <Input
-                    type="password"
-                    placeholder="••••••••"
-                    value={settings.smtpPassword || ""}
-                    onChange={(e) =>
-                      updateSettings({ smtpPassword: e.target.value })
-                    }
-                    data-testid="input-smtp-password"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      type={showSmtpPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={settings.smtpPassword || ""}
+                      onChange={(e) =>
+                        updateSettings({ smtpPassword: e.target.value })
+                      }
+                      data-testid="input-smtp-password"
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setShowSmtpPassword(!showSmtpPassword)}
+                      data-testid="button-toggle-smtp-password"
+                    >
+                      {showSmtpPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
