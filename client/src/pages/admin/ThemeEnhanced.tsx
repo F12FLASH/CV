@@ -745,31 +745,40 @@ export default function AdminThemeEnhanced() {
 
           <TabsContent value="preview" className="space-y-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">Live Preview</h3>
+              <div>
+                <h3 className="font-medium">Live Preview</h3>
+                <p className="text-sm text-muted-foreground">Changes are applied in real-time</p>
+              </div>
               <div className="flex gap-2">
                 <Button
                   variant={previewMode === "desktop" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setPreviewMode("desktop")}
                   data-testid="button-preview-desktop"
+                  className="gap-2"
                 >
                   <Monitor className="w-4 h-4" />
+                  <span className="hidden sm:inline">Desktop</span>
                 </Button>
                 <Button
                   variant={previewMode === "tablet" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setPreviewMode("tablet")}
                   data-testid="button-preview-tablet"
+                  className="gap-2"
                 >
                   <Tablet className="w-4 h-4" />
+                  <span className="hidden sm:inline">Tablet</span>
                 </Button>
                 <Button
                   variant={previewMode === "mobile" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setPreviewMode("mobile")}
                   data-testid="button-preview-mobile"
+                  className="gap-2"
                 >
                   <Smartphone className="w-4 h-4" />
+                  <span className="hidden sm:inline">Mobile</span>
                 </Button>
               </div>
             </div>
