@@ -853,6 +853,7 @@ export class DatabaseStorage implements IStorage {
         status: "Healthy",
       };
     } catch (error) {
+      console.error("Error getting system stats:", error);
       return {
         databaseSize: "Unknown",
         tableStats: [],
@@ -902,7 +903,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTrustedDevicesByUser(userId: number): Promise<TrustedDevice[]> {
-    return await this.db.select().from(trustedDevices).where(eq(trustedDevices.userId, userId)).orderBy(desc(trustedDevices.lastUsed));
+    return this.db.select().from(trustedDevices).where(eq(trustedDevices.userId, userId)).orderBy(desc(trustedDevices.lastUsed));
   }
 
   async createTrustedDevice(device: InsertTrustedDevice): Promise<TrustedDevice> {

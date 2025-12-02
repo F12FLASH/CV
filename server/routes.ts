@@ -2558,6 +2558,123 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/security/devices/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteTrustedDevice(parseInt(req.params.id));
+      res.json({ message: "Device removed" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // User Sessions
+  app.get("/api/security/sessions", requireAuth, async (req, res) => {
+    try {
+      const sessions = await storage.getUserSessions(req.session.userId!);
+      res.json(sessions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/security/sessions/terminate/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.terminateSession(parseInt(req.params.id));
+      res.json({ message: "Session terminated" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/security/sessions/terminate-all", requireAuth, async (req, res) => {
+    try {
+      await storage.terminateAllSessions(req.session.userId!);
+      res.json({ message: "All sessions terminated" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/security/sessions/logout-all-devices", requireAuth, async (req, res) => {
+    try {
+      await storage.logoutAllDevices(req.session.userId!);
+      res.json({ message: "Logged out from all devices" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // IP Rules
+  app.get("/api/security/ip-rules", requireAdmin, async (req, res) => {
+    try {
+      const rules = await storage.getIpRules();
+      res.json(rules);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/security/ip-rules", requireAdmin, async (req, res) => {
+    try {
+      const { ipAddress, type } = req.body;
+      const rule = await storage.createIpRule({ ipAddress, type, createdBy: req.session.userId });
+      await storage.createActivityLog({
+        action: `IP ${type} rule added: ${ipAddress}`,
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "warning"
+      });
+      res.json(rule);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/security/ip-rules/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteIpRule(parseInt(req.params.id));
+      res.json({ message: "IP rule removed" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Security Stats
+  app.get("/api/security/stats", requireAdmin, async (req, res) => {
+    try {
+      const logs = await storage.getSecurityLogs();
+      const totalBlocked = logs.filter(l => l.blocked).length;
+      const totalAllowed = logs.filter(l => !l.blocked).length;
+      const byEventType = logs.reduce((acc: any[], log) => {
+        const existing = acc.find(e => e.type === log.eventType);
+        if (existing) {
+          existing.count++;
+        } else {
+          acc.push({ type: log.eventType || 'unknown', count: 1 });
+        }
+        return acc;
+      }, []);
+      res.json({ totalBlocked, totalAllowed, byEventType });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Login History
+  app.get("/api/security/login-history", requireAuth, async (req, res) => {
+    try {
+      const logs = await storage.getSecurityLogs();
+      const loginLogs = logs.filter(l => 
+        l.eventType?.includes('login') || 
+        l.eventType?.includes('2fa') ||
+        l.action?.toLowerCase().includes('login')
+      ).slice(0, 50);
+      res.json(loginLogs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.patch("/api/security/devices/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
