@@ -109,7 +109,7 @@ export const services = pgTable("services", {
   icon: text("icon"),
   features: jsonb("features").$type<string[]>().default([]),
   price: text("price"),
-  order: integer("order").notNull().default(true),
+  order: integer("order").notNull().default(0),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

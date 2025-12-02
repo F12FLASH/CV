@@ -632,6 +632,34 @@ export const api = {
     return handleResponse<any>(res);
   },
 
+  // ==================== MEDIA API ====================
+  
+  createMedia: async (data: { filename: string; originalName: string; mimeType: string; size: number; url: string; alt?: string }) => {
+    const res = await fetch(`${API_BASE}/media`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return handleResponse<any>(res);
+  },
+
+  deleteMedia: async (id: number) => {
+    const res = await fetch(`${API_BASE}/media/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    return handleResponse<any>(res);
+  },
+
+  syncMedia: async () => {
+    const res = await fetch(`${API_BASE}/media/sync`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    return handleResponse<{ synced: any[]; skipped: string[] }>(res);
+  },
+
   // ==================== CATEGORIES API ====================
   
   getCategories: async (type?: string) => {

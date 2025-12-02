@@ -1537,13 +1537,74 @@ export async function registerRoutes(
 
       // Generate unique filename
       const timestamp = Date.now();
-      const name = filename || `upload-${timestamp}`;
-      const imagePath = `/uploads/${name}`;
+      const originalName = filename || `upload-${timestamp}.png`;
+      const safeFilename = originalName.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const uniqueFilename = `${timestamp}-${safeFilename}`;
 
-      // In production, you would save to cloud storage
-      // For now, we'll return the data URL directly
-      res.json({ url: image, path: imagePath });
+      // Ensure uploads/images directory exists
+      const uploadsDir = path.join(process.cwd(), "uploads", "images");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      // Check if image is base64 data URL
+      if (image.startsWith("data:")) {
+        const matches = image.match(/^data:([^;]+);base64,(.+)$/);
+        if (!matches) {
+          return res.status(400).json({ message: "Invalid base64 image format" });
+        }
+
+        const mimeType = matches[1];
+        const base64Data = matches[2];
+        const buffer = Buffer.from(base64Data, "base64");
+
+        // Determine file extension from mime type
+        let ext = ".png";
+        if (mimeType === "image/jpeg" || mimeType === "image/jpg") ext = ".jpg";
+        else if (mimeType === "image/gif") ext = ".gif";
+        else if (mimeType === "image/webp") ext = ".webp";
+        else if (mimeType === "image/svg+xml") ext = ".svg";
+
+        // Add extension if not present
+        const finalFilename = uniqueFilename.includes('.') ? uniqueFilename : `${uniqueFilename}${ext}`;
+        const filePath = path.join(uploadsDir, finalFilename);
+
+        // Security check: ensure path is within uploads directory
+        const resolvedPath = path.resolve(filePath);
+        const resolvedUploadsDir = path.resolve(uploadsDir);
+        if (!resolvedPath.startsWith(resolvedUploadsDir)) {
+          return res.status(400).json({ message: "Invalid file path" });
+        }
+
+        // Save file to disk
+        fs.writeFileSync(filePath, buffer);
+
+        const savedUrl = `/uploads/images/${finalFilename}`;
+
+        // Also save to media database
+        try {
+          await storage.createMedia({
+            filename: finalFilename,
+            originalName: originalName,
+            mimeType: mimeType,
+            size: buffer.length,
+            url: savedUrl,
+            alt: null,
+          });
+        } catch (dbError) {
+          console.error("Failed to save media to database:", dbError);
+          // Continue anyway - file is saved
+        }
+
+        res.json({ url: savedUrl, path: savedUrl });
+      } else if (image.startsWith("http://") || image.startsWith("https://")) {
+        // External URL - just return it
+        res.json({ url: image, path: image });
+      } else {
+        return res.status(400).json({ message: "Invalid image format. Must be base64 data URL or HTTP URL" });
+      }
     } catch (error: any) {
+      console.error("Upload image error:", error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -2678,7 +2739,7 @@ export async function registerRoutes(
   // User Sessions
   app.get("/api/security/sessions", requireAuth, async (req, res) => {
     try {
-      const sessions = await storage.getUserSessions(req.session.userId!);
+      const sessions = await storage.getActiveSessionsByUser(req.session.userId!);
       res.json(sessions);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -2696,7 +2757,7 @@ export async function registerRoutes(
 
   app.post("/api/security/sessions/terminate-all", requireAuth, async (req, res) => {
     try {
-      await storage.terminateAllSessions(req.session.userId!);
+      await storage.terminateAllUserSessions(req.session.userId!);
       res.json({ message: "All sessions terminated" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -2705,7 +2766,12 @@ export async function registerRoutes(
 
   app.post("/api/security/sessions/logout-all-devices", requireAuth, async (req, res) => {
     try {
-      await storage.logoutAllDevices(req.session.userId!);
+      // Terminate all sessions and remove all trusted devices
+      await storage.terminateAllUserSessions(req.session.userId!);
+      const devices = await storage.getTrustedDevicesByUser(req.session.userId!);
+      for (const device of devices) {
+        await storage.deleteTrustedDevice(device.id);
+      }
       res.json({ message: "Logged out from all devices" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -2715,7 +2781,7 @@ export async function registerRoutes(
   // IP Rules
   app.get("/api/security/ip-rules", requireAdmin, async (req, res) => {
     try {
-      const rules = await storage.getIpRules();
+      const rules = await storage.getAllIpRules();
       res.json(rules);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
