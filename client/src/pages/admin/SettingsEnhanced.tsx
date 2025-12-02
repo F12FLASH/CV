@@ -44,6 +44,7 @@ import {
   ImageIcon,
   Eye,
   EyeOff,
+  Loader2,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { SettingsPerformance } from "./SettingsPerformance";
@@ -183,10 +184,20 @@ export default function AdminSettingsEnhanced() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
     if (!file.type.startsWith("image/")) {
       toast({
         title: "Error",
         description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast({
+        title: "Error",
+        description: `File size exceeds 5MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`,
         variant: "destructive",
       });
       return;
@@ -198,7 +209,7 @@ export default function AdminSettingsEnhanced() {
       reader.onload = async (event) => {
         const base64 = event.target?.result as string;
         updateSettings({ aboutImage: base64 });
-        toast({ title: "Success", description: "Image uploaded successfully" });
+        toast({ title: "Success", description: `Image uploaded successfully (${(file.size / 1024).toFixed(2)}KB)` });
       };
       reader.readAsDataURL(file);
     } catch (error) {
@@ -216,10 +227,20 @@ export default function AdminSettingsEnhanced() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
     if (file.type !== "application/pdf") {
       toast({
         title: "Error",
         description: "Please select a PDF file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > MAX_PDF_SIZE) {
+      toast({
+        title: "Error",
+        description: `File size exceeds 10MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`,
         variant: "destructive",
       });
       return;
@@ -233,7 +254,7 @@ export default function AdminSettingsEnhanced() {
         updateSettings({ cvFileUrl: base64 });
         toast({
           title: "Success",
-          description: "CV file uploaded successfully",
+          description: `CV file uploaded successfully (${(file.size / 1024).toFixed(2)}KB)`,
         });
       };
       reader.readAsDataURL(file);
@@ -281,26 +302,37 @@ export default function AdminSettingsEnhanced() {
             onClick={handleSave}
             disabled={isSaving}
           >
-            <Save className="w-4 h-4 mr-2" />{" "}
-            {isSaving ? "Saving..." : "Save Changes"}
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            )}
           </Button>
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="flex flex-wrap gap-1 h-auto p-1">
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="branding">Branding</TabsTrigger>
-            <TabsTrigger value="seo">SEO</TabsTrigger>
-            <TabsTrigger value="email">Email</TabsTrigger>
-            <TabsTrigger value="storage">Storage</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="integrations">Integrations</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="developer">Developer</TabsTrigger>
-            <TabsTrigger value="localization">Localization</TabsTrigger>
-            <TabsTrigger value="database">Database</TabsTrigger>
-            <TabsTrigger value="logging">Logging</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto">
+            <TabsList className="inline-flex gap-1 h-auto p-1 min-w-full">
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="branding">Branding</TabsTrigger>
+              <TabsTrigger value="seo">SEO</TabsTrigger>
+              <TabsTrigger value="email">Email</TabsTrigger>
+              <TabsTrigger value="storage">Storage</TabsTrigger>
+              <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="integrations">Integrations</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              <TabsTrigger value="developer">Developer</TabsTrigger>
+              <TabsTrigger value="localization">Localization</TabsTrigger>
+              <TabsTrigger value="database">Database</TabsTrigger>
+              <TabsTrigger value="logging">Logging</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* GENERAL TAB */}
           <TabsContent value="general" className="space-y-4">
