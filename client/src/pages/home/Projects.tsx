@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { ReviewSection } from "@/components/ReviewSection";
+import { ReviewSection } from "@/components/sections/ReviewSection";
 import { useState, useMemo } from "react";
 
 export default function Projects() {

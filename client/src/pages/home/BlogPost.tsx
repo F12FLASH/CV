@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { CommentSection } from "@/components/CommentSection";
+import { CommentSection } from "@/components/sections/CommentSection";
 
 export default function BlogPost() {
   const [match, params] = useRoute("/blog/:slug");

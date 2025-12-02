@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMockData } from "@/context/MockContext";
 import { api } from "@/lib/api";
-import { ReviewSection } from "@/components/ReviewSection";
+import { ReviewSection } from "@/components/sections/ReviewSection";
 
 const useSafeMockData = () => {
   try {
