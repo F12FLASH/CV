@@ -5,13 +5,43 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Save, Upload, Mail, Database, Zap, Key, Plug, Bell, Webhook, Code2, 
-  FileText, AlertCircle, CheckCircle, Clock, Globe, DollarSign, Hash, Languages,
-  HardDrive, RefreshCw, Download, Trash2, Terminal, Bug, Gauge, Server, X, ImageIcon
+import {
+  Save,
+  Upload,
+  Mail,
+  Database,
+  Zap,
+  Key,
+  Plug,
+  Bell,
+  Code2,
+  FileText,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Globe,
+  DollarSign,
+  Hash,
+  Languages,
+  HardDrive,
+  RefreshCw,
+  Download,
+  Trash2,
+  Terminal,
+  Bug,
+  Gauge,
+  Server,
+  X,
+  ImageIcon,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { SettingsPerformance } from "./SettingsPerformance";
@@ -26,15 +56,22 @@ export default function AdminSettingsEnhanced() {
   const [cvFileUploading, setCVFileUploading] = useState(false);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const cvFileInputRef = useRef<HTMLInputElement>(null);
-  const { settings, updateSettings, saveSettings, isSaving } = useSiteSettings();
+  const { settings, updateSettings, saveSettings, isSaving } =
+    useSiteSettings();
   const { toast } = useToast();
 
-  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast({ title: "Error", description: "Please select an image file", variant: "destructive" });
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Error",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -48,7 +85,11 @@ export default function AdminSettingsEnhanced() {
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
     } finally {
       setProfileImageUploading(false);
     }
@@ -58,8 +99,12 @@ export default function AdminSettingsEnhanced() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.type !== 'application/pdf') {
-      toast({ title: "Error", description: "Please select a PDF file", variant: "destructive" });
+    if (file.type !== "application/pdf") {
+      toast({
+        title: "Error",
+        description: "Please select a PDF file",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -69,11 +114,18 @@ export default function AdminSettingsEnhanced() {
       reader.onload = async (event) => {
         const base64 = event.target?.result as string;
         updateSettings({ cvFileUrl: base64 });
-        toast({ title: "Success", description: "CV file uploaded successfully" });
+        toast({
+          title: "Success",
+          description: "CV file uploaded successfully",
+        });
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      toast({ title: "Error", description: "Failed to upload CV file", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to upload CV file",
+        variant: "destructive",
+      });
     } finally {
       setCVFileUploading(false);
     }
@@ -90,14 +142,17 @@ export default function AdminSettingsEnhanced() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-heading font-bold">Settings</h1>
-            <p className="text-muted-foreground">Manage your website configuration</p>
+            <p className="text-muted-foreground">
+              Manage your website configuration
+            </p>
           </div>
-          <Button 
-            className="bg-primary hover:bg-primary/90" 
+          <Button
+            className="bg-primary hover:bg-primary/90"
             onClick={handleSave}
             disabled={isSaving}
           >
-            <Save className="w-4 h-4 mr-2" /> {isSaving ? "Saving..." : "Save Changes"}
+            <Save className="w-4 h-4 mr-2" />{" "}
+            {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
 
@@ -111,7 +166,6 @@ export default function AdminSettingsEnhanced() {
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
             <TabsTrigger value="developer">Developer</TabsTrigger>
             <TabsTrigger value="localization">Localization</TabsTrigger>
             <TabsTrigger value="database">Database</TabsTrigger>
@@ -123,102 +177,64 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>Site Information</CardTitle>
-                <CardDescription>Basic information about your portfolio website.</CardDescription>
+                <CardDescription>
+                  Basic information about your portfolio website.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Site Title (Homepage & Admin)</Label>
-                  <Input 
-                    value={settings.siteTitle} 
-                    onChange={(e) => updateSettings({ siteTitle: e.target.value })}
+                  <Input
+                    value={settings.siteTitle}
+                    onChange={(e) =>
+                      updateSettings({ siteTitle: e.target.value })
+                    }
                     placeholder="e.g., Loi Developer - Full-stack Creative"
                     data-testid="input-site-title"
                   />
-                  <p className="text-xs text-muted-foreground">Appears in browser tab and header</p>
+                  <p className="text-xs text-muted-foreground">
+                    Appears in browser tab and header
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Tagline</Label>
-                  <Input 
+                  <Input
                     value={settings.tagline}
-                    onChange={(e) => updateSettings({ tagline: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ tagline: e.target.value })
+                    }
                     placeholder="e.g., Building digital experiences with code."
                     data-testid="input-tagline"
                   />
                 </div>
-                <Separator />
-                <div className="flex items-center justify-between pt-2">
-                  <div className="space-y-0.5">
-                    <Label className="text-base">Maintenance Mode</Label>
-                    <p className="text-xs text-muted-foreground">Show maintenance page to all visitors</p>
-                  </div>
-                  <Switch
-                    checked={settings.maintenanceMode || false}
-                    onCheckedChange={(checked) => updateSettings({ maintenanceMode: checked })}
-                    data-testid="switch-maintenance-mode"
-                  />
-                </div>
               </CardContent>
             </Card>
-
-            {settings.maintenanceMode && (
-              <Card className="border-yellow-500/20 bg-yellow-500/5">
-                <CardHeader>
-                  <CardTitle>Maintenance Mode Settings</CardTitle>
-                  <CardDescription>Configure the message shown to visitors during maintenance</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Maintenance Title</Label>
-                    <Input 
-                      value={settings.maintenanceTitle || "Under Maintenance"}
-                      onChange={(e) => updateSettings({ maintenanceTitle: e.target.value })}
-                      placeholder="e.g., Under Maintenance"
-                      data-testid="input-maintenance-title"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Maintenance Message</Label>
-                    <Textarea 
-                      value={settings.maintenanceMessage || "We're performing scheduled maintenance. Please check back soon."}
-                      onChange={(e) => updateSettings({ maintenanceMessage: e.target.value })}
-                      placeholder="Enter maintenance message..."
-                      rows={3}
-                      data-testid="input-maintenance-message"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Estimated Time</Label>
-                    <Input 
-                      value={settings.maintenanceEstimate || "We expect to be back online shortly."}
-                      onChange={(e) => updateSettings({ maintenanceEstimate: e.target.value })}
-                      placeholder="e.g., We expect to be back online shortly."
-                      data-testid="input-maintenance-estimate"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             <Card>
               <CardHeader>
                 <CardTitle>Hero Section</CardTitle>
-                <CardDescription>Main heading and call-to-action on homepage.</CardDescription>
+                <CardDescription>
+                  Main heading and call-to-action on homepage.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Hero Title</Label>
-                  <Input 
+                  <Input
                     value={settings.heroTitle}
-                    onChange={(e) => updateSettings({ heroTitle: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ heroTitle: e.target.value })
+                    }
                     placeholder="e.g., Hello, I'm Loi Developer"
                     data-testid="input-hero-title"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Hero Subtitle</Label>
-                  <Textarea 
+                  <Textarea
                     value={settings.heroSubtitle}
-                    onChange={(e) => updateSettings({ heroSubtitle: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ heroSubtitle: e.target.value })
+                    }
                     placeholder="e.g., Full-stack Developer | UI/UX Enthusiast"
                     rows={2}
                     data-testid="input-hero-subtitle"
@@ -226,23 +242,34 @@ export default function AdminSettingsEnhanced() {
                 </div>
                 <div className="space-y-2">
                   <Label>View Projects CTA Button Text</Label>
-                  <Input 
+                  <Input
                     value={settings.heroCTA}
-                    onChange={(e) => updateSettings({ heroCTA: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ heroCTA: e.target.value })
+                    }
                     placeholder="e.g., View My Work"
                     data-testid="input-hero-cta"
                   />
                 </div>
                 <Separator />
                 <div className="space-y-3">
-                  <Label className="text-base font-semibold">CV File Management</Label>
-                  <p className="text-sm text-muted-foreground">Upload a PDF or paste a link for your CV Download button</p>
+                  <Label className="text-base font-semibold">
+                    CV File Management
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Upload a PDF or paste a link for your CV Download button
+                  </p>
                   {settings.cvFileUrl && (
                     <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/50">
                       <div className="flex items-center gap-2 min-w-0">
                         <FileText className="w-4 h-4 flex-shrink-0 text-primary" />
-                        <span className="text-sm font-medium truncate" data-testid="text-cv-file-name">
-                          {settings.cvFileUrl.startsWith("data:") ? "CV.pdf" : settings.cvFileUrl.split("/").pop() || "CV file"}
+                        <span
+                          className="text-sm font-medium truncate"
+                          data-testid="text-cv-file-name"
+                        >
+                          {settings.cvFileUrl.startsWith("data:")
+                            ? "CV.pdf"
+                            : settings.cvFileUrl.split("/").pop() || "CV file"}
                         </span>
                       </div>
                       <Button
@@ -258,23 +285,28 @@ export default function AdminSettingsEnhanced() {
                   {!settings.cvFileUrl && (
                     <div className="border-2 border-dashed rounded-lg p-4 text-center hover:bg-muted/50 transition-colors">
                       <FileText className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground mb-3">No CV uploaded</p>
-                      <p className="text-xs text-muted-foreground mb-2">Upload from device or paste a PDF link</p>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        No CV uploaded
+                      </p>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Upload from device or paste a PDF link
+                      </p>
                     </div>
                   )}
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="flex-1"
                       onClick={() => cvFileInputRef.current?.click()}
                       disabled={cvFileUploading}
                       data-testid="button-upload-cv"
                     >
-                      <Upload className="w-4 h-4 mr-2" /> {cvFileUploading ? "Uploading..." : "Upload PDF"}
+                      <Upload className="w-4 h-4 mr-2" />{" "}
+                      {cvFileUploading ? "Uploading..." : "Upload PDF"}
                     </Button>
-                    <input 
+                    <input
                       ref={cvFileInputRef}
-                      type="file" 
+                      type="file"
                       accept=".pdf,application/pdf"
                       onChange={handleCVFileUpload}
                       className="hidden"
@@ -283,13 +315,17 @@ export default function AdminSettingsEnhanced() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm">Or Paste PDF URL</Label>
-                    <Input 
+                    <Input
                       value={settings.cvFileUrl}
-                      onChange={(e) => updateSettings({ cvFileUrl: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ cvFileUrl: e.target.value })
+                      }
                       placeholder="e.g., https://example.com/CV.pdf or /uploads/CV.pdf"
                       data-testid="input-cv-file-url"
                     />
-                    <p className="text-xs text-muted-foreground">Paste a direct link to your CV PDF file</p>
+                    <p className="text-xs text-muted-foreground">
+                      Paste a direct link to your CV PDF file
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -298,14 +334,19 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>About Me Section</CardTitle>
-                <CardDescription>Complete information about yourself with professional formatting.</CardDescription>
+                <CardDescription>
+                  Complete information about yourself with professional
+                  formatting.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Section Title</Label>
-                  <Input 
+                  <Input
                     value={settings.aboutTitle}
-                    onChange={(e) => updateSettings({ aboutTitle: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ aboutTitle: e.target.value })
+                    }
                     placeholder="e.g., About Me"
                     data-testid="input-about-title"
                   />
@@ -316,9 +357,9 @@ export default function AdminSettingsEnhanced() {
                   <div className="flex flex-col gap-3">
                     {settings.aboutImage && (
                       <div className="relative w-full max-w-xs">
-                        <img 
-                          src={settings.aboutImage} 
-                          alt="Profile preview" 
+                        <img
+                          src={settings.aboutImage}
+                          alt="Profile preview"
                           className="w-full h-64 object-cover rounded-lg border border-border"
                         />
                         <Button
@@ -335,7 +376,9 @@ export default function AdminSettingsEnhanced() {
                     {!settings.aboutImage && (
                       <div className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-muted/50 transition-colors">
                         <ImageIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground mb-3">No image selected</p>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          No image selected
+                        </p>
                       </div>
                     )}
                   </div>
@@ -361,21 +404,27 @@ export default function AdminSettingsEnhanced() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm">Or paste image URL</Label>
-                    <Input 
+                    <Input
                       value={settings.aboutImage}
-                      onChange={(e) => updateSettings({ aboutImage: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ aboutImage: e.target.value })
+                      }
                       placeholder="e.g., https://example.com/image.jpg or /uploads/profile.jpg"
                       data-testid="input-about-image-url"
                     />
-                    <p className="text-xs text-muted-foreground">Supports any image format (JPG, PNG, GIF, WebP, etc.)</p>
+                    <p className="text-xs text-muted-foreground">
+                      Supports any image format (JPG, PNG, GIF, WebP, etc.)
+                    </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Your Name</Label>
-                  <Input 
+                  <Input
                     value={settings.aboutName}
-                    onChange={(e) => updateSettings({ aboutName: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ aboutName: e.target.value })
+                    }
                     placeholder="e.g., Nguyen Thanh Loi"
                     data-testid="input-about-name"
                   />
@@ -384,18 +433,22 @@ export default function AdminSettingsEnhanced() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>From (Location)</Label>
-                    <Input 
+                    <Input
                       value={settings.aboutLocation}
-                      onChange={(e) => updateSettings({ aboutLocation: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ aboutLocation: e.target.value })
+                      }
                       placeholder="e.g., Ho Chi Minh City"
                       data-testid="input-about-location"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Freelance Status</Label>
-                    <Input 
+                    <Input
                       value={settings.aboutFreelance}
-                      onChange={(e) => updateSettings({ aboutFreelance: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ aboutFreelance: e.target.value })
+                      }
                       placeholder="e.g., Available"
                       data-testid="input-about-freelance"
                     />
@@ -404,9 +457,11 @@ export default function AdminSettingsEnhanced() {
 
                 <div className="space-y-2">
                   <Label>Subtitle</Label>
-                  <Input 
+                  <Input
                     value={settings.aboutSubtitle}
-                    onChange={(e) => updateSettings({ aboutSubtitle: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ aboutSubtitle: e.target.value })
+                    }
                     placeholder="e.g., Full-stack Developer based in Vietnam"
                     data-testid="input-about-subtitle"
                   />
@@ -414,47 +469,62 @@ export default function AdminSettingsEnhanced() {
 
                 <div className="space-y-2">
                   <Label>First Paragraph (Description)</Label>
-                  <p className="text-sm text-muted-foreground">Use the rich text editor to format your content with headings, lists, links, and more.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Use the rich text editor to format your content with
+                    headings, lists, links, and more.
+                  </p>
                   <RichTextEditor
                     value={settings.aboutDescription}
-                    onChange={(value) => updateSettings({ aboutDescription: value })}
+                    onChange={(value) =>
+                      updateSettings({ aboutDescription: value })
+                    }
                     placeholder="Write your first paragraph about yourself..."
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Second Paragraph (Philosophy/Additional Info)</Label>
-                  <p className="text-sm text-muted-foreground">Add your philosophy or additional information in the second paragraph.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Add your philosophy or additional information in the second
+                    paragraph.
+                  </p>
                   <RichTextEditor
                     value={settings.aboutDescription2}
-                    onChange={(value) => updateSettings({ aboutDescription2: value })}
+                    onChange={(value) =>
+                      updateSettings({ aboutDescription2: value })
+                    }
                     placeholder="Write your philosophy or additional information..."
                   />
                 </div>
-
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle>Contact Section</CardTitle>
-                <CardDescription>Contact form and information display.</CardDescription>
+                <CardDescription>
+                  Contact form and information display.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Section Title</Label>
-                  <Input 
+                  <Input
                     value={settings.contactTitle}
-                    onChange={(e) => updateSettings({ contactTitle: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ contactTitle: e.target.value })
+                    }
                     placeholder="e.g., Let's Talk"
                     data-testid="input-contact-title"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Section Subtitle</Label>
-                  <Textarea 
+                  <Textarea
                     value={settings.contactSubtitle}
-                    onChange={(e) => updateSettings({ contactSubtitle: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ contactSubtitle: e.target.value })
+                    }
                     placeholder="e.g., Have a project in mind?"
                     rows={2}
                     data-testid="input-contact-subtitle"
@@ -462,31 +532,39 @@ export default function AdminSettingsEnhanced() {
                 </div>
                 <div className="space-y-2">
                   <Label>Contact Email</Label>
-                  <Input 
-                    type="email" 
+                  <Input
+                    type="email"
                     value={settings.contactEmail}
-                    onChange={(e) => updateSettings({ contactEmail: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ contactEmail: e.target.value })
+                    }
                     placeholder="e.g., hello@example.com"
                     data-testid="input-contact-email"
                   />
-                  <p className="text-xs text-muted-foreground">This email is used in both About and Contact sections</p>
+                  <p className="text-xs text-muted-foreground">
+                    This email is used in both About and Contact sections
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Phone Number</Label>
-                    <Input 
+                    <Input
                       value={settings.contactPhone}
-                      onChange={(e) => updateSettings({ contactPhone: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ contactPhone: e.target.value })
+                      }
                       placeholder="e.g., +84 123 456 789"
                       data-testid="input-contact-phone"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Address</Label>
-                    <Input 
+                    <Input
                       value={settings.contactAddress}
-                      onChange={(e) => updateSettings({ contactAddress: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ contactAddress: e.target.value })
+                      }
                       placeholder="e.g., Ho Chi Minh City, Vietnam"
                       data-testid="input-contact-address"
                     />
@@ -498,59 +576,73 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>Social Media Links (Follow Me)</CardTitle>
-                <CardDescription>Add your social media profiles.</CardDescription>
+                <CardDescription>
+                  Add your social media profiles.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2">
                   <Label>Facebook URL</Label>
-                  <Input 
+                  <Input
                     value={settings.socialFacebook}
-                    onChange={(e) => updateSettings({ socialFacebook: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ socialFacebook: e.target.value })
+                    }
                     placeholder="https://facebook.com/username"
                     data-testid="input-social-facebook"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Twitter/X URL</Label>
-                  <Input 
+                  <Input
                     value={settings.socialTwitter}
-                    onChange={(e) => updateSettings({ socialTwitter: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ socialTwitter: e.target.value })
+                    }
                     placeholder="https://twitter.com/username"
                     data-testid="input-social-twitter"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Instagram URL</Label>
-                  <Input 
+                  <Input
                     value={settings.socialInstagram}
-                    onChange={(e) => updateSettings({ socialInstagram: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ socialInstagram: e.target.value })
+                    }
                     placeholder="https://instagram.com/username"
                     data-testid="input-social-instagram"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>LinkedIn URL</Label>
-                  <Input 
+                  <Input
                     value={settings.socialLinkedin}
-                    onChange={(e) => updateSettings({ socialLinkedin: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ socialLinkedin: e.target.value })
+                    }
                     placeholder="https://linkedin.com/in/username"
                     data-testid="input-social-linkedin"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>GitHub URL</Label>
-                  <Input 
+                  <Input
                     value={settings.socialGithub}
-                    onChange={(e) => updateSettings({ socialGithub: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ socialGithub: e.target.value })
+                    }
                     placeholder="https://github.com/username"
                     data-testid="input-social-github"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>YouTube URL</Label>
-                  <Input 
+                  <Input
                     value={settings.socialYoutube}
-                    onChange={(e) => updateSettings({ socialYoutube: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ socialYoutube: e.target.value })
+                    }
                     placeholder="https://youtube.com/@username"
                     data-testid="input-social-youtube"
                   />
@@ -561,23 +653,29 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>Footer</CardTitle>
-                <CardDescription>Footer content and copyright information.</CardDescription>
+                <CardDescription>
+                  Footer content and copyright information.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Footer Text</Label>
-                  <Input 
+                  <Input
                     value={settings.footerText}
-                    onChange={(e) => updateSettings({ footerText: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ footerText: e.target.value })
+                    }
                     placeholder="e.g., Crafted with love & countless cups of coffee"
                     data-testid="input-footer-text"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Copyright Notice</Label>
-                  <Input 
+                  <Input
                     value={settings.footerCopyright}
-                    onChange={(e) => updateSettings({ footerCopyright: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ footerCopyright: e.target.value })
+                    }
                     placeholder="e.g., 2024 Loi Developer. All rights reserved."
                     data-testid="input-footer-copyright"
                   />
@@ -588,16 +686,22 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>Maintenance Mode</CardTitle>
-                <CardDescription>Temporarily disable access to the public site.</CardDescription>
+                <CardDescription>
+                  Temporarily disable access to the public site.
+                </CardDescription>
               </CardHeader>
               <CardContent className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Enable Maintenance Mode</Label>
-                  <p className="text-sm text-muted-foreground">Visitors will see a "Coming Soon" page.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Visitors will see a "Coming Soon" page.
+                  </p>
                 </div>
-                <Switch 
+                <Switch
                   checked={settings.maintenanceMode}
-                  onCheckedChange={(checked) => updateSettings({ maintenanceMode: checked })}
+                  onCheckedChange={(checked) =>
+                    updateSettings({ maintenanceMode: checked })
+                  }
                   data-testid="toggle-maintenance-mode"
                 />
               </CardContent>
@@ -609,17 +713,19 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>Logo & Favicon</CardTitle>
-                <CardDescription>Upload your site logo and favicon.</CardDescription>
+                <CardDescription>
+                  Upload your site logo and favicon.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
                   <Label htmlFor="logo-upload">Site Logo</Label>
                   <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 transition">
-                    <input 
+                    <input
                       id="logo-upload"
-                      type="file" 
+                      type="file"
                       accept="image/*"
-                      className="hidden" 
+                      className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
@@ -636,20 +742,37 @@ export default function AdminSettingsEnhanced() {
                     />
                     {settings.logoUrl ? (
                       <div className="flex flex-col items-center gap-2">
-                        <img src={settings.logoUrl} alt="Logo" className="h-12 w-auto" />
-                        <p className="text-xs text-muted-foreground">Click to replace</p>
+                        <img
+                          src={settings.logoUrl}
+                          alt="Logo"
+                          className="h-12 w-auto"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Click to replace
+                        </p>
                       </div>
                     ) : (
                       <>
                         <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                        <p className="text-sm font-medium">Drop image or click to upload</p>
-                        <p className="text-xs text-muted-foreground">PNG, SVG, JPG (Max 2MB)</p>
+                        <p className="text-sm font-medium">
+                          Drop image or click to upload
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PNG, SVG, JPG (Max 2MB)
+                        </p>
                       </>
                     )}
                   </div>
                   <label htmlFor="logo-upload" className="cursor-pointer">
-                    <Button type="button" variant="outline" className="w-full" asChild>
-                      <span>{settings.logoUrl ? "Change Logo" : "Select Logo"}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      asChild
+                    >
+                      <span>
+                        {settings.logoUrl ? "Change Logo" : "Select Logo"}
+                      </span>
                     </Button>
                   </label>
                 </div>
@@ -659,16 +782,20 @@ export default function AdminSettingsEnhanced() {
                   <div className="flex gap-2">
                     <div className="w-16 h-16 rounded-lg border border-border flex items-center justify-center bg-muted overflow-hidden">
                       {settings.faviconUrl ? (
-                        <img src={settings.faviconUrl} alt="Favicon" className="w-full h-full object-cover" />
+                        <img
+                          src={settings.faviconUrl}
+                          alt="Favicon"
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <span className="text-2xl">✨</span>
                       )}
                     </div>
-                    <input 
+                    <input
                       id="favicon-upload"
-                      type="file" 
+                      type="file"
                       accept="image/*"
-                      className="hidden" 
+                      className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
@@ -684,7 +811,11 @@ export default function AdminSettingsEnhanced() {
                     />
                     <label htmlFor="favicon-upload" className="flex-1">
                       <Button variant="outline" className="w-full" asChild>
-                        <span>{settings.faviconUrl ? "Change Favicon" : "Upload Favicon"}</span>
+                        <span>
+                          {settings.faviconUrl
+                            ? "Change Favicon"
+                            : "Upload Favicon"}
+                        </span>
                       </Button>
                     </label>
                   </div>
@@ -698,33 +829,41 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>SEO Configuration</CardTitle>
-                <CardDescription>Optimize your site for search engines.</CardDescription>
+                <CardDescription>
+                  Optimize your site for search engines.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Meta Description (Default)</Label>
-                  <Input 
-                    placeholder="Describe your website..." 
+                  <Input
+                    placeholder="Describe your website..."
                     value={settings.metaDescription || ""}
-                    onChange={(e) => updateSettings({ metaDescription: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ metaDescription: e.target.value })
+                    }
                     data-testid="input-meta-description"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Default Keywords</Label>
-                  <Input 
-                    placeholder="web development, full-stack, react, node.js" 
+                  <Input
+                    placeholder="web development, full-stack, react, node.js"
                     value={settings.metaKeywords || ""}
-                    onChange={(e) => updateSettings({ metaKeywords: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ metaKeywords: e.target.value })
+                    }
                     data-testid="input-meta-keywords"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Google Analytics ID</Label>
-                  <Input 
-                    placeholder="G-XXXXXXXXXX or UA-XXXXXXXXX-X" 
+                  <Input
+                    placeholder="G-XXXXXXXXXX or UA-XXXXXXXXX-X"
                     value={settings.googleAnalyticsId || ""}
-                    onChange={(e) => updateSettings({ googleAnalyticsId: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ googleAnalyticsId: e.target.value })
+                    }
                     data-testid="input-google-analytics"
                   />
                 </div>
@@ -734,27 +873,35 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>Open Graph & Twitter Cards</CardTitle>
-                <CardDescription>Control how your site appears on social media.</CardDescription>
+                <CardDescription>
+                  Control how your site appears on social media.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Open Graph Image URL</Label>
-                  <Input 
-                    placeholder="https://example.com/og-image.png" 
+                  <Input
+                    placeholder="https://example.com/og-image.png"
                     value={settings.ogImageUrl || ""}
-                    onChange={(e) => updateSettings({ ogImageUrl: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ ogImageUrl: e.target.value })
+                    }
                     data-testid="input-og-image"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Twitter Card Type</Label>
-                  <select 
+                  <select
                     className="w-full p-2 rounded-md border border-input bg-background"
                     value={settings.twitterCardType || "summary_large_image"}
-                    onChange={(e) => updateSettings({ twitterCardType: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ twitterCardType: e.target.value })
+                    }
                     data-testid="select-twitter-card"
                   >
-                    <option value="summary_large_image">summary_large_image</option>
+                    <option value="summary_large_image">
+                      summary_large_image
+                    </option>
                     <option value="summary">summary</option>
                     <option value="app">app</option>
                   </select>
@@ -767,8 +914,20 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle>Robots.txt & Sitemap</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start" data-testid="button-edit-robots">Edit robots.txt</Button>
-                <Button variant="outline" className="w-full justify-start" data-testid="button-regenerate-sitemap">Regenerate Sitemap</Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  data-testid="button-edit-robots"
+                >
+                  Edit robots.txt
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  data-testid="button-regenerate-sitemap"
+                >
+                  Regenerate Sitemap
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -780,7 +939,10 @@ export default function AdminSettingsEnhanced() {
                 <AlertCircle className="w-5 h-5 text-amber-500" />
                 <div>
                   <p className="text-sm font-medium">Configuration Required</p>
-                  <p className="text-xs text-muted-foreground">SMTP settings are saved but email sending requires a mail server integration.</p>
+                  <p className="text-xs text-muted-foreground">
+                    SMTP settings are saved but email sending requires a mail
+                    server integration.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -789,25 +951,31 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle className="flex items-center gap-2">
                   <Mail className="w-5 h-5" /> SMTP Configuration
                 </CardTitle>
-                <CardDescription>Configure email settings for notifications and newsletters.</CardDescription>
+                <CardDescription>
+                  Configure email settings for notifications and newsletters.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>From Name</Label>
-                    <Input 
-                      placeholder="Loi Developer" 
+                    <Input
+                      placeholder="Loi Developer"
                       value={settings.emailFromName || ""}
-                      onChange={(e) => updateSettings({ emailFromName: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ emailFromName: e.target.value })
+                      }
                       data-testid="input-email-from-name"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>From Email Address</Label>
-                    <Input 
-                      placeholder="noreply@example.com" 
+                    <Input
+                      placeholder="noreply@example.com"
                       value={settings.emailFromAddress || ""}
-                      onChange={(e) => updateSettings({ emailFromAddress: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ emailFromAddress: e.target.value })
+                      }
                       data-testid="input-email-from-address"
                     />
                   </div>
@@ -815,55 +983,71 @@ export default function AdminSettingsEnhanced() {
                 <Separator />
                 <div className="space-y-2">
                   <Label>SMTP Host</Label>
-                  <Input 
-                    placeholder="smtp.gmail.com" 
+                  <Input
+                    placeholder="smtp.gmail.com"
                     value={settings.smtpHost || ""}
-                    onChange={(e) => updateSettings({ smtpHost: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ smtpHost: e.target.value })
+                    }
                     data-testid="input-smtp-host"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>SMTP Port</Label>
-                    <Input 
-                      placeholder="587" 
+                    <Input
+                      placeholder="587"
                       value={settings.smtpPort || ""}
-                      onChange={(e) => updateSettings({ smtpPort: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ smtpPort: e.target.value })
+                      }
                       data-testid="input-smtp-port"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>SMTP User</Label>
-                    <Input 
-                      placeholder="your-email@gmail.com" 
+                    <Input
+                      placeholder="your-email@gmail.com"
                       value={settings.smtpUser || ""}
-                      onChange={(e) => updateSettings({ smtpUser: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ smtpUser: e.target.value })
+                      }
                       data-testid="input-smtp-user"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>SMTP Password</Label>
-                  <Input 
-                    type="password" 
-                    placeholder="••••••••" 
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
                     value={settings.smtpPassword || ""}
-                    onChange={(e) => updateSettings({ smtpPassword: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ smtpPassword: e.target.value })
+                    }
                     data-testid="input-smtp-password"
                   />
                 </div>
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium text-sm">Use TLS/SSL</p>
-                    <p className="text-xs text-muted-foreground">Encrypt email transmission</p>
+                    <p className="text-xs text-muted-foreground">
+                      Encrypt email transmission
+                    </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.smtpSecure ?? true}
-                    onCheckedChange={(checked) => updateSettings({ smtpSecure: checked })}
+                    onCheckedChange={(checked) =>
+                      updateSettings({ smtpSecure: checked })
+                    }
                     data-testid="switch-smtp-secure"
                   />
                 </div>
-                <Button variant="outline" className="w-full" data-testid="button-test-email">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  data-testid="button-test-email"
+                >
                   <Mail className="w-4 h-4 mr-2" /> Send Test Email
                 </Button>
               </CardContent>
@@ -872,12 +1056,32 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>Email Templates</CardTitle>
-                <CardDescription>Customize email templates for different notifications</CardDescription>
+                <CardDescription>
+                  Customize email templates for different notifications
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start" data-testid="button-edit-welcome-email">Edit Welcome Email</Button>
-                <Button variant="outline" className="w-full justify-start" data-testid="button-edit-notification-email">Edit Notification Email</Button>
-                <Button variant="outline" className="w-full justify-start" data-testid="button-edit-newsletter">Edit Newsletter Template</Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  data-testid="button-edit-welcome-email"
+                >
+                  Edit Welcome Email
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  data-testid="button-edit-notification-email"
+                >
+                  Edit Notification Email
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  data-testid="button-edit-newsletter"
+                >
+                  Edit Newsletter Template
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -889,7 +1093,10 @@ export default function AdminSettingsEnhanced() {
                 <Zap className="w-5 h-5 text-blue-500" />
                 <div>
                   <p className="text-sm font-medium">Feature Preview</p>
-                  <p className="text-xs text-muted-foreground">Cloud storage integration preview. Requires cloud provider setup.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Cloud storage integration preview. Requires cloud provider
+                    setup.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -898,7 +1105,9 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle className="flex items-center gap-2">
                   <Database className="w-5 h-5" /> Cloud Storage
                 </CardTitle>
-                <CardDescription>Configure cloud storage for file uploads.</CardDescription>
+                <CardDescription>
+                  Configure cloud storage for file uploads.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -936,10 +1145,15 @@ export default function AdminSettingsEnhanced() {
                     <span className="font-medium">2.4 GB / 10 GB</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: "24%" }} />
+                    <div
+                      className="bg-primary h-2 rounded-full"
+                      style={{ width: "24%" }}
+                    />
                   </div>
                 </div>
-                <Button variant="outline" className="w-full">View File Management</Button>
+                <Button variant="outline" className="w-full">
+                  View File Management
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -961,7 +1175,9 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="w-5 h-5" /> Notification Preferences
                 </CardTitle>
-                <CardDescription>Configure how and when you receive notifications</CardDescription>
+                <CardDescription>
+                  Configure how and when you receive notifications
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
@@ -969,56 +1185,82 @@ export default function AdminSettingsEnhanced() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <p className="font-medium text-sm">New contact form submissions</p>
-                        <p className="text-xs text-muted-foreground">Receive email when someone contacts you</p>
+                        <p className="font-medium text-sm">
+                          New contact form submissions
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Receive email when someone contacts you
+                        </p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={settings.emailNotifyNewContact ?? true}
-                        onCheckedChange={(checked) => updateSettings({ emailNotifyNewContact: checked })}
+                        onCheckedChange={(checked) =>
+                          updateSettings({ emailNotifyNewContact: checked })
+                        }
                         data-testid="switch-notify-contact"
                       />
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium text-sm">New comments</p>
-                        <p className="text-xs text-muted-foreground">Get notified when comments are posted</p>
+                        <p className="text-xs text-muted-foreground">
+                          Get notified when comments are posted
+                        </p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={settings.emailNotifyNewComment ?? true}
-                        onCheckedChange={(checked) => updateSettings({ emailNotifyNewComment: checked })}
+                        onCheckedChange={(checked) =>
+                          updateSettings({ emailNotifyNewComment: checked })
+                        }
                         data-testid="switch-notify-comment"
                       />
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium text-sm">Security alerts</p>
-                        <p className="text-xs text-muted-foreground">Important security-related notifications</p>
+                        <p className="text-xs text-muted-foreground">
+                          Important security-related notifications
+                        </p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={settings.emailNotifySecurityAlert ?? true}
-                        onCheckedChange={(checked) => updateSettings({ emailNotifySecurityAlert: checked })}
+                        onCheckedChange={(checked) =>
+                          updateSettings({ emailNotifySecurityAlert: checked })
+                        }
                         data-testid="switch-notify-security"
                       />
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <p className="font-medium text-sm">Newsletter subscriptions</p>
-                        <p className="text-xs text-muted-foreground">When new users subscribe</p>
+                        <p className="font-medium text-sm">
+                          Newsletter subscriptions
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          When new users subscribe
+                        </p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={settings.emailNotifyNewsletter ?? false}
-                        onCheckedChange={(checked) => updateSettings({ emailNotifyNewsletter: checked })}
+                        onCheckedChange={(checked) =>
+                          updateSettings({ emailNotifyNewsletter: checked })
+                        }
                         data-testid="switch-notify-newsletter"
                       />
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <p className="font-medium text-sm">Weekly analytics summary</p>
-                        <p className="text-xs text-muted-foreground">Weekly report of site performance</p>
+                        <p className="font-medium text-sm">
+                          Weekly analytics summary
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Weekly report of site performance
+                        </p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={settings.emailNotifyWeeklySummary ?? true}
-                        onCheckedChange={(checked) => updateSettings({ emailNotifyWeeklySummary: checked })}
+                        onCheckedChange={(checked) =>
+                          updateSettings({ emailNotifyWeeklySummary: checked })
+                        }
                         data-testid="switch-notify-weekly"
                       />
                     </div>
@@ -1032,23 +1274,33 @@ export default function AdminSettingsEnhanced() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <p className="font-medium text-sm">Browser notifications</p>
-                        <p className="text-xs text-muted-foreground">Show desktop notifications</p>
+                        <p className="font-medium text-sm">
+                          Browser notifications
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Show desktop notifications
+                        </p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={settings.pushNotifyBrowser ?? false}
-                        onCheckedChange={(checked) => updateSettings({ pushNotifyBrowser: checked })}
+                        onCheckedChange={(checked) =>
+                          updateSettings({ pushNotifyBrowser: checked })
+                        }
                         data-testid="switch-push-browser"
                       />
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium text-sm">Mobile push</p>
-                        <p className="text-xs text-muted-foreground">Send to mobile devices</p>
+                        <p className="text-xs text-muted-foreground">
+                          Send to mobile devices
+                        </p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={settings.pushNotifyMobile ?? false}
-                        onCheckedChange={(checked) => updateSettings({ pushNotifyMobile: checked })}
+                        onCheckedChange={(checked) =>
+                          updateSettings({ pushNotifyMobile: checked })
+                        }
                         data-testid="switch-push-mobile"
                       />
                     </div>
@@ -1060,30 +1312,66 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>Channel Priority & Routing</CardTitle>
-                <CardDescription>Configure notification delivery channels and priority</CardDescription>
+                <CardDescription>
+                  Configure notification delivery channels and priority
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   {[
-                    { channel: "Email", priority: 1, enabled: true, desc: "Primary notification channel" },
-                    { channel: "Browser Push", priority: 2, enabled: false, desc: "Desktop notifications" },
-                    { channel: "SMS", priority: 3, enabled: false, desc: "Text messages for critical alerts" },
-                    { channel: "Slack", priority: 4, enabled: true, desc: "Team notifications" },
-                    { channel: "Discord", priority: 5, enabled: true, desc: "Community updates" },
+                    {
+                      channel: "Email",
+                      priority: 1,
+                      enabled: true,
+                      desc: "Primary notification channel",
+                    },
+                    {
+                      channel: "Browser Push",
+                      priority: 2,
+                      enabled: false,
+                      desc: "Desktop notifications",
+                    },
+                    {
+                      channel: "SMS",
+                      priority: 3,
+                      enabled: false,
+                      desc: "Text messages for critical alerts",
+                    },
+                    {
+                      channel: "Slack",
+                      priority: 4,
+                      enabled: true,
+                      desc: "Team notifications",
+                    },
+                    {
+                      channel: "Discord",
+                      priority: 5,
+                      enabled: true,
+                      desc: "Community updates",
+                    },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold">
                           {item.priority}
                         </div>
                         <div>
                           <p className="font-medium text-sm">{item.channel}</p>
-                          <p className="text-xs text-muted-foreground">{item.desc}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.desc}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">↑</Button>
-                        <Button variant="ghost" size="sm">↓</Button>
+                        <Button variant="ghost" size="sm">
+                          ↑
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          ↓
+                        </Button>
                         <Switch defaultChecked={item.enabled} />
                       </div>
                     </div>
@@ -1092,7 +1380,9 @@ export default function AdminSettingsEnhanced() {
                 <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                   <div>
                     <p className="font-medium text-sm">Fallback Routing</p>
-                    <p className="text-xs text-muted-foreground">Try next channel if delivery fails</p>
+                    <p className="text-xs text-muted-foreground">
+                      Try next channel if delivery fails
+                    </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
@@ -1102,7 +1392,9 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>Alert Thresholds</CardTitle>
-                <CardDescription>Set triggers for automatic alerts</CardDescription>
+                <CardDescription>
+                  Set triggers for automatic alerts
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -1132,121 +1424,41 @@ export default function AdminSettingsEnhanced() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {[
-                  { message: "Storage usage reached 75%", time: "2 hours ago", type: "warning" },
-                  { message: "Weekly backup completed successfully", time: "Yesterday", type: "success" },
-                  { message: "3 failed login attempts detected", time: "2 days ago", type: "error" },
+                  {
+                    message: "Storage usage reached 75%",
+                    time: "2 hours ago",
+                    type: "warning",
+                  },
+                  {
+                    message: "Weekly backup completed successfully",
+                    time: "Yesterday",
+                    type: "success",
+                  },
+                  {
+                    message: "3 failed login attempts detected",
+                    time: "2 days ago",
+                    type: "error",
+                  },
                 ].map((notif, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 border rounded-lg">
-                    {notif.type === "warning" && <AlertCircle className="w-5 h-5 text-yellow-500" />}
-                    {notif.type === "success" && <CheckCircle className="w-5 h-5 text-green-500" />}
-                    {notif.type === "error" && <AlertCircle className="w-5 h-5 text-red-500" />}
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 p-3 border rounded-lg"
+                  >
+                    {notif.type === "warning" && (
+                      <AlertCircle className="w-5 h-5 text-yellow-500" />
+                    )}
+                    {notif.type === "success" && (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    )}
+                    {notif.type === "error" && (
+                      <AlertCircle className="w-5 h-5 text-red-500" />
+                    )}
                     <div className="flex-1">
                       <p className="text-sm">{notif.message}</p>
-                      <p className="text-xs text-muted-foreground">{notif.time}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {notif.time}
+                      </p>
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* WEBHOOKS TAB */}
-          <TabsContent value="webhooks" className="space-y-4">
-            <Card className="border-blue-500/20 bg-blue-500/5">
-              <CardContent className="flex items-center gap-3 py-3">
-                <Zap className="w-5 h-5 text-blue-500" />
-                <div>
-                  <p className="text-sm font-medium">Feature Preview</p>
-                  <p className="text-xs text-muted-foreground">Webhook integration preview. Requires webhook dispatcher setup.</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Webhook className="w-5 h-5" /> Webhook Endpoints
-                </CardTitle>
-                <CardDescription>Configure webhooks for external integrations</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {[
-                    { name: "Discord Notifications", url: "https://discord.com/api/webhooks/...", events: ["new_comment", "contact_form"], status: "active", lastDelivery: "2 mins ago", successRate: "98%" },
-                    { name: "Slack Channel", url: "https://hooks.slack.com/services/...", events: ["security_alert"], status: "active", lastDelivery: "1 hour ago", successRate: "100%" },
-                    { name: "Custom API", url: "https://api.myapp.com/webhook", events: ["all"], status: "inactive", lastDelivery: "Never", successRate: "N/A" },
-                  ].map((webhook, i) => (
-                    <div key={i} className="p-4 border rounded-lg space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{webhook.name}</h4>
-                          <Badge variant={webhook.status === "active" ? "default" : "secondary"}>
-                            {webhook.status}
-                          </Badge>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">Test</Button>
-                          <Button variant="ghost" size="sm">Edit</Button>
-                          <Button variant="ghost" size="sm" className="text-destructive">Delete</Button>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground font-mono truncate">{webhook.url}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-1 flex-wrap">
-                          {webhook.events.map((event, j) => (
-                            <Badge key={j} variant="outline" className="text-xs">{event}</Badge>
-                          ))}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Last: {webhook.lastDelivery} • Success: {webhook.successRate}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <Button className="w-full">+ Add New Webhook</Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Events</CardTitle>
-                <CardDescription>Events that can trigger webhooks</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    "new_post", "post_updated", "post_deleted",
-                    "new_comment", "comment_approved", "comment_deleted",
-                    "contact_form", "newsletter_subscribe",
-                    "user_login", "user_logout", "security_alert",
-                    "backup_complete", "error_occurred"
-                  ].map((event, i) => (
-                    <div key={i} className="flex items-center gap-2 p-2 border rounded text-sm">
-                      <div className="w-2 h-2 bg-primary rounded-full" />
-                      {event}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Webhook Logs</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {[
-                  { endpoint: "Discord", event: "new_comment", status: "200", time: "Just now" },
-                  { endpoint: "Slack", event: "security_alert", status: "200", time: "5 mins ago" },
-                  { endpoint: "Custom API", event: "contact_form", status: "500", time: "1 hour ago" },
-                ].map((log, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 border rounded text-sm">
-                    <div className="flex items-center gap-3">
-                      <Badge variant={log.status === "200" ? "default" : "destructive"}>{log.status}</Badge>
-                      <span>{log.endpoint}</span>
-                      <span className="text-muted-foreground">→ {log.event}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{log.time}</span>
                   </div>
                 ))}
               </CardContent>
@@ -1260,39 +1472,53 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle className="flex items-center gap-2">
                   <Bug className="w-5 h-5" /> Debug Mode
                 </CardTitle>
-                <CardDescription>Enable debugging features for development</CardDescription>
+                <CardDescription>
+                  Enable debugging features for development
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 border rounded-lg bg-yellow-500/5 border-yellow-500/20">
                   <div>
                     <p className="font-medium text-sm">Enable Debug Mode</p>
-                    <p className="text-xs text-muted-foreground">Shows detailed error messages and stack traces</p>
+                    <p className="text-xs text-muted-foreground">
+                      Shows detailed error messages and stack traces
+                    </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.debugMode ?? false}
-                    onCheckedChange={(checked) => updateSettings({ debugMode: checked })}
+                    onCheckedChange={(checked) =>
+                      updateSettings({ debugMode: checked })
+                    }
                     data-testid="switch-debug-mode"
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">Log to Console</p>
-                    <p className="text-xs text-muted-foreground">Output logs to browser/server console</p>
+                    <p className="text-xs text-muted-foreground">
+                      Output logs to browser/server console
+                    </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.logToConsole ?? true}
-                    onCheckedChange={(checked) => updateSettings({ logToConsole: checked })}
+                    onCheckedChange={(checked) =>
+                      updateSettings({ logToConsole: checked })
+                    }
                     data-testid="switch-log-console"
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">Log to File</p>
-                    <p className="text-xs text-muted-foreground">Save logs to file system</p>
+                    <p className="text-xs text-muted-foreground">
+                      Save logs to file system
+                    </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.logToFile ?? false}
-                    onCheckedChange={(checked) => updateSettings({ logToFile: checked })}
+                    onCheckedChange={(checked) =>
+                      updateSettings({ logToFile: checked })
+                    }
                     data-testid="switch-log-file"
                   />
                 </div>
@@ -1304,29 +1530,50 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle className="flex items-center gap-2">
                   <Gauge className="w-5 h-5" /> API Rate Limits
                 </CardTitle>
-                <CardDescription>Configure rate limiting for API endpoints</CardDescription>
+                <CardDescription>
+                  Configure rate limiting for API endpoints
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Requests per minute (global)</Label>
-                  <Input 
-                    type="number" 
+                  <Input
+                    type="number"
                     value={settings.apiRateLimit ?? 100}
-                    onChange={(e) => updateSettings({ apiRateLimit: parseInt(e.target.value) || 100 })}
+                    onChange={(e) =>
+                      updateSettings({
+                        apiRateLimit: parseInt(e.target.value) || 100,
+                      })
+                    }
                     data-testid="input-api-rate-limit"
                   />
-                  <p className="text-xs text-muted-foreground">Maximum API requests per minute across all endpoints</p>
+                  <p className="text-xs text-muted-foreground">
+                    Maximum API requests per minute across all endpoints
+                  </p>
                 </div>
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm">Endpoint-specific limits (read-only)</h4>
+                  <h4 className="font-medium text-sm">
+                    Endpoint-specific limits (read-only)
+                  </h4>
                   {[
                     { endpoint: "/api/contact", limit: 5, window: "1 hour" },
-                    { endpoint: "/api/auth/login", limit: 10, window: "15 mins" },
+                    {
+                      endpoint: "/api/auth/login",
+                      limit: 10,
+                      window: "15 mins",
+                    },
                     { endpoint: "/api/upload", limit: 20, window: "1 hour" },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-2 border rounded text-sm">
-                      <code className="text-xs bg-muted px-2 py-1 rounded">{item.endpoint}</code>
-                      <span>{item.limit} requests / {item.window}</span>
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-2 border rounded text-sm"
+                    >
+                      <code className="text-xs bg-muted px-2 py-1 rounded">
+                        {item.endpoint}
+                      </code>
+                      <span>
+                        {item.limit} requests / {item.window}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -1343,35 +1590,48 @@ export default function AdminSettingsEnhanced() {
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium text-sm">Enable CORS</p>
-                    <p className="text-xs text-muted-foreground">Allow cross-origin requests</p>
+                    <p className="text-xs text-muted-foreground">
+                      Allow cross-origin requests
+                    </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.corsEnabled ?? true}
-                    onCheckedChange={(checked) => updateSettings({ corsEnabled: checked })}
+                    onCheckedChange={(checked) =>
+                      updateSettings({ corsEnabled: checked })
+                    }
                     data-testid="switch-cors-enabled"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Allowed Origins (CORS)</Label>
-                  <Input 
+                  <Input
                     placeholder="* (all origins) or https://example.com, https://app.example.com"
                     value={settings.corsOrigins || ""}
-                    onChange={(e) => updateSettings({ corsOrigins: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ corsOrigins: e.target.value })
+                    }
                     data-testid="input-cors-origins"
                   />
-                  <p className="text-xs text-muted-foreground">Use * to allow all origins, or specify comma-separated domains</p>
+                  <p className="text-xs text-muted-foreground">
+                    Use * to allow all origins, or specify comma-separated
+                    domains
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Custom Headers</Label>
-                  <Textarea 
+                  <Textarea
                     placeholder="X-Custom-Header: value&#10;X-Another-Header: value"
                     className="font-mono text-sm"
                     rows={3}
                     value={settings.customHeaders || ""}
-                    onChange={(e) => updateSettings({ customHeaders: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ customHeaders: e.target.value })
+                    }
                     data-testid="input-custom-headers"
                   />
-                  <p className="text-xs text-muted-foreground">Add custom HTTP headers to all responses</p>
+                  <p className="text-xs text-muted-foreground">
+                    Add custom HTTP headers to all responses
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -1384,31 +1644,43 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle className="flex items-center gap-2">
                   <Globe className="w-5 h-5" /> Regional Settings
                 </CardTitle>
-                <CardDescription>Configure timezone and language preferences</CardDescription>
+                <CardDescription>
+                  Configure timezone and language preferences
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Timezone</Label>
-                  <select 
+                  <select
                     className="w-full p-2 rounded-md border border-input bg-background"
                     value={settings.timezone || "Asia/Ho_Chi_Minh"}
-                    onChange={(e) => updateSettings({ timezone: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ timezone: e.target.value })
+                    }
                     data-testid="select-timezone"
                   >
-                    <option value="Asia/Ho_Chi_Minh">UTC+07:00 (Vietnam)</option>
+                    <option value="Asia/Ho_Chi_Minh">
+                      UTC+07:00 (Vietnam)
+                    </option>
                     <option value="Asia/Shanghai">UTC+08:00 (Shanghai)</option>
                     <option value="Asia/Tokyo">UTC+09:00 (Tokyo)</option>
                     <option value="Europe/London">UTC+00:00 (London)</option>
-                    <option value="America/New_York">UTC-05:00 (New York)</option>
-                    <option value="America/Los_Angeles">UTC-08:00 (Los Angeles)</option>
+                    <option value="America/New_York">
+                      UTC-05:00 (New York)
+                    </option>
+                    <option value="America/Los_Angeles">
+                      UTC-08:00 (Los Angeles)
+                    </option>
                   </select>
                 </div>
                 <div className="space-y-2">
                   <Label>Default Language</Label>
-                  <select 
+                  <select
                     className="w-full p-2 rounded-md border border-input bg-background"
                     value={settings.language || "en"}
-                    onChange={(e) => updateSettings({ language: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ language: e.target.value })
+                    }
                     data-testid="select-language"
                   >
                     <option value="en">English</option>
@@ -1420,10 +1692,12 @@ export default function AdminSettingsEnhanced() {
                 </div>
                 <div className="space-y-2">
                   <Label>Date Format</Label>
-                  <select 
+                  <select
                     className="w-full p-2 rounded-md border border-input bg-background"
                     value={settings.dateFormat || "MM/DD/YYYY"}
-                    onChange={(e) => updateSettings({ dateFormat: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ dateFormat: e.target.value })
+                    }
                     data-testid="select-date-format"
                   >
                     <option value="MM/DD/YYYY">MM/DD/YYYY</option>
@@ -1433,10 +1707,12 @@ export default function AdminSettingsEnhanced() {
                 </div>
                 <div className="space-y-2">
                   <Label>Time Format</Label>
-                  <select 
+                  <select
                     className="w-full p-2 rounded-md border border-input bg-background"
                     value={settings.timeFormat || "12h"}
-                    onChange={(e) => updateSettings({ timeFormat: e.target.value })}
+                    onChange={(e) =>
+                      updateSettings({ timeFormat: e.target.value })
+                    }
                     data-testid="select-time-format"
                   >
                     <option value="12h">12 Hour (AM/PM)</option>
@@ -1451,22 +1727,30 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle className="flex items-center gap-2">
                   <DollarSign className="w-5 h-5" /> Currency Settings
                 </CardTitle>
-                <CardDescription>Configure currency display preferences</CardDescription>
+                <CardDescription>
+                  Configure currency display preferences
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Default Currency</Label>
-                    <select 
+                    <select
                       className="w-full p-2 rounded-md border border-input bg-background"
                       value={settings.currency || "USD"}
                       onChange={(e) => {
                         const currencySymbols: Record<string, string> = {
-                          USD: "$", VND: "₫", EUR: "€", GBP: "£", JPY: "¥", CNY: "¥"
+                          USD: "$",
+                          VND: "₫",
+                          EUR: "€",
+                          GBP: "£",
+                          JPY: "¥",
+                          CNY: "¥",
                         };
-                        updateSettings({ 
+                        updateSettings({
                           currency: e.target.value,
-                          currencySymbol: currencySymbols[e.target.value] || "$"
+                          currencySymbol:
+                            currencySymbols[e.target.value] || "$",
                         });
                       }}
                       data-testid="select-currency"
@@ -1481,9 +1765,11 @@ export default function AdminSettingsEnhanced() {
                   </div>
                   <div className="space-y-2">
                     <Label>Currency Symbol</Label>
-                    <Input 
+                    <Input
                       value={settings.currencySymbol || "$"}
-                      onChange={(e) => updateSettings({ currencySymbol: e.target.value })}
+                      onChange={(e) =>
+                        updateSettings({ currencySymbol: e.target.value })
+                      }
                       data-testid="input-currency-symbol"
                     />
                   </div>
@@ -1491,9 +1777,18 @@ export default function AdminSettingsEnhanced() {
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-sm font-medium mb-2">Preview:</p>
                   <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div><span className="text-muted-foreground">Currency:</span> {settings.currencySymbol || "$"}1,234.56</div>
-                    <div><span className="text-muted-foreground">Date:</span> {new Date().toLocaleDateString()}</div>
-                    <div><span className="text-muted-foreground">Time:</span> {new Date().toLocaleTimeString()}</div>
+                    <div>
+                      <span className="text-muted-foreground">Currency:</span>{" "}
+                      {settings.currencySymbol || "$"}1,234.56
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Date:</span>{" "}
+                      {new Date().toLocaleDateString()}
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Time:</span>{" "}
+                      {new Date().toLocaleTimeString()}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -1504,7 +1799,9 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle className="flex items-center gap-2">
                   <Hash className="w-5 h-5" /> Number Formatting
                 </CardTitle>
-                <CardDescription>Configure number display preferences</CardDescription>
+                <CardDescription>
+                  Configure number display preferences
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -1528,9 +1825,18 @@ export default function AdminSettingsEnhanced() {
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-sm font-medium mb-2">Preview:</p>
                   <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div><span className="text-muted-foreground">Number:</span> 1,234,567.89</div>
-                    <div><span className="text-muted-foreground">Currency:</span> $1,234.56</div>
-                    <div><span className="text-muted-foreground">Date:</span> 03/20/2024</div>
+                    <div>
+                      <span className="text-muted-foreground">Number:</span>{" "}
+                      1,234,567.89
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Currency:</span>{" "}
+                      $1,234.56
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Date:</span>{" "}
+                      03/20/2024
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -1541,29 +1847,46 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle className="flex items-center gap-2">
                   <Languages className="w-5 h-5" /> Custom Translations
                 </CardTitle>
-                <CardDescription>Manage custom translation strings</CardDescription>
+                <CardDescription>
+                  Manage custom translation strings
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1">Import Translations</Button>
-                  <Button variant="outline" className="flex-1">Export Translations</Button>
+                  <Button variant="outline" className="flex-1">
+                    Import Translations
+                  </Button>
+                  <Button variant="outline" className="flex-1">
+                    Export Translations
+                  </Button>
                 </div>
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Translation Keys</h4>
                   {[
-                    { key: "site.title", en: "Loi Developer", vi: "Loi Developer" },
+                    {
+                      key: "site.title",
+                      en: "Loi Developer",
+                      vi: "Loi Developer",
+                    },
                     { key: "nav.home", en: "Home", vi: "Trang chủ" },
                     { key: "nav.about", en: "About", vi: "Giới thiệu" },
                     { key: "nav.contact", en: "Contact", vi: "Liên hệ" },
                   ].map((item, i) => (
-                    <div key={i} className="grid grid-cols-3 gap-2 p-2 border rounded text-sm">
-                      <code className="text-xs bg-muted px-2 py-1 rounded">{item.key}</code>
+                    <div
+                      key={i}
+                      className="grid grid-cols-3 gap-2 p-2 border rounded text-sm"
+                    >
+                      <code className="text-xs bg-muted px-2 py-1 rounded">
+                        {item.key}
+                      </code>
                       <Input defaultValue={item.en} className="h-8" />
                       <Input defaultValue={item.vi} className="h-8" />
                     </div>
                   ))}
                 </div>
-                <Button variant="outline" className="w-full">+ Add Translation Key</Button>
+                <Button variant="outline" className="w-full">
+                  + Add Translation Key
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1575,7 +1898,10 @@ export default function AdminSettingsEnhanced() {
                 <Zap className="w-5 h-5 text-blue-500" />
                 <div>
                   <p className="text-sm font-medium">Feature Preview</p>
-                  <p className="text-xs text-muted-foreground">Database management preview. Full backup/restore coming soon.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Database management preview. Full backup/restore coming
+                    soon.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -1589,14 +1915,26 @@ export default function AdminSettingsEnhanced() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-4 gap-4">
                   {[
-                    { label: "Status", value: "Connected", color: "text-green-500" },
+                    {
+                      label: "Status",
+                      value: "Connected",
+                      color: "text-green-500",
+                    },
                     { label: "Size", value: "45.2 MB", color: "text-primary" },
                     { label: "Tables", value: "12", color: "text-primary" },
-                    { label: "Uptime", value: "99.9%", color: "text-green-500" },
+                    {
+                      label: "Uptime",
+                      value: "99.9%",
+                      color: "text-green-500",
+                    },
                   ].map((stat, i) => (
                     <div key={i} className="p-4 border rounded-lg text-center">
-                      <p className="text-xs text-muted-foreground">{stat.label}</p>
-                      <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {stat.label}
+                      </p>
+                      <p className={`text-lg font-bold ${stat.color}`}>
+                        {stat.value}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -1622,20 +1960,41 @@ export default function AdminSettingsEnhanced() {
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Recent Backups</h4>
                   {[
-                    { name: "backup_2024-03-20_14-30.sql", size: "42 MB", date: "Today, 2:30 PM" },
-                    { name: "backup_2024-03-19_14-30.sql", size: "41 MB", date: "Yesterday" },
-                    { name: "backup_2024-03-18_14-30.sql", size: "40 MB", date: "2 days ago" },
+                    {
+                      name: "backup_2024-03-20_14-30.sql",
+                      size: "42 MB",
+                      date: "Today, 2:30 PM",
+                    },
+                    {
+                      name: "backup_2024-03-19_14-30.sql",
+                      size: "41 MB",
+                      date: "Yesterday",
+                    },
+                    {
+                      name: "backup_2024-03-18_14-30.sql",
+                      size: "40 MB",
+                      date: "2 days ago",
+                    },
                   ].map((backup, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div>
                         <p className="text-sm font-mono">{backup.name}</p>
-                        <p className="text-xs text-muted-foreground">{backup.size} • {backup.date}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {backup.size} • {backup.date}
+                        </p>
                       </div>
                       <div className="flex gap-2">
                         <Button variant="ghost" size="sm">
                           <Download className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-destructive">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -1661,8 +2020,12 @@ export default function AdminSettingsEnhanced() {
                 <Button variant="outline" className="w-full justify-start">
                   <Database className="w-4 h-4 mr-2" /> Run Migrations
                 </Button>
-                <Button variant="outline" className="w-full justify-start text-destructive">
-                  <AlertCircle className="w-4 h-4 mr-2" /> Reset Database (Danger)
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-destructive"
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" /> Reset Database
+                  (Danger)
                 </Button>
               </CardContent>
             </Card>
@@ -1675,7 +2038,9 @@ export default function AdminSettingsEnhanced() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">Enable Auto Backup</p>
-                    <p className="text-xs text-muted-foreground">Automatically backup database</p>
+                    <p className="text-xs text-muted-foreground">
+                      Automatically backup database
+                    </p>
                   </div>
                   <Switch defaultChecked />
                 </div>
@@ -1709,7 +2074,10 @@ export default function AdminSettingsEnhanced() {
                 <Zap className="w-5 h-5 text-blue-500" />
                 <div>
                   <p className="text-sm font-medium">Feature Preview</p>
-                  <p className="text-xs text-muted-foreground">Logging configuration preview. Advanced log management coming soon.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Logging configuration preview. Advanced log management
+                    coming soon.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -1718,7 +2086,9 @@ export default function AdminSettingsEnhanced() {
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" /> Logging Configuration
                 </CardTitle>
-                <CardDescription>Configure what gets logged and where</CardDescription>
+                <CardDescription>
+                  Configure what gets logged and where
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -1737,17 +2107,46 @@ export default function AdminSettingsEnhanced() {
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm">Log Categories</h4>
                   {[
-                    { label: "Authentication logs", desc: "Login attempts, logouts, password changes", enabled: true },
-                    { label: "API request logs", desc: "All API endpoint calls", enabled: true },
-                    { label: "Database query logs", desc: "SQL queries and execution time", enabled: false },
-                    { label: "Error logs", desc: "Application errors and exceptions", enabled: true },
-                    { label: "Security logs", desc: "Security-related events", enabled: true },
-                    { label: "Performance logs", desc: "Slow queries and bottlenecks", enabled: false },
+                    {
+                      label: "Authentication logs",
+                      desc: "Login attempts, logouts, password changes",
+                      enabled: true,
+                    },
+                    {
+                      label: "API request logs",
+                      desc: "All API endpoint calls",
+                      enabled: true,
+                    },
+                    {
+                      label: "Database query logs",
+                      desc: "SQL queries and execution time",
+                      enabled: false,
+                    },
+                    {
+                      label: "Error logs",
+                      desc: "Application errors and exceptions",
+                      enabled: true,
+                    },
+                    {
+                      label: "Security logs",
+                      desc: "Security-related events",
+                      enabled: true,
+                    },
+                    {
+                      label: "Performance logs",
+                      desc: "Slow queries and bottlenecks",
+                      enabled: false,
+                    },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div>
                         <p className="font-medium text-sm">{item.label}</p>
-                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.desc}
+                        </p>
                       </div>
                       <Switch defaultChecked={item.enabled} />
                     </div>
@@ -1789,7 +2188,10 @@ export default function AdminSettingsEnhanced() {
                     <span className="font-medium">127 MB / 500 MB</span>
                   </div>
                   <div className="w-full bg-background rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: "25%" }} />
+                    <div
+                      className="bg-primary h-2 rounded-full"
+                      style={{ width: "25%" }}
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -1801,12 +2203,16 @@ export default function AdminSettingsEnhanced() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button variant="outline" className="w-full justify-start">
-                  <Download className="w-4 h-4 mr-2" /> Export Logs (Last 7 days)
+                  <Download className="w-4 h-4 mr-2" /> Export Logs (Last 7
+                  days)
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <FileText className="w-4 h-4 mr-2" /> View Live Logs
                 </Button>
-                <Button variant="outline" className="w-full justify-start text-destructive">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-destructive"
+                >
                   <Trash2 className="w-4 h-4 mr-2" /> Clear All Logs
                 </Button>
               </CardContent>
@@ -1815,7 +2221,9 @@ export default function AdminSettingsEnhanced() {
             <Card>
               <CardHeader>
                 <CardTitle>External Log Services</CardTitle>
-                <CardDescription>Send logs to external monitoring services</CardDescription>
+                <CardDescription>
+                  Send logs to external monitoring services
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -1823,7 +2231,9 @@ export default function AdminSettingsEnhanced() {
                     <Server className="w-5 h-5 text-muted-foreground" />
                     <div>
                       <p className="font-medium text-sm">Sentry</p>
-                      <p className="text-xs text-muted-foreground">Error tracking and monitoring</p>
+                      <p className="text-xs text-muted-foreground">
+                        Error tracking and monitoring
+                      </p>
                     </div>
                   </div>
                   <Badge variant="secondary">Not Connected</Badge>
@@ -1833,7 +2243,9 @@ export default function AdminSettingsEnhanced() {
                     <Server className="w-5 h-5 text-muted-foreground" />
                     <div>
                       <p className="font-medium text-sm">Datadog</p>
-                      <p className="text-xs text-muted-foreground">Infrastructure monitoring</p>
+                      <p className="text-xs text-muted-foreground">
+                        Infrastructure monitoring
+                      </p>
                     </div>
                   </div>
                   <Badge variant="secondary">Not Connected</Badge>
@@ -1843,7 +2255,9 @@ export default function AdminSettingsEnhanced() {
                     <Server className="w-5 h-5 text-muted-foreground" />
                     <div>
                       <p className="font-medium text-sm">Loggly</p>
-                      <p className="text-xs text-muted-foreground">Cloud log management</p>
+                      <p className="text-xs text-muted-foreground">
+                        Cloud log management
+                      </p>
                     </div>
                   </div>
                   <Badge variant="secondary">Not Connected</Badge>
