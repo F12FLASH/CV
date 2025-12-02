@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { Code, Music, Gamepad, Camera, Plane } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import avatarImage from "@assets/generated_images/futuristic_3d_developer_avatar.png";
+
+const avatarImage = "/uploads/images/futuristic_3d_developer_avatar.png";
 
 export function About() {
   const { data: settings } = useQuery<Record<string, any>>({

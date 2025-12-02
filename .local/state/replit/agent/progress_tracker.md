@@ -148,3 +148,10 @@
     - Khi nhấn Sync: quét thư mục uploads/images, uploads/documents, uploads/media và thêm file mới vào database
     - File đã tồn tại trong database sẽ được bỏ qua (không tạo trùng lặp)
     - Upload mới sẽ tự động lưu vào thư mục uploads/images hoặc uploads/documents tùy theo loại file
+[x] 130. **UPDATE (Dec 2, 2025 - 3:41 AM)** - Chuyển tất cả ảnh từ attached_assets sang uploads
+    - Cập nhật database: projects.image, posts.featured_image, media.url đều trỏ đến /uploads/images/
+    - Cập nhật file seed.ts để sử dụng đường dẫn /uploads/images/ thay vì /attached_assets/generated_images/
+    - Cập nhật Login.tsx, Hero.tsx, About.tsx để sử dụng URL path thay vì import từ @assets
+    - Tất cả ảnh website bây giờ được lấy từ thư mục uploads/images/
+    - File mới tải lên sẽ được lưu vào uploads/images/ (ảnh) hoặc uploads/documents/ (tài liệu)
+    - Website đã hoạt động bình thường với preloader animation

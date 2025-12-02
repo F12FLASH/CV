@@ -104,7 +104,7 @@ async function seed() {
       {
         title: "E-commerce Analytics Dashboard",
         category: "full-stack",
-        image: "/attached_assets/generated_images/project_screenshot_dashboard.png",
+        image: "/uploads/images/project_screenshot_dashboard.png",
         description: "A comprehensive data analytics platform for e-commerce businesses with real-time visualization, sales tracking, inventory management, and customer insights. Built with modern tech stack for scalability and performance.",
         tech: ["React", "TypeScript", "D3.js", "Node.js", "PostgreSQL", "Redis", "Docker"],
         link: "https://demo.analytics.com",
@@ -115,7 +115,7 @@ async function seed() {
       {
         title: "Modern E-commerce Platform",
         category: "frontend",
-        image: "/attached_assets/generated_images/project_screenshot_ecommerce.png",
+        image: "/uploads/images/project_screenshot_ecommerce.png",
         description: "A cutting-edge shopping experience with headless CMS architecture, featuring advanced product filtering, wishlist, cart management, and seamless checkout process with multiple payment gateways.",
         tech: ["Next.js", "TypeScript", "Tailwind CSS", "Stripe", "Sanity CMS", "Vercel"],
         link: "https://demo.shop.com",
@@ -126,7 +126,7 @@ async function seed() {
       {
         title: "Social Connect Mobile App",
         category: "mobile",
-        image: "/attached_assets/generated_images/project_screenshot_mobile_app.png",
+        image: "/uploads/images/project_screenshot_mobile_app.png",
         description: "Cross-platform social networking application for community engagement with real-time messaging, media sharing, story features, and advanced privacy controls.",
         tech: ["React Native", "TypeScript", "Firebase", "Redux Toolkit", "Socket.io"],
         link: "https://apps.apple.com/socialconnect",
@@ -137,7 +137,7 @@ async function seed() {
       {
         title: "Task Management API",
         category: "backend",
-        image: "/attached_assets/generated_images/project_screenshot_dashboard.png",
+        image: "/uploads/images/project_screenshot_dashboard.png",
         description: "RESTful API for task and project management with authentication, role-based access control, real-time updates, and comprehensive documentation.",
         tech: ["Node.js", "Express", "MongoDB", "JWT", "Swagger", "Jest"],
         link: "https://api.taskmanager.com",
@@ -148,7 +148,7 @@ async function seed() {
       {
         title: "Portfolio Design System",
         category: "design",
-        image: "/attached_assets/generated_images/project_screenshot_ecommerce.png",
+        image: "/uploads/images/project_screenshot_ecommerce.png",
         description: "Comprehensive design system with reusable components, design tokens, and guidelines for building consistent user interfaces across products.",
         tech: ["Figma", "Storybook", "React", "Tailwind CSS", "Design Tokens"],
         link: "https://design.portfolio.com",
@@ -159,7 +159,7 @@ async function seed() {
       {
         title: "AI Content Generator",
         category: "ai-ml",
-        image: "/attached_assets/generated_images/project_screenshot_mobile_app.png",
+        image: "/uploads/images/project_screenshot_mobile_app.png",
         description: "AI-powered content generation tool using GPT models for creating blog posts, social media content, and marketing copy with customizable templates.",
         tech: ["Python", "FastAPI", "OpenAI API", "React", "PostgreSQL", "Celery"],
         link: "https://contentai.com",
@@ -170,7 +170,7 @@ async function seed() {
       {
         title: "DevOps Automation Suite",
         category: "devops",
-        image: "/attached_assets/generated_images/project_screenshot_dashboard.png",
+        image: "/uploads/images/project_screenshot_dashboard.png",
         description: "Automated CI/CD pipeline with infrastructure as code, monitoring, logging, and deployment automation for containerized applications.",
         tech: ["Docker", "Kubernetes", "Jenkins", "Terraform", "AWS", "Prometheus"],
         link: "https://devops.automation.com",
@@ -181,7 +181,7 @@ async function seed() {
       {
         title: "Real-time Chat Application",
         category: "full-stack",
-        image: "/attached_assets/generated_images/project_screenshot_ecommerce.png",
+        image: "/uploads/images/project_screenshot_ecommerce.png",
         description: "Scalable real-time chat application with group chats, file sharing, voice/video calls, and end-to-end encryption.",
         tech: ["React", "Socket.io", "Node.js", "MongoDB", "WebRTC", "Redis"],
         link: "https://chat.demo.com",
@@ -241,7 +241,7 @@ React 19 represents a major step forward in web development. Start exploring the
         author: "Loi Developer",
         status: "Published",
         tags: ["React", "JavaScript", "Frontend", "Web Development"],
-        featuredImage: "/attached_assets/generated_images/tech_article_background_design.png",
+        featuredImage: "/uploads/images/tech_article_background_design.png",
         publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
       },
       {
@@ -280,7 +280,7 @@ AI is augmenting, not replacing, designers. Embrace these tools to enhance your 
         author: "Loi Developer",
         status: "Published",
         tags: ["AI", "Design", "Trends", "UX"],
-        featuredImage: "/attached_assets/generated_images/abstract_digital_particle_background.png",
+        featuredImage: "/uploads/images/abstract_digital_particle_background.png",
         publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
       },
       {
@@ -329,7 +329,7 @@ Use Vercel Analytics and Lighthouse for performance tracking.`,
         author: "Loi Developer",
         status: "Published",
         tags: ["Next.js", "Performance", "Optimization", "React"],
-        featuredImage: "/attached_assets/generated_images/dev_blog_post_background.png",
+        featuredImage: "/uploads/images/dev_blog_post_background.png",
         publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
       },
       {
@@ -371,7 +371,7 @@ Learn how to build production-ready APIs that can handle millions of requests.
         author: "Loi Developer",
         status: "Published",
         tags: ["Node.js", "PostgreSQL", "API", "Backend"],
-        featuredImage: "/attached_assets/generated_images/abstract_blog_article_background.png",
+        featuredImage: "/uploads/images/abstract_blog_article_background.png",
         publishedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
       },
       {
@@ -431,7 +431,7 @@ Implement elegant dark mode switching.`,
         author: "Loi Developer",
         status: "Published",
         tags: ["Tailwind CSS", "CSS", "Frontend", "Design"],
-        featuredImage: "/attached_assets/generated_images/tech_article_background_design.png",
+        featuredImage: "/uploads/images/tech_article_background_design.png",
         publishedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
       },
       {
@@ -464,7 +464,7 @@ Learn to automate your deployment process.
         author: "Loi Developer",
         status: "Published",
         tags: ["DevOps", "CI/CD", "Automation", "Docker"],
-        featuredImage: "/attached_assets/generated_images/abstract_digital_particle_background.png",
+        featuredImage: "/uploads/images/abstract_digital_particle_background.png",
         publishedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
       },
       {
@@ -1057,7 +1057,7 @@ Strategies for advancing your development career.
         originalName: "hero-image.jpg",
         mimeType: "image/jpeg",
         size: 245678,
-        url: "/attached_assets/generated_images/futuristic_3d_developer_avatar.png",
+        url: "/uploads/images/futuristic_3d_developer_avatar.png",
         alt: "Developer avatar",
         createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
       },
@@ -1066,7 +1066,7 @@ Strategies for advancing your development career.
         originalName: "analytics-dashboard-screenshot.png",
         mimeType: "image/png",
         size: 512340,
-        url: "/attached_assets/generated_images/project_screenshot_dashboard.png",
+        url: "/uploads/images/project_screenshot_dashboard.png",
         alt: "Analytics dashboard screenshot",
         createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)
       },
@@ -1075,7 +1075,7 @@ Strategies for advancing your development career.
         originalName: "ecommerce-platform.png",
         mimeType: "image/png",
         size: 478920,
-        url: "/attached_assets/generated_images/project_screenshot_ecommerce.png",
+        url: "/uploads/images/project_screenshot_ecommerce.png",
         alt: "E-commerce platform screenshot",
         createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
       },
@@ -1084,7 +1084,7 @@ Strategies for advancing your development career.
         originalName: "tech-article-background.png",
         mimeType: "image/png",
         size: 156789,
-        url: "/attached_assets/generated_images/tech_article_background_design.png",
+        url: "/uploads/images/tech_article_background_design.png",
         alt: "Blog post background",
         createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
       }

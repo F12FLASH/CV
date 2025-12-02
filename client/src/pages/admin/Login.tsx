@@ -11,7 +11,8 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { useToast } from "@/hooks/use-toast";
 import { useRecaptcha } from "@/hooks/use-recaptcha";
 import { startAuthentication } from "@simplewebauthn/browser";
-import loginBg from "@assets/generated_images/admin_login_background.png";
+
+const loginBg = "/uploads/images/admin_login_background.png";
 
 export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);

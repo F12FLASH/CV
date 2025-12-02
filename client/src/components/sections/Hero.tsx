@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Download, Terminal, Code2, Shield, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import avatarImage from "@assets/generated_images/futuristic_3d_developer_avatar.png";
+
+const avatarImage = "/uploads/images/futuristic_3d_developer_avatar.png";
 
 function MatrixRain() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
