@@ -52,7 +52,23 @@ The application supports multiple 2FA methods:
 
 ### Backend Architecture
 
-The backend utilizes Node.js with Express.js and TypeScript. It follows a RESTful API design, with an abstraction layer for storage (currently in-memory, but prepared for PostgreSQL). `esbuild` handles server bundling for production, and `tsx` is used for development. The server is structured to separate concerns between routing, business logic, and data access, and includes custom logging and environment-based configuration. WebSocket integration provides real-time communication for notifications.
+The backend utilizes Node.js with Express.js and TypeScript. It follows a RESTful API design with modular architecture:
+
+**Directory Structure:**
+- `server/api/` - 25 separate API route modules (auth, users, projects, posts, etc.)
+- `server/middleware/` - Authentication and security middleware
+- `server/utils/` - Shared utilities (upload, password, captcha)
+- `server/` - Core files (index.ts, routes.ts, storage.ts, db.ts, websocket.ts)
+
+**API Route Modules:**
+- Authentication: `auth.ts`, `security.ts`
+- Content: `posts.ts`, `projects.ts`, `pages.ts`, `skills.ts`, `services.ts`, `testimonials.ts`
+- User Management: `users.ts`, `notifications.ts`, `activity-logs.ts`
+- Admin: `settings.ts`, `dashboard.ts`, `database.ts`, `logs.ts`, `performance.ts`
+- Interactions: `comments.ts`, `reviews.ts`, `messages.ts`, `newsletter.ts`
+- Utilities: `media.ts`, `storage.ts`, `categories.ts`, `faqs.ts`, `homepage.ts`
+
+`esbuild` handles server bundling for production, and `tsx` is used for development. The server is structured to separate concerns between routing, business logic, and data access, with custom logging and environment-based configuration. WebSocket integration provides real-time communication for notifications.
 
 ### Data Storage
 
