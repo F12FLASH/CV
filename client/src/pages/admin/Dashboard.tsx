@@ -344,7 +344,7 @@ export default function AdminDashboard() {
                    <CardTitle>Recent Activity</CardTitle>
                    <CardDescription>Latest system actions</CardDescription>
                  </div>
-                 <Link href="/admin/activity-logs">
+                 <Link href="/admin/activity">
                    <Button variant="ghost" size="sm">View All</Button>
                  </Link>
               </CardHeader>
