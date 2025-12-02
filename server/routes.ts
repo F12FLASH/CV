@@ -3420,9 +3420,7 @@ export async function registerRoutes(
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,
         size: req.file.size,
-        path: req.file.path,
-        type: req.file.mimetype.startsWith('image/') ? 'image' : 'document',
-        uploadedBy: req.session.userId || 0
+        url: `/uploads/${req.file.filename}`
       });
 
       res.json(mediaItem);
