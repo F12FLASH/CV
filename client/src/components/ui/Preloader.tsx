@@ -15,14 +15,15 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 100) {
+        const next = prev + Math.random() * 10 + 5;
+        if (next >= 100) {
           clearInterval(interval);
-          setTimeout(onComplete, 500);
+          setTimeout(onComplete, 200);
           return 100;
         }
-        return prev + Math.random() * 3;
+        return next;
       });
-    }, 50);
+    }, 35);
     return () => clearInterval(interval);
   }, [onComplete]);
 
