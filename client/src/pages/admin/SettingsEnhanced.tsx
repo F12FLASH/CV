@@ -1057,6 +1057,29 @@ export default function AdminSettingsEnhanced() {
                   variant="outline"
                   className="w-full"
                   data-testid="button-test-email"
+                  onClick={async () => {
+                    try {
+                      const testEmail = prompt("Enter email address to send test email to:");
+                      if (!testEmail) return;
+                      
+                      await api.sendTestEmail({
+                        to: testEmail,
+                        subject: "Test Email from Portfolio",
+                        body: "<h1>Test Email</h1><p>This is a test email from your portfolio admin panel.</p>"
+                      });
+                      
+                      toast({
+                        title: "Success",
+                        description: "Test email sent successfully"
+                      });
+                    } catch (error: any) {
+                      toast({
+                        title: "Error",
+                        description: error.message || "Failed to send test email",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
                 >
                   <Mail className="w-4 h-4 mr-2" /> Send Test Email
                 </Button>

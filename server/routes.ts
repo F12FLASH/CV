@@ -2594,27 +2594,74 @@ export async function registerRoutes(
   app.post("/api/email/test", requireAdmin, async (req, res) => {
     try {
       const { to, subject, body } = req.body;
-      const smtpSettings = await storage.getSetting("smtp");
       
-      if (!smtpSettings || !smtpSettings.value?.smtpHost) {
+      if (!to || !subject || !body) {
         return res.status(400).json({ 
-          message: "SMTP not configured. Please configure SMTP settings first." 
+          message: "Missing required fields: to, subject, body" 
         });
       }
 
-      // In production, use nodemailer with SMTP settings
-      // For now, simulate sending
-      await storage.createActivityLog({
-        action: `Test email sent to ${to}`,
-        userId: req.session.userId,
-        userName: req.session.username,
-        type: "info"
-      });
+      // Get individual SMTP settings
+      const smtpHost = await storage.getSetting("smtpHost");
+      const smtpPort = await storage.getSetting("smtpPort");
+      const smtpUser = await storage.getSetting("smtpUser");
+      const smtpPassword = await storage.getSetting("smtpPassword");
+      const smtpSecure = await storage.getSetting("smtpSecure");
+      const emailFromName = await storage.getSetting("emailFromName");
+      const emailFromAddress = await storage.getSetting("emailFromAddress");
 
-      res.json({ 
-        message: `Test email would be sent to ${to}. SMTP integration requires nodemailer package.`,
-        success: true 
-      });
+      if (!smtpHost?.value || !smtpPort?.value || !smtpUser?.value || !smtpPassword?.value) {
+        return res.status(400).json({ 
+          message: "SMTP not fully configured. Please fill in all SMTP settings." 
+        });
+      }
+
+      // Try to send actual email using nodemailer
+      try {
+        const nodemailer = require('nodemailer');
+        
+        const transporter = nodemailer.createTransport({
+          host: smtpHost.value,
+          port: parseInt(smtpPort.value as string),
+          secure: smtpSecure?.value === 'true' || smtpSecure?.value === true,
+          auth: {
+            user: smtpUser.value,
+            pass: smtpPassword.value,
+          },
+        });
+
+        await transporter.sendMail({
+          from: `"${emailFromName?.value || 'Portfolio'}" <${emailFromAddress?.value || smtpUser.value}>`,
+          to,
+          subject,
+          html: body,
+        });
+
+        await storage.createActivityLog({
+          action: `Test email sent to ${to}`,
+          userId: req.session.userId,
+          userName: req.session.username,
+          type: "success"
+        });
+
+        res.json({ 
+          message: `Test email sent successfully to ${to}`,
+          success: true 
+        });
+      } catch (smtpError: any) {
+        console.error("SMTP Error:", smtpError);
+        await storage.createActivityLog({
+          action: `Failed to send test email to ${to}: ${smtpError.message}`,
+          userId: req.session.userId,
+          userName: req.session.username,
+          type: "error"
+        });
+        
+        return res.status(500).json({ 
+          message: `SMTP Error: ${smtpError.message}. Please check your SMTP settings.`,
+          success: false 
+        });
+      }
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
