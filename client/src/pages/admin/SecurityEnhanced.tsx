@@ -12,11 +12,11 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
 import { 
-  Shield, Key, Lock, Smartphone, Globe, AlertTriangle, Trash2, Filter,
+  Shield, Key, Lock, Smartphone, Globe, AlertTriangle, Trash2,
   ShieldAlert, RefreshCw, Eye, EyeOff, Clock, Users,
-  Fingerprint, Monitor, LogOut, Ban, CheckCircle, XCircle,
-  Server, AlertCircle, Plus, Loader2, FileText, Code, BarChart3, 
-  Zap, Activity, Database, Link2, Layers, QrCode, Copy, Check
+  Monitor, LogOut, Ban, CheckCircle, XCircle,
+  Server, AlertCircle, Plus, Loader2, FileText, BarChart3, 
+  Zap, Activity, Layers, QrCode, Copy, Check
 } from "lucide-react";
 import {
   Dialog,
@@ -30,7 +30,6 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 
 interface SecuritySettings {
   twoFactorEnabled?: boolean;
-  biometricLogin?: boolean;
   passwordExpiration?: boolean;
   captchaType?: 'disabled' | 'local' | 'google' | 'cloudflare';
   captchaSettings?: {
@@ -77,22 +76,11 @@ interface SecuritySettings {
     forceLogoutInactive?: boolean;
     concurrentSessionLimit?: string;
   };
-  deviceFingerprinting?: {
-    enabled?: boolean;
-    alertOnNewDevice?: boolean;
-    blockSuspiciousDevices?: boolean;
-  };
   compliance?: {
     gdprEnabled?: boolean;
     dataRetentionDays?: number;
     privacyPolicyUrl?: string;
     cookieConsentEnabled?: boolean;
-  };
-  apiSecurity?: {
-    apiKeyRotationDays?: number;
-    oauthEnabled?: boolean;
-    webhooksEnabled?: boolean;
-    rateLimitPerMin?: number;
   };
   cspSettings?: {
     enabled?: boolean;
@@ -175,10 +163,6 @@ export default function AdminSecurityEnhanced() {
   const [disableCode, setDisableCode] = useState("");
   const [secretCopied, setSecretCopied] = useState(false);
   
-  // Biometric Modal
-  const [showBiometricSetup, setShowBiometricSetup] = useState(false);
-  const [biometricDeviceName, setBiometricDeviceName] = useState("");
-  const [isBiometricRegistering, setIsBiometricRegistering] = useState(false);
 
   const { data: settings = {}, isLoading: settingsLoading, refetch: refetchSettings } = useQuery<SecuritySettings>({
     queryKey: ['/api/security/settings'],
@@ -202,10 +186,6 @@ export default function AdminSecurityEnhanced() {
 
   const { data: loginHistory = [], refetch: refetchLoginHistory } = useQuery<SecurityLog[]>({
     queryKey: ['/api/security/login-history'],
-  });
-
-  const { data: webauthnCredentials = [], refetch: refetchWebauthnCredentials } = useQuery<any[]>({
-    queryKey: ['/api/auth/webauthn/credentials'],
   });
 
   const { data: user = null, refetch: refetchUser } = useQuery<any>({
@@ -350,65 +330,6 @@ export default function AdminSecurityEnhanced() {
     }
   });
 
-  // Biometric Mutations
-  const registerBiometricMutation = useMutation({
-    mutationFn: async () => {
-      setIsBiometricRegistering(true);
-      try {
-        // Get registration options
-        const optionsRes = await apiRequest('GET', '/api/auth/webauthn/register/options');
-        
-        // Start WebAuthn registration
-        const credential = await (navigator as any).credentials.create({
-          publicKey: optionsRes
-        });
-
-        // Verify registration
-        await apiRequest('POST', '/api/auth/webauthn/register/verify', {
-          credential: {
-            id: credential.id,
-            rawId: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(credential.rawId)))),
-            response: {
-              clientDataJSON: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(credential.response.clientDataJSON)))),
-              attestationObject: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(credential.response.attestationObject))))
-            },
-            type: credential.type
-          },
-          deviceName: biometricDeviceName || 'Biometric Device'
-        });
-
-        return credential;
-      } finally {
-        setIsBiometricRegistering(false);
-      }
-    },
-    onSuccess: () => {
-      toast({ title: "Biometric device registered successfully" });
-      setShowBiometricSetup(false);
-      setBiometricDeviceName("");
-      refetchWebauthnCredentials();
-      refetchSettings();
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: "Biometric registration failed", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    }
-  });
-
-  const deleteWebauthnCredentialMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest('DELETE', `/api/auth/webauthn/credentials/${id}`);
-      return await res.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Biometric device removed" });
-      refetchWebauthnCredentials();
-    }
-  });
-
   const updateLocalSetting = (key: string, value: any) => {
     setLocalSettings(prev => ({ ...prev, [key]: value }));
   };
@@ -432,28 +353,6 @@ export default function AdminSecurityEnhanced() {
       generate2FAMutation.mutate();
     } else {
       setShow2FADisable(true);
-    }
-  };
-
-  const handleBiometricToggle = (enabled: boolean) => {
-    if (enabled) {
-      if (!window.PublicKeyCredential) {
-        toast({ 
-          title: "Not supported", 
-          description: "Your browser doesn't support biometric authentication",
-          variant: "destructive" 
-        });
-        return;
-      }
-      setShowBiometricSetup(true);
-    } else {
-      // Disable by removing all credentials
-      if (webauthnCredentials.length > 0) {
-        toast({ 
-          title: "Remove all biometric devices first",
-          variant: "destructive" 
-        });
-      }
     }
   };
 
@@ -551,7 +450,6 @@ export default function AdminSecurityEnhanced() {
             <TabsTrigger value="threat" data-testid="tab-threat">Threat Protection</TabsTrigger>
             <TabsTrigger value="sessions" data-testid="tab-sessions">Sessions</TabsTrigger>
             <TabsTrigger value="compliance" data-testid="tab-compliance">Compliance</TabsTrigger>
-            <TabsTrigger value="api-security" data-testid="tab-api-security">API Security</TabsTrigger>
             <TabsTrigger value="csp" data-testid="tab-csp">CSP</TabsTrigger>
             <TabsTrigger value="scanner" data-testid="tab-scanner">Scanner</TabsTrigger>
             <TabsTrigger value="activity" data-testid="tab-activity">Activity</TabsTrigger>
@@ -581,51 +479,6 @@ export default function AdminSecurityEnhanced() {
                     disabled={generate2FAMutation.isPending}
                     data-testid="switch-2fa"
                   />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Fingerprint className="w-5 h-5 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium">Biometric Login</div>
-                        <div className="text-sm text-muted-foreground">Touch ID / Face ID support</div>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleBiometricToggle(true)}
-                      disabled={registerBiometricMutation.isPending}
-                      data-testid="button-add-biometric"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Device
-                    </Button>
-                  </div>
-                  
-                  {webauthnCredentials.length > 0 && (
-                    <div className="space-y-2 pl-8">
-                      {webauthnCredentials.map((cred) => (
-                        <div key={cred.id} className="flex items-center justify-between p-2 border rounded-lg bg-muted/30">
-                          <div>
-                            <p className="font-medium text-sm">{cred.deviceName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Added {new Date(cred.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-destructive"
-                            onClick={() => deleteWebauthnCredentialMutation.mutate(cred.id)}
-                            data-testid={`button-remove-biometric-${cred.id}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -1526,54 +1379,6 @@ export default function AdminSecurityEnhanced() {
                 </Button>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Fingerprint className="w-5 h-5" /> Device Fingerprinting
-                </CardTitle>
-                <CardDescription>Identify and track devices for security</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium text-sm">Enable Device Fingerprinting</p>
-                    <p className="text-xs text-muted-foreground">Track unique device signatures</p>
-                  </div>
-                  <Switch 
-                    checked={localSettings.deviceFingerprinting?.enabled || false}
-                    onCheckedChange={(v) => updateNestedSetting('deviceFingerprinting', 'enabled', v)}
-                    data-testid="switch-device-fingerprinting"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Alert on New Device</p>
-                    <p className="text-xs text-muted-foreground">Notify when login from unrecognized device</p>
-                  </div>
-                  <Switch 
-                    checked={localSettings.deviceFingerprinting?.alertOnNewDevice ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('deviceFingerprinting', 'alertOnNewDevice', v)}
-                    data-testid="switch-alert-new-device"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Block Suspicious Devices</p>
-                    <p className="text-xs text-muted-foreground">Require verification for flagged devices</p>
-                  </div>
-                  <Switch 
-                    checked={localSettings.deviceFingerprinting?.blockSuspiciousDevices || false}
-                    onCheckedChange={(v) => updateNestedSetting('deviceFingerprinting', 'blockSuspiciousDevices', v)}
-                    data-testid="switch-block-suspicious"
-                  />
-                </div>
-                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-fingerprinting">
-                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Save Device Settings
-                </Button>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* COMPLIANCE TAB */}
@@ -1632,67 +1437,6 @@ export default function AdminSecurityEnhanced() {
                 <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-compliance">
                   {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save Compliance Settings
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* API SECURITY TAB */}
-          <TabsContent value="api-security" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Code className="w-5 h-5" /> API Protection
-                </CardTitle>
-                <CardDescription>Control API access and authentication</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">API Key Rotation (days)</label>
-                  <Input 
-                    value={localSettings.apiSecurity?.apiKeyRotationDays ?? 90}
-                    onChange={(e) => updateNestedSetting('apiSecurity', 'apiKeyRotationDays', parseInt(e.target.value) || 90)}
-                    type="number" 
-                    className="mt-1"
-                    data-testid="input-api-rotation"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Force API key rotation after this period</p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">OAuth 2.0</p>
-                    <p className="text-xs text-muted-foreground">Enable OAuth authentication</p>
-                  </div>
-                  <Switch 
-                    checked={localSettings.apiSecurity?.oauthEnabled ?? false}
-                    onCheckedChange={(v) => updateNestedSetting('apiSecurity', 'oauthEnabled', v)}
-                    data-testid="switch-oauth"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Webhooks</p>
-                    <p className="text-xs text-muted-foreground">Allow outbound webhooks</p>
-                  </div>
-                  <Switch 
-                    checked={localSettings.apiSecurity?.webhooksEnabled ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('apiSecurity', 'webhooksEnabled', v)}
-                    data-testid="switch-webhooks"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Rate Limit (requests/min)</label>
-                  <Input 
-                    value={localSettings.apiSecurity?.rateLimitPerMin ?? 60}
-                    onChange={(e) => updateNestedSetting('apiSecurity', 'rateLimitPerMin', parseInt(e.target.value) || 60)}
-                    type="number" 
-                    className="mt-1"
-                    data-testid="input-api-rate-limit"
-                  />
-                </div>
-                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-api-security">
-                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Save API Security Settings
                 </Button>
               </CardContent>
             </Card>
@@ -2025,52 +1769,6 @@ export default function AdminSecurityEnhanced() {
             >
               {disable2FAMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Disable 2FA
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Biometric Setup Modal */}
-      <Dialog open={showBiometricSetup} onOpenChange={setShowBiometricSetup}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Biometric Device</DialogTitle>
-            <DialogDescription>
-              Register your fingerprint or face for quick login
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Device Name (Optional)</Label>
-              <Input 
-                placeholder="e.g., My iPhone, Work Laptop"
-                value={biometricDeviceName}
-                onChange={(e) => setBiometricDeviceName(e.target.value)}
-              />
-            </div>
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                <Fingerprint className="w-4 h-4 inline mr-2" />
-                You'll be prompted to use your device's biometric sensor
-              </p>
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setShowBiometricSetup(false);
-                setBiometricDeviceName("");
-              }}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => registerBiometricMutation.mutate()}
-              disabled={isBiometricRegistering}
-            >
-              {isBiometricRegistering && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Register Device
             </Button>
           </DialogFooter>
         </DialogContent>
