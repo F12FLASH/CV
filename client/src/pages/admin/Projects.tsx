@@ -205,7 +205,7 @@ export default function AdminProjects() {
   const closeDialog = () => {
     setIsDialogOpen(false);
     setEditingProject(null);
-    setFormData(defaultFormData);
+    setFormData(getDefaultFormData());
     setTechInput("");
   };
 
@@ -260,7 +260,7 @@ export default function AdminProjects() {
       }
       
       setIsDialogOpen(false);
-      setFormData(defaultFormData);
+      setFormData(getDefaultFormData());
       setTechInput("");
       setEditingProject(null);
       await loadProjects();

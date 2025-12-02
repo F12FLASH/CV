@@ -44,6 +44,7 @@ export default function AdminPosts() {
       excerpt: null,
       featuredImage: null,
       tags: [],
+      featured: false,
       publishedAt: null,
     });
   };

@@ -571,7 +571,7 @@ export default function AdminMedia() {
                     </a>
                   </pre>
                 </div>
-              ) : (
+              ) : previewItem ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   {getFileIcon(previewItem?.mimeType || '')}
                   <p className="text-muted-foreground mt-4">
@@ -580,7 +580,7 @@ export default function AdminMedia() {
                     </a>
                   </p>
                 </div>
-              )}
+              ) : null}
             </div>
 
             <DialogFooter>
