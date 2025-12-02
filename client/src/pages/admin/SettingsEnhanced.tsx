@@ -48,7 +48,6 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { SettingsPerformance } from "./SettingsPerformance";
-import { SettingsIntegrations } from "./SettingsIntegrations";
 import {
   Dialog,
   DialogContent,
@@ -155,10 +154,12 @@ export default function AdminSettingsEnhanced() {
       const response = await fetch("/api/storage/upload", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error("Upload failed");
+        const errorText = await response.text();
+        throw new Error(errorText || "Upload failed");
       }
 
       const data = await response.json();
@@ -325,7 +326,6 @@ export default function AdminSettingsEnhanced() {
               <TabsTrigger value="email">Email</TabsTrigger>
               <TabsTrigger value="storage">Storage</TabsTrigger>
               <TabsTrigger value="performance">Performance</TabsTrigger>
-              <TabsTrigger value="integrations">Integrations</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
               <TabsTrigger value="developer">Developer</TabsTrigger>
               <TabsTrigger value="localization">Localization</TabsTrigger>
@@ -1336,11 +1336,6 @@ export default function AdminSettingsEnhanced() {
           {/* PERFORMANCE TAB */}
           <TabsContent value="performance" className="space-y-4">
             <SettingsPerformance />
-          </TabsContent>
-
-          {/* INTEGRATIONS TAB */}
-          <TabsContent value="integrations" className="space-y-4">
-            <SettingsIntegrations />
           </TabsContent>
 
           {/* NOTIFICATIONS & ALERTS TAB */}

@@ -11,7 +11,6 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { useState, useEffect } from "react";
 import {
   Mail,
-  Eye,
   Save,
   Loader2
 } from "lucide-react";
@@ -29,7 +28,6 @@ interface NewsletterSettings {
 
 export default function AdminNewsletter() {
   const { toast } = useToast();
-  const [showPreview, setShowPreview] = useState(false);
   const [localSettings, setLocalSettings] = useState<NewsletterSettings>({
     enabled: false,
     title: "Subscribe to Our Newsletter",
@@ -92,12 +90,6 @@ export default function AdminNewsletter() {
             <h1 className="text-3xl font-heading font-bold">Newsletter Management</h1>
             <p className="text-muted-foreground">Configure and manage newsletter popup on homepage</p>
           </div>
-          <Button 
-            onClick={() => setShowPreview(!showPreview)}
-            variant="outline"
-          >
-            <Eye className="w-4 h-4 mr-2" /> {showPreview ? 'Hide' : 'Preview'}
-          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -224,36 +216,6 @@ export default function AdminNewsletter() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Preview */}
-          {showPreview && localSettings.enabled && (
-            <div className="lg:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Preview</CardTitle>
-                  <CardDescription>How it will look on homepage</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4 p-6 border rounded-lg bg-muted">
-                    <div>
-                      <h3 className="font-bold text-lg">{localSettings.title}</h3>
-                      <p className="text-sm font-medium text-muted-foreground">{localSettings.subtitle}</p>
-                    </div>
-                    <div className="text-sm prose prose-sm dark:prose-invert max-w-none [&_p]:my-0 [&_ul]:my-1 [&_ol]:my-1" dangerouslySetInnerHTML={{ __html: localSettings.description }} />
-                    <div className="flex gap-2">
-                      <input
-                        type="email"
-                        placeholder={localSettings.placeholder}
-                        className="flex-1 px-3 py-2 rounded border border-input text-sm"
-                        disabled
-                      />
-                      <Button disabled>{localSettings.buttonText}</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       </div>
     </AdminLayout>

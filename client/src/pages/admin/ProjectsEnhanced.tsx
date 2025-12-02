@@ -20,6 +20,7 @@ interface Project {
   title: string;
   category: string;
   image: string | null;
+  shortDescription: string | null;
   description: string | null;
   tech: string[];
   link: string | null;
@@ -43,6 +44,7 @@ const emptyProject = {
   title: "",
   category: "full-stack",
   image: "",
+  shortDescription: "",
   description: "",
   tech: [] as string[],
   link: "",
@@ -153,6 +155,7 @@ export default function AdminProjectsEnhanced() {
       title: project.title,
       category: project.category,
       image: project.image || "",
+      shortDescription: project.shortDescription || "",
       description: project.description || "",
       tech: project.tech || [],
       link: project.link || "",
@@ -453,7 +456,25 @@ export default function AdminProjectsEnhanced() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Project Description</Label>
+              <Label htmlFor="shortDescription">Short Description</Label>
+              <p className="text-sm text-muted-foreground">
+                A brief summary shown in featured project cards (max 150 characters)
+              </p>
+              <Input
+                id="shortDescription"
+                value={formData.shortDescription}
+                onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                placeholder="Brief project summary for featured display..."
+                maxLength={150}
+                data-testid="input-short-description"
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {formData.shortDescription.length}/150
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Full Description</Label>
               <p className="text-sm text-muted-foreground mb-3">
                 Add detailed information about your project with rich formatting support
               </p>

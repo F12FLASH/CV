@@ -8,6 +8,7 @@ export interface Project {
   title: string;
   category: string;
   image: string | null;
+  shortDescription: string | null;
   description: string | null;
   tech: string[];
   link: string | null;

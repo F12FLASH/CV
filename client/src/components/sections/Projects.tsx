@@ -109,7 +109,7 @@ export function Projects() {
                     {project.title}
                   </h3>
                   <p className="text-white/70 text-sm mb-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100">
-                    {project.description}
+                    {project.shortDescription || project.description}
                   </p>
                   <div className="flex flex-wrap gap-2 justify-center mb-6 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-150">
                     {project.tech.map((t: string) => (

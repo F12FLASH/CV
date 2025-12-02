@@ -710,4 +710,38 @@ export const api = {
     });
     return handleResponse<{ message: string; success: boolean }>(res);
   },
+
+  // ==================== SYSTEM API ====================
+  
+  async getSystemStats() {
+    const res = await fetch(`${API_BASE}/system/stats`, { credentials: 'include' });
+    return handleResponse<{
+      status: string;
+      lastCheck: string;
+      databaseSize: string;
+      serverUptime: number;
+      tableStats: Array<{ name: string; count: number }>;
+    }>(res);
+  },
+
+  async getSystemActivityLogs(limit = 100, offset = 0) {
+    const res = await fetch(`${API_BASE}/system/activity-logs?limit=${limit}&offset=${offset}`, { credentials: 'include' });
+    return handleResponse<any[]>(res);
+  },
+
+  async clearActivityLogs() {
+    const res = await fetch(`${API_BASE}/system/clear-logs`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    return handleResponse<{ message: string; success: boolean }>(res);
+  },
+
+  async resetSystem() {
+    const res = await fetch(`${API_BASE}/system/reset`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    return handleResponse<{ message: string; success: boolean }>(res);
+  },
 };

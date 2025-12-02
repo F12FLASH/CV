@@ -35,6 +35,7 @@ export const projects = pgTable("projects", {
   title: text("title").notNull(),
   category: text("category").notNull(),
   image: text("image"),
+  shortDescription: text("short_description"),
   description: text("description"),
   tech: jsonb("tech").$type<string[]>().default([]),
   link: text("link"),

@@ -400,3 +400,37 @@
     - Inbox: ✅ Đã sửa - TanStack Query với mutations cho read/archive/delete
     - Không còn mock data, tất cả operations lưu vào database
 [x] 199. **✅ ADMIN PAGES API INTEGRATION COMPLETE** - Tất cả 8 trang admin hoạt động với real API và database persistence!
+
+## Enhancement and Bug Fixes (Dec 2, 2025 - 12:34 PM)
+[x] 200. **FIX** - admin/System.tsx missing API functions
+    - Added getSystemStats, getSystemActivityLogs, clearActivityLogs, resetSystem functions to client/src/lib/api.ts
+    - System page now properly fetches real data from API endpoints
+[x] 201. **FIX** - Theme toggle not working on homepage
+    - Updated useTheme hook to use next-themes library
+    - Theme toggle now properly switches between light/dark modes
+[x] 202. **FIX** - Branding tab image upload not working
+    - Added credentials: 'include' to fetch requests in upload handler
+    - Image uploads now properly authenticate and save to database
+[x] 203. **FEATURE** - Added shortDescription field to projects schema
+    - Added shortDescription column to projects table in shared/schema.ts
+    - Updated insertProjectSchema to include shortDescription field
+    - Updated ProjectsEnhanced.tsx admin form with new input field (max 150 chars)
+    - Updated frontend Projects.tsx to display shortDescription in featured cards
+    - Short description provides brief summary for cards, full description for detail view
+[x] 204. **REMOVED** - Preview button from admin/newsletter page
+    - Removed Eye icon import, showPreview state, Preview button
+    - Removed entire Preview section with card and form preview
+    - Newsletter management page now shows only settings form
+[x] 205. **REMOVED** - Integrations tab from admin/settings
+    - Removed SettingsIntegrations import
+    - Removed TabsTrigger for "integrations" value
+    - Removed TabsContent for integrations section
+[x] 206. **FIX** - Created session table for PostgreSQL session storage
+    - Created "session" table with sid, sess, expire columns
+    - Added index on expire column for cleanup performance
+    - Session persistence errors now resolved
+[x] 207. **FIX** - Applied database migration for shortDescription column
+    - Ran npm run db:push to sync schema with database
+    - Updated MockContext Project interface to include shortDescription
+    - Removed `as any` type cast in Projects.tsx frontend component
+    - All type issues resolved, shortDescription properly typed
