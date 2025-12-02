@@ -528,9 +528,16 @@ export async function registerRoutes(
       req.session.username = user.username;
       req.session.role = user.role;
 
-      // Create user session record
+      // Create user session record - check if exists first
       const sessionExpiry = new Date();
       sessionExpiry.setHours(sessionExpiry.getHours() + 24); // 24 hour session
+
+      try {
+        // Try to delete existing session with same ID first
+        await storage.terminateSessionBySessionId(req.sessionID);
+      } catch (e) {
+        // Session doesn't exist yet, continue
+      }
 
       await storage.createUserSession({
         sessionId: req.sessionID,

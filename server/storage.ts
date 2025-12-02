@@ -195,6 +195,7 @@ export interface IStorage {
   createUserSession(session: InsertUserSession): Promise<UserSession>;
   updateUserSession(id: number, session: Partial<InsertUserSession>): Promise<UserSession | undefined>;
   terminateSession(id: number): Promise<boolean>;
+  terminateSessionBySessionId(sessionId: string): Promise<void>;
   terminateAllUserSessions(userId: number): Promise<boolean>;
   terminateAllSessions(): Promise<boolean>;
 
@@ -954,6 +955,10 @@ export class DatabaseStorage implements IStorage {
   async terminateSession(id: number): Promise<boolean> {
     await this.db.update(userSessions).set({ active: false }).where(eq(userSessions.id, id));
     return true;
+  }
+
+  async terminateSessionBySessionId(sessionId: string): Promise<void> {
+    await this.db.delete(userSessions).where(eq(userSessions.sessionId, sessionId));
   }
 
   async terminateAllUserSessions(userId: number): Promise<boolean> {
