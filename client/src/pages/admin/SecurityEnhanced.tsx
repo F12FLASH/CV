@@ -202,7 +202,7 @@ export default function AdminSecurityEnhanced() {
     queryKey: ['/api/security/stats'],
   });
 
-  const { data: loginHistory = [], refetch: refetchLoginHistory } = useQuery<SecurityLog[]>({
+  const { data: loginHistory = [], refetch: refetchLoginHistory, isRefetching: isRefetchingLoginHistory } = useQuery<SecurityLog[]>({
     queryKey: ['/api/security/login-history'],
     refetchInterval: showLoginHistory ? 30000 : false, // Auto refresh every 30s when viewing
   });
@@ -368,16 +368,75 @@ export default function AdminSecurityEnhanced() {
     updateSettingsMutation.mutate(localSettings);
   };
 
+  const saveAuthSettings = () => {
+    const authSettings = {
+      passwordExpiration: localSettings.passwordExpiration
+    };
+    updateSettingsMutation.mutate(authSettings);
+  };
+
+  const saveCaptchaSettings = () => {
+    const captchaSettings = {
+      captchaType: localSettings.captchaType,
+      captchaSettings: localSettings.captchaSettings,
+      protectionCoverage: localSettings.protectionCoverage
+    };
+    updateSettingsMutation.mutate(captchaSettings);
+  };
+
+  const saveFirewallSettings = () => {
+    const firewallSettings = {
+      rateLimiting: localSettings.rateLimiting
+    };
+    updateSettingsMutation.mutate(firewallSettings);
+  };
+
+  const saveThreatSettings = () => {
+    const threatSettings = {
+      ddosProtection: localSettings.ddosProtection,
+      sqlInjectionProtection: localSettings.sqlInjectionProtection,
+      xssProtection: localSettings.xssProtection
+    };
+    updateSettingsMutation.mutate(threatSettings);
+  };
+
+  const saveSessionSettings = () => {
+    const sessionSettings = {
+      sessionSettings: localSettings.sessionSettings
+    };
+    updateSettingsMutation.mutate(sessionSettings);
+  };
+
+  const saveComplianceSettings = () => {
+    const complianceSettings = {
+      compliance: localSettings.compliance
+    };
+    updateSettingsMutation.mutate(complianceSettings);
+  };
+
+  const saveCSPSettings = () => {
+    const cspSettings = {
+      cspSettings: localSettings.cspSettings
+    };
+    updateSettingsMutation.mutate(cspSettings);
+  };
+
+  const saveScannerSettings = () => {
+    const scannerSettings = {
+      scannerSettings: localSettings.scannerSettings
+    };
+    updateSettingsMutation.mutate(scannerSettings);
+  };
+
   const handle2FAToggle = (enabled: boolean) => {
     if (enabled) {
       if (user?.twoFactorEnabled) {
         toast({ title: "2FA is already enabled", variant: "default" });
         return;
       }
-      // Auto show setup dialog sau khi generate thành công
       generate2FAMutation.mutate(undefined, {
         onSuccess: () => {
-          // Modal sẽ tự động hiện nhờ state show2FASetup được set trong mutation
+          // Modal sẽ tự động hiện
         },
         onError: () => {
           toast({ title: "Failed to generate 2FA setup", variant: "destructive" });
@@ -530,7 +589,7 @@ export default function AdminSecurityEnhanced() {
                     data-testid="switch-password-expiration"
                   />
                 </div>
-                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-auth">
+                <Button onClick={saveAuthSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-auth">
                   {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save Authentication Settings
                 </Button>
@@ -600,8 +659,9 @@ export default function AdminSecurityEnhanced() {
                         variant="ghost" 
                         size="sm"
                         onClick={() => refetchLoginHistory()}
+                        disabled={isRefetchingLoginHistory}
                       >
-                        <RefreshCw className="w-3 h-3" />
+                        <RefreshCw className={`w-3 h-3 ${isRefetchingLoginHistory ? 'animate-spin' : ''}`} />
                       </Button>
                     </div>
                     {loginHistory.length === 0 ? (
@@ -867,7 +927,7 @@ export default function AdminSecurityEnhanced() {
                     </div>
                   </div>
 
-                  <Button className="w-full" onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-captcha">
+                  <Button className="w-full" onClick={saveCaptchaSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-captcha">
                     {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Save Captcha Settings
                   </Button>
@@ -939,7 +999,7 @@ export default function AdminSecurityEnhanced() {
                         data-testid="switch-protect-registration"
                       />
                     </div>
-                    <Button className="w-full" onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-coverage">
+                    <Button className="w-full" onClick={saveCaptchaSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-coverage">
                       Save Coverage Settings
                     </Button>
                   </CardContent>
@@ -1141,7 +1201,7 @@ export default function AdminSecurityEnhanced() {
                   />
                   <p className="text-xs text-muted-foreground mt-1">Time before locked out user can try again</p>
                 </div>
-                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-rate-limiting">
+                <Button onClick={saveFirewallSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-rate-limiting">
                   {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save Rate Limiting Settings
                 </Button>
@@ -1292,7 +1352,7 @@ export default function AdminSecurityEnhanced() {
                     </div>
                   </>
                 )}
-                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-threat">
+                <Button onClick={saveThreatSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-threat">
                   {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save Threat Protection Settings
                 </Button>
@@ -1437,7 +1497,7 @@ export default function AdminSecurityEnhanced() {
                   </select>
                 </div>
 
-                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-session-policies">
+                <Button onClick={saveSessionSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-session-policies">
                   {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save Session Policies
                 </Button>
@@ -1498,7 +1558,7 @@ export default function AdminSecurityEnhanced() {
                     data-testid="switch-cookie-consent"
                   />
                 </div>
-                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-compliance">
+                <Button onClick={saveComplianceSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-compliance">
                   {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save Compliance Settings
                 </Button>
@@ -1549,7 +1609,7 @@ export default function AdminSecurityEnhanced() {
                   />
                   <p className="text-xs text-muted-foreground mt-1">Endpoint to receive CSP violation reports</p>
                 </div>
-                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-csp">
+                <Button onClick={saveCSPSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-csp">
                   {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save CSP Settings
                 </Button>
@@ -1613,7 +1673,7 @@ export default function AdminSecurityEnhanced() {
                     <option value="monthly">Monthly</option>
                   </select>
                 </div>
-                <Button onClick={saveAllSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-scanner">
+                <Button onClick={saveScannerSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-scanner">
                   {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save Scanner Settings
                 </Button>
