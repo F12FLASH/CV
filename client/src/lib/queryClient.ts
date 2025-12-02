@@ -41,14 +41,25 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+// staleTime configurations for different query types
+export const STALE_TIMES = {
+  static: Infinity,           // Settings, site config - rarely changes
+  long: 1000 * 60 * 30,       // 30 min - Projects, posts, categories
+  medium: 1000 * 60 * 5,      // 5 min - Comments, reviews, skills
+  short: 1000 * 60 * 1,       // 1 min - Messages, notifications
+  realtime: 1000 * 30,        // 30 sec - Dashboard stats
+};
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: STALE_TIMES.medium,  // 5 min default staleTime
+      gcTime: 1000 * 60 * 30,         // 30 min garbage collection
+      retry: 1,                        // Retry once on failure
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     mutations: {
       retry: false,
