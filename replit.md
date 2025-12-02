@@ -14,6 +14,40 @@ Preferred communication style: Simple, everyday language.
 
 The frontend is built using React 18 with TypeScript, Vite for tooling, Wouter for routing, and React Context API/TanStack Query for state management. Radix UI and shadcn/ui provide the component foundation, styled with Tailwind CSS v4. Animations are handled by Framer Motion, and 3D elements are integrated using React Three Fiber. The design emphasizes a dark mode aesthetic, component-based structure, and custom theming. Key features include a portfolio showcase, blog, contact form, testimonials, skills visualization, and an extensive admin dashboard with CRUD operations for projects, posts, categories, comments, and reviews. Recent enhancements focus on real-time notifications via WebSockets, an auto-approval system for comments/reviews, a redesigned preloader, comprehensive site settings management, and improved notification UX.
 
+**Frontend Page Organization (Domain-Centric):**
+
+```
+client/src/pages/
+├── home/                    # Public-facing pages
+│   ├── Home.tsx            # Landing page
+│   ├── Blog.tsx            # Blog listing
+│   ├── BlogPost.tsx        # Individual blog post
+│   ├── Projects.tsx        # Projects showcase
+│   ├── Pages.tsx           # Dynamic CMS pages
+│   ├── PageDetail.tsx      # Individual page view
+│   ├── Maintenance.tsx     # Maintenance mode
+│   └── not-found.tsx       # 404 page
+│
+└── admin/                   # Admin dashboard (10 functional domains)
+    ├── auth/               # Login
+    ├── dashboard/          # Dashboard, Analytics
+    ├── content/            # Organized by content type
+    │   ├── posts/          # Posts, PostCategories
+    │   ├── projects/       # Projects, ProjectCategories
+    │   ├── services/       # Services management
+    │   ├── skills/         # Skills management
+    │   └── testimonials/   # Testimonials
+    ├── communications/     # Inbox, Comments, Notifications, Newsletter, EmailTemplates
+    ├── settings/           # Site settings, Theme, Language, SEO
+    ├── security/           # Security, Webhooks, APIKeys
+    ├── system/             # System, Cache, Logs, ActivityLog, ExportImport, APIDocs
+    ├── tools/              # Media, ImageOptimizer, Scheduler, FileManager
+    ├── pages/              # CMS Pages, PageBuilder, FAQs, Editor
+    └── users/              # Profile, Users, Roles
+```
+
+All admin pages use React.lazy() for code splitting to optimize bundle size.
+
 ### Security & CAPTCHA Integration
 
 The application includes a flexible CAPTCHA system supporting multiple providers:
