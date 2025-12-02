@@ -35,8 +35,9 @@ export function useThemeSettings() {
     
     if (!theme || typeof theme !== 'object') return;
 
-    const root = document.documentElement;
-    console.log('Applying theme settings:', theme);
+    try {
+      const root = document.documentElement;
+      console.log('Applying theme settings:', theme);
     
     // Apply color settings
     if (theme.primaryColor) {
@@ -83,6 +84,19 @@ export function useThemeSettings() {
       root.style.setProperty('--letter-spacing', `${theme.letterSpacing}px`);
     }
 
+    // Apply custom CSS if provided
+    if (theme.customCSS) {
+      let styleElement = document.getElementById('custom-theme-css');
+      if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = 'custom-theme-css';
+        document.head.appendChild(styleElement);
+      }
+      styleElement.textContent = theme.customCSS;
+    }
+    } catch (error) {
+      console.error('Error applying theme settings:', error);
+    }
   }, [settings]);
 }
 

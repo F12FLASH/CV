@@ -143,12 +143,14 @@ export default function AdminThemeEnhanced() {
         try {
           const parsedTheme = JSON.parse((savedSettings as any).theme);
           setTheme({ ...defaultTheme, ...parsedTheme });
+          setHasChanges(false);
         } catch (e) {
           console.error('Failed to parse theme:', e);
         }
       } else if ((savedSettings as any).theme && typeof (savedSettings as any).theme === 'object') {
         // If it's already an object, use it directly
         setTheme({ ...defaultTheme, ...(savedSettings as any).theme });
+        setHasChanges(false);
       }
     }
   }, [savedSettings]);
@@ -190,6 +192,11 @@ export default function AdminThemeEnhanced() {
   };
 
   const handleReset = () => {
+    if (hasChanges) {
+      if (!confirm("You have unsaved changes. Reset anyway?")) {
+        return;
+      }
+    }
     setTheme(defaultTheme);
     setHasChanges(true);
     toast({
@@ -730,7 +737,7 @@ export default function AdminThemeEnhanced() {
               </CardHeader>
               <CardContent>
                 <textarea
-                  className="w-full p-3 border rounded-md font-mono text-sm bg-background min-h-[200px]"
+                  className="w-full p-3 border rounded-md font-mono text-sm bg-muted/50 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder={`:root {
   --primary: ${theme.primaryColor};
   --secondary: ${theme.secondaryColor};
