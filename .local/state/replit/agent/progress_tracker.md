@@ -335,3 +335,34 @@
     - Only 401 errors for auth endpoints (expected when not logged in)
 [x] 193. **✅ MIGRATION COMPLETE** - Project fully migrated and operational in new environment!
 [x] 194. **✅ IMPORT COMPLETED** - All migration tasks finished, project is ready for development!
+
+## Admin Pages Real API Integration (Dec 2, 2025 - 9:05 AM)
+[x] 195. **EVALUATED** - Đánh giá toàn diện 8 trang Admin:
+    - Skills: ✅ Hoàn chỉnh - TanStack Query, CRUD mutations
+    - Testimonials: ✅ Hoàn chỉnh - TanStack Query, CRUD mutations
+    - Comments: ✅ Hoàn chỉnh - Real API cho comments, reviews, FAQs
+    - Newsletter: ✅ Hoàn chỉnh - Real API cho newsletter settings
+    - System: ✅ Hoàn chỉnh - Real API cho system stats và activity logs
+    - ExportImport: ✅ Hoàn chỉnh - Real API cho export/import data
+    - Services: ⚠️ Mock data tĩnh - CẦN SỬA
+    - Inbox: ⚠️ useMockData() - CẦN SỬA
+[x] 196. **FIX** - Sửa admin/Services.tsx:
+    - Xóa bỏ dữ liệu mock hardcoded (servicesData, packagesData arrays)
+    - Thêm useQuery hook cho fetching services (queryKey: ['/api/services'])
+    - Thêm useMutation hooks cho createService, updateService, deleteService
+    - Proper queryClient.invalidateQueries để cập nhật cache
+    - Form dialog cho tạo/sửa service với validation
+    - Loading states, error handling, toast notifications
+[x] 197. **FIX** - Sửa admin/Inbox.tsx:
+    - Xóa bỏ useMockData() dependency
+    - Thêm useQuery hook cho fetching messages (queryKey: ['/api/messages'])
+    - Thêm useMutation hooks cho markAsRead, archive, delete
+    - Sử dụng apiRequest từ queryClient cho mutations
+    - Proper date formatting với date-fns
+    - Auto mark-as-read khi chọn message
+    - Loading states và toast notifications
+[x] 198. **VERIFIED** - Tất cả 8 trang admin đều sử dụng real API:
+    - Services: ✅ Đã sửa - TanStack Query với CRUD mutations
+    - Inbox: ✅ Đã sửa - TanStack Query với mutations cho read/archive/delete
+    - Không còn mock data, tất cả operations lưu vào database
+[x] 199. **✅ ADMIN PAGES API INTEGRATION COMPLETE** - Tất cả 8 trang admin hoạt động với real API và database persistence!
