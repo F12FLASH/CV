@@ -72,10 +72,11 @@ export default function AdminSystem() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: systemStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
+  const { data: systemStats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
     queryKey: ["/api/system/stats"],
     queryFn: () => api.getSystemStats(),
     refetchInterval: 30000,
+    retry: 2,
   });
 
   const { data: activityLogs = [], isLoading: logsLoading, refetch: refetchLogs } = useQuery({
@@ -180,6 +181,15 @@ export default function AdminSystem() {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
+        ) : statsError ? (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3 text-destructive">
+                <XCircle className="w-5 h-5" />
+                <p>Failed to load system stats. Please try refreshing.</p>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -209,7 +219,7 @@ export default function AdminSystem() {
                 <CardContent>
                   <div className="text-2xl font-bold">{systemStats?.databaseSize || "Unknown"}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {systemStats?.tableStats?.reduce((sum, t) => sum + t.count, 0) || 0} total records
+                    {systemStats?.tableStats?.reduce((sum, t) => sum + (t?.count || 0), 0) || 0} total records
                   </p>
                 </CardContent>
               </Card>
@@ -239,11 +249,12 @@ export default function AdminSystem() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                  {systemStats?.tableStats?.map((table) => (
-                    <div 
-                      key={table.name} 
-                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
-                    >
+                  {systemStats?.tableStats && systemStats.tableStats.length > 0 ? (
+                    systemStats.tableStats.map((table) => (
+                      <div 
+                        key={table?.name || Math.random()} 
+                        className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
+                      >
                       <div className="p-2 rounded-md bg-primary/10">
                         {table.name === "Users" && <Users className="w-4 h-4 text-primary" />}
                         {table.name === "Projects" && <Briefcase className="w-4 h-4 text-primary" />}
@@ -257,7 +268,13 @@ export default function AdminSystem() {
                         <p className="text-xs text-muted-foreground">{table.name}</p>
                       </div>
                     </div>
-                  ))}
+                  ))
+                  ) : (
+                    <div className="col-span-full text-center text-muted-foreground py-8">
+                      <Database className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                      <p>No database tables found</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
