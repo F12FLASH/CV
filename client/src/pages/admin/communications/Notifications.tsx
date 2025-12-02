@@ -43,6 +43,7 @@ export default function AdminNotifications() {
 
   const { data: messages = [], refetch: refetchMessages } = useQuery<any[]>({
     queryKey: ['/api/messages'],
+    retry: false,
   });
 
   const { data: comments = [], refetch: refetchComments } = useQuery<any[]>({

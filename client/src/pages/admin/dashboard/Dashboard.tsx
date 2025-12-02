@@ -56,6 +56,7 @@ import type {
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const trafficSourceData = [
   { name: "Organic", value: 400, color: "hsl(var(--primary))" },
@@ -65,6 +66,8 @@ const trafficSourceData = [
 ];
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
+
   const { data: posts = [] } = useQuery<Post[]>({
     queryKey: ["/api/posts"],
   });
@@ -73,8 +76,14 @@ export default function AdminDashboard() {
     queryKey: ["/api/projects"],
   });
 
-  const { data: messages = [] } = useQuery<Message[]>({
+  const {
+    data: messages = [],
+    isLoading: messagesLoading,
+    isError: messagesError,
+  } = useQuery<Message[]>({
     queryKey: ["/api/messages"],
+    retry: false,
+    enabled: !!user,
   });
 
   const { data: comments = [] } = useQuery<Comment[]>({
@@ -544,10 +553,18 @@ export default function AdminDashboard() {
               <CardTitle>Recent Messages</CardTitle>
             </CardHeader>
             <CardContent>
-              {messages.length === 0 ? (
+              {messages.length === 0 && !messagesLoading && !messagesError ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Mail className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p>No messages yet</p>
+                </div>
+              ) : messagesError ? (
+                <div className="text-center py-8 text-red-500">
+                  <AlertTriangle className="w-12 h-12 mx-auto mb-4" />
+                  <p>Could not load messages.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Please ensure you are logged in as an admin.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
