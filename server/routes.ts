@@ -23,6 +23,7 @@ import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse 
 } from "@simplewebauthn/server";
+import nodemailer from "nodemailer";
 
 // Configure multer for file uploads
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -2626,7 +2627,6 @@ export async function registerRoutes(
 
       // Try to send actual email using nodemailer
       try {
-        const nodemailer = require('nodemailer');
         
         // Parse port to number
         const port = typeof smtpPort.value === 'string' 
