@@ -215,8 +215,21 @@ export default function AdminSettings() {
     }
   };
 
-  const handleSave = () => {
-    updateMutation.mutate(settings);
+  const handleSave = async () => {
+    try {
+      await updateMutation.mutateAsync(settings);
+      toast({ 
+        title: "Thành công", 
+        description: "Cài đặt đã được lưu thành công" 
+      });
+      setHasChanges(false);
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể lưu cài đặt",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePasswordChange = () => {

@@ -77,11 +77,11 @@ export interface SiteSettings {
   pushNotifyMobile?: boolean;
 }
 
-interface SiteContextType {
+interface SiteSettingsContextType {
   settings: SiteSettings;
-  updateSettings: (newSettings: Partial<SiteSettings>) => void;
-  saveSettings: () => Promise<void>;
   isLoading: boolean;
+  updateSettings: (newSettings: Partial<SiteSettings>) => void;
+  saveSettings: () => Promise<{ success: boolean; error?: string }>;
   isSaving: boolean;
 }
 
@@ -158,10 +158,10 @@ const defaultSettings: SiteSettings = {
   pushNotifyMobile: false,
 };
 
-const SiteContext = createContext<SiteContextType | undefined>(undefined);
+const SiteContext = createContext<SiteSettingsContextType | undefined>(undefined);
 
 export function SiteProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
+  const [localSettings, setLocalSettings] = useState<SiteSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -169,7 +169,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     try {
       const data = await api.getSettings();
       if (data && Object.keys(data).length > 0) {
-        setSettings({
+        setLocalSettings({
           siteTitle: data.siteTitle || defaultSettings.siteTitle,
           tagline: data.tagline || defaultSettings.tagline,
           maintenanceMode: data.maintenanceMode ?? defaultSettings.maintenanceMode,
@@ -250,7 +250,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem("siteSettings");
       if (stored) {
         try {
-          setSettings(JSON.parse(stored));
+          setLocalSettings(JSON.parse(stored));
         } catch (e) {
           console.error("Failed to parse site settings:", e);
         }
@@ -275,39 +275,39 @@ export function SiteProvider({ children }: { children: ReactNode }) {
 
   // Update favicon when faviconUrl changes
   useEffect(() => {
-    if (settings.faviconUrl) {
+    if (localSettings.faviconUrl) {
       const link = document.querySelector("link[rel='icon']") as HTMLLinkElement;
       if (link) {
-        link.href = settings.faviconUrl;
+        link.href = localSettings.faviconUrl;
         link.type = "image/png";
       } else {
         const newLink = document.createElement('link');
         newLink.rel = 'icon';
-        newLink.href = settings.faviconUrl;
+        newLink.href = localSettings.faviconUrl;
         newLink.type = "image/png";
         document.head.appendChild(newLink);
       }
     }
-  }, [settings.faviconUrl]);
+  }, [localSettings.faviconUrl]);
 
   // Update document title when siteTitle changes
   useEffect(() => {
-    if (settings.siteTitle) {
-      document.title = settings.siteTitle;
+    if (localSettings.siteTitle) {
+      document.title = localSettings.siteTitle;
     }
-  }, [settings.siteTitle]);
+  }, [localSettings.siteTitle]);
 
   const updateSettings = (newSettings: Partial<SiteSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+    setLocalSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   const saveSettings = async () => {
     setIsSaving(true);
     try {
-      console.log("Saving settings:", settings);
-      const response = await api.updateSettings(settings);
-      console.log("Settings saved successfully:", response);
-      localStorage.setItem("siteSettings", JSON.stringify(settings));
+      console.log("Saving settings:", localSettings);
+      await api.updateSettings(localSettings);
+      console.log("Settings saved successfully");
+      localStorage.setItem("siteSettings", JSON.stringify(localSettings));
       return { success: true };
     } catch (error: any) {
       console.error("Failed to save settings to API:", error);
@@ -316,7 +316,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
         response: error?.response,
         status: error?.status
       });
-      localStorage.setItem("siteSettings", JSON.stringify(settings));
+      localStorage.setItem("siteSettings", JSON.stringify(localSettings));
       return { success: false, error: error?.message || "Failed to save settings" };
     } finally {
       setIsSaving(false);
@@ -324,7 +324,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <SiteContext.Provider value={{ settings, updateSettings, saveSettings, isLoading, isSaving }}>
+    <SiteContext.Provider value={{ settings: localSettings, updateSettings, saveSettings, isLoading, isSaving }}>
       {children}
     </SiteContext.Provider>
   );
