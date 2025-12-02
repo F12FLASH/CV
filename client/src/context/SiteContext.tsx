@@ -333,6 +333,63 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     }
   }, [localSettings.siteTitle]);
 
+  // Apply SEO meta tags
+  useEffect(() => {
+    const updateMetaTag = (name: string, content: string | undefined, isProperty = false) => {
+      if (!content) return;
+      const selector = isProperty ? `meta[property="${name}"]` : `meta[name="${name}"]`;
+      let meta = document.querySelector(selector) as HTMLMetaElement;
+      if (meta) {
+        meta.content = content;
+      } else {
+        meta = document.createElement('meta');
+        if (isProperty) {
+          meta.setAttribute('property', name);
+        } else {
+          meta.name = name;
+        }
+        meta.content = content;
+        document.head.appendChild(meta);
+      }
+    };
+
+    updateMetaTag('description', localSettings.metaDescription);
+    updateMetaTag('keywords', localSettings.metaKeywords);
+    updateMetaTag('og:title', localSettings.siteTitle, true);
+    updateMetaTag('og:description', localSettings.metaDescription, true);
+    updateMetaTag('og:image', localSettings.ogImageUrl, true);
+    updateMetaTag('og:type', 'website', true);
+    updateMetaTag('twitter:card', localSettings.twitterCardType);
+    updateMetaTag('twitter:title', localSettings.siteTitle);
+    updateMetaTag('twitter:description', localSettings.metaDescription);
+    updateMetaTag('twitter:image', localSettings.ogImageUrl);
+  }, [
+    localSettings.metaDescription,
+    localSettings.metaKeywords,
+    localSettings.siteTitle,
+    localSettings.ogImageUrl,
+    localSettings.twitterCardType
+  ]);
+
+  // Load Google Analytics if configured
+  useEffect(() => {
+    if (localSettings.googleAnalyticsId && !document.querySelector(`script[src*="googletagmanager"]`)) {
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${localSettings.googleAnalyticsId}`;
+      document.head.appendChild(script);
+
+      const inlineScript = document.createElement('script');
+      inlineScript.innerHTML = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${localSettings.googleAnalyticsId}');
+      `;
+      document.head.appendChild(inlineScript);
+    }
+  }, [localSettings.googleAnalyticsId]);
+
   const updateSettings = (newSettings: Partial<SiteSettings>) => {
     setLocalSettings(prev => ({ ...prev, ...newSettings }));
   };

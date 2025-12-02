@@ -174,6 +174,9 @@ export interface IStorage {
   }>;
   getActivityLogs(limit: number, offset: number): Promise<ActivityLog[]>;
   clearActivityLogs(): Promise<void>;
+  getSystemLogs(limit?: number): Promise<any[]>;
+  clearSystemLogs(): Promise<void>;
+  createSystemLog(log: { level: string; message: string; source: string; metadata?: any }): Promise<any>;
 
   // Security Settings
   getSecuritySetting(key: string): Promise<SecuritySetting | undefined>;
@@ -872,6 +875,23 @@ export class DatabaseStorage implements IStorage {
 
   async clearActivityLogs(): Promise<void> {
     await this.db.delete(activityLogs);
+  }
+
+  async getSystemLogs(limit: number = 100): Promise<any[]> {
+    return await this.db.select().from(securityLogs).orderBy(desc(securityLogs.createdAt)).limit(limit);
+  }
+
+  async clearSystemLogs(): Promise<void> {
+    await this.db.delete(securityLogs);
+  }
+
+  async createSystemLog(log: { level: string; message: string; source: string; metadata?: any }): Promise<any> {
+    const [created] = await this.db.insert(securityLogs).values({
+      eventType: log.level,
+      action: log.message,
+      ipAddress: log.source,
+    }).returning();
+    return created;
   }
 
   // Security Settings

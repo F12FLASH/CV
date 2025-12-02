@@ -32,6 +32,31 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+const fileCounter: Record<string, number> = {};
+
+function generateCleanFilename(originalName: string, subDir: string): string {
+  const date = new Date();
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const dateStr = `${day}${month}${year}`;
+  
+  const ext = path.extname(originalName);
+  let baseName = path.basename(originalName, ext)
+    .replace(/[^a-zA-Z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .substring(0, 30);
+  
+  if (!baseName) baseName = 'file';
+  
+  const counterKey = `${subDir}_${baseName}_${dateStr}`;
+  fileCounter[counterKey] = (fileCounter[counterKey] || 0) + 1;
+  const counter = fileCounter[counterKey];
+  
+  return `${baseName}_${counter}_${dateStr}${ext.toLowerCase()}`;
+}
+
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     let subDir = "media";
@@ -57,9 +82,12 @@ const multerStorage = multer.diskStorage({
     cb(null, targetDir);
   },
   filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const safeFilename = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-    cb(null, `${timestamp}-${safeFilename}`);
+    let subDir = "media";
+    if (file.mimetype.startsWith("image/")) subDir = "images";
+    else if (["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(file.mimetype)) subDir = "documents";
+    
+    const cleanName = generateCleanFilename(file.originalname, subDir);
+    cb(null, cleanName);
   }
 });
 
@@ -1542,16 +1570,10 @@ export async function registerRoutes(
         return res.status(400).json({ message: "No image data provided" });
       }
 
-      // Generate unique filename
-      const timestamp = Date.now();
-      const originalName = filename || `upload-${timestamp}.png`;
-      const safeFilename = originalName.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const uniqueFilename = `${timestamp}-${safeFilename}`;
-
       // Ensure uploads/images directory exists
-      const uploadsDir = path.join(process.cwd(), "uploads", "images");
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
+      const imagesDir = path.join(process.cwd(), "uploads", "images");
+      if (!fs.existsSync(imagesDir)) {
+        fs.mkdirSync(imagesDir, { recursive: true });
       }
 
       // Check if image is base64 data URL
@@ -1572,13 +1594,14 @@ export async function registerRoutes(
         else if (mimeType === "image/webp") ext = ".webp";
         else if (mimeType === "image/svg+xml") ext = ".svg";
 
-        // Add extension if not present
-        const finalFilename = uniqueFilename.includes('.') ? uniqueFilename : `${uniqueFilename}${ext}`;
-        const filePath = path.join(uploadsDir, finalFilename);
+        // Generate clean filename with pattern: Name_counter_DDMMYYYY.ext
+        const originalName = filename || `image${ext}`;
+        const finalFilename = generateCleanFilename(originalName, "images");
+        const filePath = path.join(imagesDir, finalFilename);
 
         // Security check: ensure path is within uploads directory
         const resolvedPath = path.resolve(filePath);
-        const resolvedUploadsDir = path.resolve(uploadsDir);
+        const resolvedUploadsDir = path.resolve(imagesDir);
         if (!resolvedPath.startsWith(resolvedUploadsDir)) {
           return res.status(400).json({ message: "Invalid file path" });
         }
@@ -2148,6 +2171,31 @@ export async function registerRoutes(
         type: "warning"
       });
       res.json({ message: "Logs cleared successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/system/logs", requireAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const logs = await storage.getSystemLogs(limit);
+      res.json(logs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/system/clear-system-logs", requireAdmin, async (req, res) => {
+    try {
+      await storage.clearSystemLogs();
+      await storage.createActivityLog({
+        action: "System logs cleared",
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "warning"
+      });
+      res.json({ message: "System logs cleared successfully", success: true });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

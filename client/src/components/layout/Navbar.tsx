@@ -129,11 +129,23 @@ export function Navbar() {
           <Button
             variant="outline"
             className="hidden lg:flex gap-2 border-primary text-primary relative overflow-hidden group transition-all hover:text-white hover:border-transparent"
-            data-testid="button-resume"
+            data-testid="button-download-cv"
+            onClick={() => {
+              if (settings.cvFileUrl) {
+                const link = document.createElement("a");
+                link.href = settings.cvFileUrl;
+                link.download = settings.cvFileUrl.split("/").pop() || "CV.pdf";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              } else {
+                alert("CV file not available. Please contact the site owner.");
+              }
+            }}
           >
             <span className="absolute inset-0 bg-gradient-to-r from-primary to-secondary translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300 ease-out" />
             <span className="relative z-10 flex items-center gap-2">
-                <Download size={16} /> Resume
+                <Download size={16} /> {t("hero.download_cv") || "Download CV"}
             </span>
           </Button>
         </div>

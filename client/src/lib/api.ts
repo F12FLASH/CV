@@ -737,6 +737,14 @@ export const api = {
     return handleResponse<{ message: string; success: boolean }>(res);
   },
 
+  async clearSystemLogs() {
+    const res = await fetch(`${API_BASE}/system/clear-system-logs`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    return handleResponse<{ message: string; success: boolean }>(res);
+  },
+
   async resetSystem() {
     const res = await fetch(`${API_BASE}/system/reset`, {
       method: 'POST',
