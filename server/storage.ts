@@ -24,7 +24,7 @@ import {
   webauthnCredentials, type WebAuthnCredential, type InsertWebAuthnCredential
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, or, ilike, sql } from "drizzle-orm";
+import { eq, desc, asc, and, or, ilike, sql, lt } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -1013,8 +1013,8 @@ export class DatabaseStorage implements IStorage {
         or(
           eq(securityLogs.eventType, 'login_success'),
           eq(securityLogs.eventType, 'login_failed'),
-          eq(securityLogs.eventType, 'login'),
-          eq(securityLogs.eventType, 'two_factor_failed')
+          eq(securityLogs.eventType, 'two_factor_failed'),
+          eq(securityLogs.eventType, 'password_expired')
         )
       )
       .orderBy(desc(securityLogs.createdAt))
@@ -1024,6 +1024,29 @@ export class DatabaseStorage implements IStorage {
   async createSecurityLog(log: InsertSecurityLog): Promise<SecurityLog> {
     const [created] = await this.db.insert(securityLogs).values(log).returning();
     return created;
+  }
+
+  async getSecurityStats(): Promise<{
+    totalBlocked: number;
+    totalAllowed: number;
+    byEventType: { type: string; count: number }[];
+  }> {
+    const [blockedCount] = await this.db.select({ count: sql<number>`count(*)` }).from(securityLogs).where(eq(securityLogs.blocked, true));
+    const [allowedCount] = await this.db.select({ count: sql<number>`count(*)` }).from(securityLogs).where(eq(securityLogs.blocked, false));
+
+    const byType = await this.db
+      .select({
+        type: securityLogs.eventType,
+        count: sql<number>`count(*)`
+      })
+      .from(securityLogs)
+      .groupBy(securityLogs.eventType);
+
+    return {
+      totalBlocked: Number(blockedCount.count) || 0,
+      totalAllowed: Number(allowedCount.count) || 0,
+      byEventType: byType.map(t => ({ type: t.type, count: Number(t.count) })),
+    };
   }
 
   // Homepage Sections
@@ -1065,29 +1088,6 @@ export class DatabaseStorage implements IStorage {
       order: section.order ?? defaultOrder
     }).returning();
     return created;
-  }
-
-  async getSecurityStats(): Promise<{
-    totalBlocked: number;
-    totalAllowed: number;
-    byEventType: { type: string; count: number }[];
-  }> {
-    const [blockedCount] = await this.db.select({ count: sql<number>`count(*)` }).from(securityLogs).where(eq(securityLogs.blocked, true));
-    const [allowedCount] = await this.db.select({ count: sql<number>`count(*)` }).from(securityLogs).where(eq(securityLogs.blocked, false));
-
-    const byType = await this.db
-      .select({
-        type: securityLogs.eventType,
-        count: sql<number>`count(*)`
-      })
-      .from(securityLogs)
-      .groupBy(securityLogs.eventType);
-
-    return {
-      totalBlocked: Number(blockedCount.count) || 0,
-      totalAllowed: Number(allowedCount.count) || 0,
-      byEventType: byType.map(t => ({ type: t.type, count: Number(t.count) })),
-    };
   }
 
   // FAQs
@@ -1167,7 +1167,7 @@ export class DatabaseStorage implements IStorage {
     if (!user || !user.twoFactorSecret) {
       return false;
     }
-    
+
     // Import speakeasy dynamically to verify the token
     try {
       const speakeasy = require('speakeasy');

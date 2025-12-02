@@ -24,6 +24,7 @@ import {
   verifyAuthenticationResponse 
 } from "@simplewebauthn/server";
 import nodemailer from "nodemailer";
+import { rateLimitMiddleware, loginRateLimitMiddleware, recordFailedLogin, clearLoginAttempts } from "./middleware/security";
 
 // Configure multer for file uploads
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -196,6 +197,43 @@ async function verifyCaptcha(
   return { success: true };
 }
 
+// IP Blocking Middleware
+async function checkIpBlocking(req: Request, res: Response, next: NextFunction) {
+  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+  
+  // Check if IP is blacklisted
+  const ipRules = await storage.getAllIpRules();
+  const blacklisted = ipRules.find(rule => rule.type === 'blacklist' && rule.ipAddress === clientIp);
+  
+  if (blacklisted) {
+    await storage.createSecurityLog({
+      action: 'Blocked request from blacklisted IP',
+      ipAddress: clientIp,
+      userAgent: req.get('User-Agent'),
+      eventType: 'ip_blocked',
+      blocked: true,
+      requestPath: req.path
+    });
+    return res.status(403).json({ message: "Access denied" });
+  }
+  
+  // Check whitelist (if any rules exist, enforce whitelist)
+  const whitelisted = ipRules.filter(rule => rule.type === 'whitelist');
+  if (whitelisted.length > 0 && !whitelisted.find(rule => rule.ipAddress === clientIp)) {
+    await storage.createSecurityLog({
+      action: 'Blocked request - IP not whitelisted',
+      ipAddress: clientIp,
+      userAgent: req.get('User-Agent'),
+      eventType: 'ip_not_whitelisted',
+      blocked: true,
+      requestPath: req.path
+    });
+    return res.status(403).json({ message: "Access denied - IP not whitelisted" });
+  }
+  
+  next();
+}
+
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.session.userId) {
     return res.status(401).json({ message: "Authentication required" });
@@ -264,7 +302,14 @@ export async function registerRoutes(
 ): Promise<Server> {
   await seedInitialData();
 
-  app.post("/api/auth/login", async (req, res) => {
+  // Apply IP blocking middleware to admin routes
+  app.use('/api/auth/login', checkIpBlocking);
+  app.use('/admin/*', checkIpBlocking);
+  
+  // Apply rate limiting to all API routes (except static assets)
+  app.use('/api/*', rateLimitMiddleware);
+
+  app.post("/api/auth/login", loginRateLimitMiddleware, async (req, res) => {
     try {
       const { username, password, captchaToken, captchaType } = req.body;
       const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
@@ -276,6 +321,7 @@ export async function registerRoutes(
 
       const captchaResult = await verifyCaptcha(captchaToken, captchaType);
       if (!captchaResult.success) {
+        recordFailedLogin(clientIp);
         await storage.createSecurityLog({
           action: `Failed login attempt - captcha failed`,
           userId: null,
@@ -290,6 +336,7 @@ export async function registerRoutes(
 
       const user = await storage.getUserByUsernameOrEmail(username);
       if (!user) {
+        recordFailedLogin(clientIp);
         await storage.createSecurityLog({
           action: `Failed login attempt - user not found`,
           userId: null,
@@ -304,6 +351,7 @@ export async function registerRoutes(
       
       const isValid = await verifyPassword(password, user.password);
       if (!isValid) {
+        recordFailedLogin(clientIp);
         await storage.createSecurityLog({
           action: `Failed login attempt - invalid password`,
           userId: user.id,
@@ -315,6 +363,9 @@ export async function registerRoutes(
         });
         return res.status(401).json({ message: "Invalid credentials" });
       }
+      
+      // Clear failed login attempts on success
+      clearLoginAttempts(clientIp);
 
       // Check if 2FA is enabled for user
       if (user.twoFactorEnabled) {
@@ -357,6 +408,20 @@ export async function registerRoutes(
       req.session.userId = user.id;
       req.session.username = user.username;
       req.session.role = user.role;
+
+      // Create user session record
+      const sessionExpiry = new Date();
+      sessionExpiry.setHours(sessionExpiry.getHours() + 24); // 24 hour session
+      
+      await storage.createUserSession({
+        sessionId: req.sessionID,
+        userId: user.id,
+        ipAddress: clientIp,
+        userAgent: userAgent,
+        deviceInfo: userAgent,
+        location: 'Unknown', // Could integrate with IP geolocation service
+        expiresAt: sessionExpiry
+      });
 
       await storage.createActivityLog({
         action: `User ${user.name} logged in`,
@@ -2322,9 +2387,24 @@ export async function registerRoutes(
     try {
       const settings = await storage.getAllSecuritySettings();
       const settingsObject: Record<string, any> = {};
+      
+      // Build nested structure for frontend
       settings.forEach(s => {
-        settingsObject[s.key] = s.value;
+        const keys = s.key.split('.');
+        if (keys.length === 1) {
+          settingsObject[s.key] = s.value;
+        } else {
+          let current = settingsObject;
+          for (let i = 0; i < keys.length - 1; i++) {
+            if (!current[keys[i]]) {
+              current[keys[i]] = {};
+            }
+            current = current[keys[i]];
+          }
+          current[keys[keys.length - 1]] = s.value;
+        }
       });
+      
       res.json(settingsObject);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
