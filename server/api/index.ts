@@ -1,0 +1,56 @@
+import { Express } from "express";
+
+import authRouter from "./auth";
+import usersRouter from "./users";
+import projectsRouter from "./projects";
+import postsRouter from "./posts";
+import pagesRouter from "./pages";
+import skillsRouter from "./skills";
+import servicesRouter from "./services";
+import testimonialsRouter from "./testimonials";
+import categoriesRouter from "./categories";
+import messagesRouter from "./messages";
+import commentsRouter from "./comments";
+import reviewsRouter from "./reviews";
+import mediaRouter from "./media";
+import settingsRouter from "./settings";
+import dashboardRouter from "./dashboard";
+import activityLogsRouter from "./activity-logs";
+import notificationsRouter from "./notifications";
+import securityRouter from "./security";
+import storageRouter from "./storage";
+import logsRouter from "./logs";
+import databaseRouter from "./database";
+import newsletterRouter from "./newsletter";
+import homepageRouter from "./homepage";
+import faqsRouter from "./faqs";
+import performanceRouter from "./performance";
+
+export function registerApiRoutes(app: Express) {
+  app.use("/api/auth", authRouter);
+  app.use("/api/users", usersRouter);
+  app.use("/api/projects", projectsRouter);
+  app.use("/api/posts", postsRouter);
+  app.use("/api/pages", pagesRouter);
+  app.use("/api/skills", skillsRouter);
+  app.use("/api/services", servicesRouter);
+  app.use("/api/testimonials", testimonialsRouter);
+  app.use("/api/categories", categoriesRouter);
+  app.use("/api/messages", messagesRouter);
+  app.use("/api/comments", commentsRouter);
+  app.use("/api/reviews", reviewsRouter);
+  app.use("/api/media", mediaRouter);
+  app.use("/api/upload", mediaRouter);
+  app.use("/api/settings", settingsRouter);
+  app.use("/api/dashboard", dashboardRouter);
+  app.use("/api/activity-logs", activityLogsRouter);
+  app.use("/api/notifications", notificationsRouter);
+  app.use("/api/security", securityRouter);
+  app.use("/api/storage", storageRouter);
+  app.use("/api/logs", logsRouter);
+  app.use("/api/database", databaseRouter);
+  app.use("/api/newsletter", newsletterRouter);
+  app.use("/api/homepage", homepageRouter);
+  app.use("/api/faqs", faqsRouter);
+  app.use("/api/performance", performanceRouter);
+}
