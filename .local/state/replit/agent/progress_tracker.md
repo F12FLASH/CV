@@ -136,3 +136,7 @@
 [x] 125. All API endpoints responding correctly (only 401 errors for auth endpoints - expected when not logged in)
 [x] 126. **✅ MIGRATION COMPLETE** - Project fully migrated and operational in new environment!
 [x] 127. **✅ IMPORT COMPLETED** - All migration tasks finished, project is ready for development!
+[x] 128. **FIX (Dec 2, 2025 - 3:27 AM)** - Sửa lỗi trang admin/media không truy cập được
+    - Vấn đề: Route sử dụng `lazy()` không có Suspense wrapper, gây ra trang trống
+    - Giải pháp: Thay thế lazy loading bằng import trực tiếp component AdminMedia
+    - Kết quả: Trang media hoạt động bình thường, chuyển hướng đến login khi chưa đăng nhập

@@ -98,7 +98,7 @@ function Router() {
       <Route path="/admin/profile" component={AdminProfile} />
       <Route path="/admin/theme" component={AdminThemeEnhanced} />
       <Route path="/admin/system" component={AdminSystem} />
-      <Route path="/admin/media" component={lazy(() => import("@/pages/admin/Media"))} />
+      <Route path="/admin/media" component={AdminMedia} />
       <Route path="/admin/files">
         {() => <Redirect to="/admin/media" />}
       </Route>
