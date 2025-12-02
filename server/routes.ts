@@ -2620,17 +2620,33 @@ export async function registerRoutes(
       try {
         const nodemailer = require('nodemailer');
         
+        // Parse port to number
+        const port = typeof smtpPort.value === 'string' 
+          ? parseInt(smtpPort.value) 
+          : smtpPort.value;
+        
+        // Parse secure flag
+        const secure = smtpSecure?.value === true || smtpSecure?.value === 'true';
+        
         const transporter = nodemailer.createTransport({
-          host: smtpHost.value,
-          port: parseInt(smtpPort.value as string),
-          secure: smtpSecure?.value === 'true' || smtpSecure?.value === true,
+          host: smtpHost.value as string,
+          port: port as number,
+          secure: secure,
           auth: {
-            user: smtpUser.value,
-            pass: smtpPassword.value,
+            user: smtpUser.value as string,
+            pass: smtpPassword.value as string,
           },
+          // Add timeout and debug options
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 10000,
         });
 
-        await transporter.sendMail({
+        // Verify connection configuration
+        await transporter.verify();
+
+        // Send email
+        const info = await transporter.sendMail({
           from: `"${emailFromName?.value || 'Portfolio'}" <${emailFromAddress?.value || smtpUser.value}>`,
           to,
           subject,
@@ -2646,24 +2662,42 @@ export async function registerRoutes(
 
         res.json({ 
           message: `Test email sent successfully to ${to}`,
+          messageId: info.messageId,
           success: true 
         });
       } catch (smtpError: any) {
         console.error("SMTP Error:", smtpError);
+        
+        let errorMessage = smtpError.message || 'Unknown SMTP error';
+        
+        // Provide more helpful error messages
+        if (errorMessage.includes('ECONNREFUSED')) {
+          errorMessage = 'Cannot connect to SMTP server. Please check host and port.';
+        } else if (errorMessage.includes('Invalid login')) {
+          errorMessage = 'SMTP authentication failed. Please check username and password.';
+        } else if (errorMessage.includes('ETIMEDOUT')) {
+          errorMessage = 'Connection timeout. Please check your network and SMTP settings.';
+        }
+        
         await storage.createActivityLog({
-          action: `Failed to send test email to ${to}: ${smtpError.message}`,
+          action: `Failed to send test email to ${to}: ${errorMessage}`,
           userId: req.session.userId,
           userName: req.session.username,
           type: "error"
         });
         
         return res.status(500).json({ 
-          message: `SMTP Error: ${smtpError.message}. Please check your SMTP settings.`,
+          message: errorMessage,
+          error: smtpError.message,
           success: false 
         });
       }
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("Error in test email endpoint:", error);
+      res.status(500).json({ 
+        message: error.message || 'Internal server error',
+        success: false 
+      });
     }
   });
 
