@@ -218,6 +218,7 @@ export interface IStorage {
     totalAllowed: number;
     byEventType: { type: string; count: number }[];
   }>;
+  getSecurityLogs(limit?: number, offset?: number, type?: string): Promise<SecurityLog[]>;
 
   // FAQs
   getFAQ(id: number): Promise<FAQ | undefined>;
@@ -1053,6 +1054,22 @@ export class DatabaseStorage implements IStorage {
       totalAllowed: Number(allowedCount.count) || 0,
       byEventType: byType.map(t => ({ type: t.type, count: Number(t.count) })),
     };
+  }
+
+  async getSecurityLogs(limit: number = 100, offset: number = 0, type?: string): Promise<SecurityLog[]> {
+    const query = this.db.select().from(securityLogs);
+
+    if (type === 'login') {
+      query.where(
+        or(
+          eq(securityLogs.eventType, 'login_success'),
+          eq(securityLogs.eventType, 'login_failed'),
+          eq(securityLogs.eventType, 'login_lockout')
+        )
+      );
+    }
+
+    return await query.orderBy(desc(securityLogs.createdAt)).limit(limit).offset(offset);
   }
 
   // Homepage Sections

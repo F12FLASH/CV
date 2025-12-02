@@ -49,7 +49,7 @@ const multerStorage = multer.diskStorage({
     ) {
       subDir = "documents";
     }
-    
+
     const targetDir = path.join(uploadsDir, subDir);
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
@@ -146,7 +146,7 @@ async function verifyCaptcha(
       console.warn('Google reCAPTCHA secret key not configured');
       return { success: true };
     }
-    
+
     try {
       const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
         method: 'POST',
@@ -154,7 +154,7 @@ async function verifyCaptcha(
         body: `secret=${googleSecretKey}&response=${captchaToken}`
       });
       const result = await response.json() as { success: boolean; score?: number; 'error-codes'?: string[] };
-      
+
       if (result.success && (result.score === undefined || result.score >= 0.5)) {
         return { success: true, score: result.score };
       }
@@ -171,19 +171,19 @@ async function verifyCaptcha(
       console.warn('Cloudflare Turnstile secret key not configured');
       return { success: true };
     }
-    
+
     try {
       const formData = new URLSearchParams();
       formData.append('secret', cfSecretKey);
       formData.append('response', captchaToken);
-      
+
       const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData.toString()
       });
       const result = await response.json() as { success: boolean; 'error-codes'?: string[] };
-      
+
       if (result.success) {
         return { success: true };
       }
@@ -200,11 +200,11 @@ async function verifyCaptcha(
 // IP Blocking Middleware
 async function checkIpBlocking(req: Request, res: Response, next: NextFunction) {
   const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-  
+
   // Check if IP is blacklisted
   const ipRules = await storage.getAllIpRules();
   const blacklisted = ipRules.find(rule => rule.type === 'blacklist' && rule.ipAddress === clientIp);
-  
+
   if (blacklisted) {
     await storage.createSecurityLog({
       action: 'Blocked request from blacklisted IP',
@@ -216,7 +216,7 @@ async function checkIpBlocking(req: Request, res: Response, next: NextFunction) 
     });
     return res.status(403).json({ message: "Access denied" });
   }
-  
+
   // Check whitelist (if any rules exist, enforce whitelist)
   const whitelisted = ipRules.filter(rule => rule.type === 'whitelist');
   if (whitelisted.length > 0 && !whitelisted.find(rule => rule.ipAddress === clientIp)) {
@@ -230,7 +230,7 @@ async function checkIpBlocking(req: Request, res: Response, next: NextFunction) 
     });
     return res.status(403).json({ message: "Access denied - IP not whitelisted" });
   }
-  
+
   next();
 }
 
@@ -305,10 +305,118 @@ export async function registerRoutes(
   // Apply IP blocking middleware to admin routes
   app.use('/api/auth/login', checkIpBlocking);
   app.use('/admin/*', checkIpBlocking);
-  
+
   // Apply rate limiting to all API routes (except static assets)
   app.use('/api/*', rateLimitMiddleware);
 
+  // 2FA routes
+  app.post('/api/auth/2fa/generate', requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const secret = speakeasy.generateSecret({
+        name: `Loi Developer (${user.email})`,
+        issuer: "Loi Developer Portfolio"
+      });
+
+      // Lưu secret tạm thời vào session
+      req.session.temp2FASecret = secret.base32;
+
+      // Generate QR code
+      const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url!);
+
+      res.json({
+        secret: secret.base32,
+        qrCode: qrCodeUrl
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post('/api/auth/2fa/verify', requireAuth, async (req, res) => {
+    try {
+      const { token } = req.body;
+      const secret = req.session.temp2FASecret;
+
+      if (!secret) {
+        return res.status(400).json({ message: "No 2FA setup in progress" });
+      }
+
+      const verified = speakeasy.totp.verify({
+        secret,
+        encoding: 'base32',
+        token,
+        window: 2
+      });
+
+      if (!verified) {
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+
+      // Save secret to database
+      await storage.updateUser(req.session.userId!, {
+        twoFactorSecret: secret,
+        twoFactorEnabled: true
+      });
+
+      delete req.session.temp2FASecret;
+
+      await storage.createActivityLog({
+        action: "2FA enabled",
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "success"
+      });
+
+      res.json({ message: "2FA enabled successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post('/api/auth/2fa/disable', requireAuth, async (req, res) => {
+    try {
+      const { token } = req.body;
+      const user = await storage.getUser(req.session.userId!);
+
+      if (!user?.twoFactorSecret) {
+        return res.status(400).json({ message: "2FA not enabled" });
+      }
+
+      const verified = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: 'base32',
+        token,
+        window: 2
+      });
+
+      if (!verified) {
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+
+      await storage.updateUser(req.session.userId!, {
+        twoFactorSecret: null,
+        twoFactorEnabled: false
+      });
+
+      await storage.createActivityLog({
+        action: "2FA disabled",
+        userId: req.session.userId,
+        userName: req.session.username,
+        type: "warning"
+      });
+
+      res.json({ message: "2FA disabled successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Auth routes
   app.post("/api/auth/login", loginRateLimitMiddleware, async (req, res) => {
     try {
       const { username, password, captchaToken, captchaType } = req.body;
@@ -348,7 +456,7 @@ export async function registerRoutes(
         });
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       const isValid = await verifyPassword(password, user.password);
       if (!isValid) {
         recordFailedLogin(clientIp);
@@ -363,7 +471,7 @@ export async function registerRoutes(
         });
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       // Clear failed login attempts on success
       clearLoginAttempts(clientIp);
 
@@ -423,7 +531,7 @@ export async function registerRoutes(
       // Create user session record
       const sessionExpiry = new Date();
       sessionExpiry.setHours(sessionExpiry.getHours() + 24); // 24 hour session
-      
+
       await storage.createUserSession({
         sessionId: req.sessionID,
         userId: user.id,
@@ -485,14 +593,14 @@ export async function registerRoutes(
     try {
       const userId = req.session.userId!;
       const { name, email, username, avatar } = req.body;
-      
+
       // Only allow updating specific fields
       const updateData: any = {};
       if (name !== undefined) updateData.name = name;
       if (email !== undefined) updateData.email = email;
       if (username !== undefined) updateData.username = username;
       if (avatar !== undefined) updateData.avatar = avatar;
-      
+
       // Check if username is taken by another user
       if (username) {
         const existingUser = await storage.getUserByUsername(username);
@@ -500,7 +608,7 @@ export async function registerRoutes(
           return res.status(400).json({ message: "Username already taken" });
         }
       }
-      
+
       // Check if email is taken by another user
       if (email) {
         const existingEmail = await storage.getUserByEmail(email);
@@ -508,17 +616,17 @@ export async function registerRoutes(
           return res.status(400).json({ message: "Email already taken" });
         }
       }
-      
+
       const user = await storage.updateUser(userId, updateData);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Update session with new username if changed
       if (username) {
         req.session.username = username;
       }
-      
+
       const { password, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
     } catch (error: any) {
@@ -530,38 +638,38 @@ export async function registerRoutes(
   app.post("/api/auth/force-password-reset", async (req, res) => {
     try {
       const { userId, currentPassword, newPassword } = req.body;
-      
+
       if (!userId || !currentPassword || !newPassword) {
         return res.status(400).json({ message: "All fields are required" });
       }
-      
+
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       const isValid = await verifyPassword(currentPassword, user.password);
       if (!isValid) {
         return res.status(401).json({ message: "Current password is incorrect" });
       }
-      
+
       const hashedPassword = await hashPassword(newPassword);
       const now = new Date();
       const expiresAt = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
-      
+
       await storage.updateUser(userId, { 
         password: hashedPassword,
         passwordUpdatedAt: now,
         passwordExpiresAt: expiresAt
       });
-      
+
       await storage.createActivityLog({
         action: 'Forced password reset due to expiration',
         userId: user.id,
         userName: user.username,
         type: 'warning'
       });
-      
+
       res.json({ message: "Password reset successfully. You can now login." });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -573,38 +681,38 @@ export async function registerRoutes(
     try {
       const userId = req.session.userId!;
       const { currentPassword, newPassword } = req.body;
-      
+
       if (!currentPassword || !newPassword) {
         return res.status(400).json({ message: "Current password and new password are required" });
       }
-      
+
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       const isValid = await verifyPassword(currentPassword, user.password);
       if (!isValid) {
         return res.status(401).json({ message: "Current password is incorrect" });
       }
-      
+
       const hashedPassword = await hashPassword(newPassword);
       const now = new Date();
       const expiresAt = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000); // 90 days from now
-      
+
       await storage.updateUser(userId, { 
         password: hashedPassword,
         passwordUpdatedAt: now,
         passwordExpiresAt: expiresAt
       });
-      
+
       await storage.createActivityLog({
         action: 'Password changed successfully',
         userId: userId,
         userName: req.session.username || 'Unknown',
         type: 'success'
       });
-      
+
       res.json({ message: "Password updated successfully" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1113,9 +1221,9 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
       const message = await storage.createMessage(parsed.data);
-      
+
       broadcastNewMessage(message);
-      
+
       // Send notification email asynchronously (don't wait for it)
       sendNotificationEmail('contact', {
         senderName: message.sender,
@@ -1123,7 +1231,7 @@ export async function registerRoutes(
         messageSubject: message.subject || 'No subject',
         messageContent: message.message
       }).catch(err => console.error('Failed to send contact notification email:', err));
-      
+
       res.status(201).json(message);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1337,7 +1445,7 @@ export async function registerRoutes(
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
-      
+
       const file = req.file;
       let subDir = "media";
       if (file.mimetype.startsWith("image/")) {
@@ -1354,9 +1462,9 @@ export async function registerRoutes(
       ) {
         subDir = "documents";
       }
-      
+
       const fileUrl = `/uploads/${subDir}/${file.filename}`;
-      
+
       // Create media record in database
       const mediaItem = await storage.createMedia({
         filename: file.filename,
@@ -1366,7 +1474,7 @@ export async function registerRoutes(
         url: fileUrl,
         alt: req.body.alt || null,
       });
-      
+
       res.status(201).json(mediaItem);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1380,9 +1488,9 @@ export async function registerRoutes(
       if (!files || files.length === 0) {
         return res.status(400).json({ message: "No files uploaded" });
       }
-      
+
       const mediaItems = [];
-      
+
       for (const file of files) {
         let subDir = "media";
         if (file.mimetype.startsWith("image/")) {
@@ -1399,9 +1507,9 @@ export async function registerRoutes(
         ) {
           subDir = "documents";
         }
-        
+
         const fileUrl = `/uploads/${subDir}/${file.filename}`;
-        
+
         const mediaItem = await storage.createMedia({
           filename: file.filename,
           originalName: file.originalname,
@@ -1410,10 +1518,10 @@ export async function registerRoutes(
           url: fileUrl,
           alt: null,
         });
-        
+
         mediaItems.push(mediaItem);
       }
-      
+
       res.status(201).json(mediaItems);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1426,12 +1534,12 @@ export async function registerRoutes(
       if (!image) {
         return res.status(400).json({ message: "No image data provided" });
       }
-      
+
       // Generate unique filename
       const timestamp = Date.now();
       const name = filename || `upload-${timestamp}`;
       const imagePath = `/uploads/${name}`;
-      
+
       // In production, you would save to cloud storage
       // For now, we'll return the data URL directly
       res.json({ url: image, path: imagePath });
@@ -1455,20 +1563,20 @@ export async function registerRoutes(
       if (!filename || !originalName || !mimeType || !url) {
         return res.status(400).json({ message: "Missing required fields" });
       }
-      
+
       const safeFilename = path.basename(filename).replace(/[^a-zA-Z0-9._-]/g, '_');
       if (!safeFilename || safeFilename.startsWith('.')) {
         return res.status(400).json({ message: "Invalid filename" });
       }
-      
+
       let savedUrl = url;
-      
+
       if (url.startsWith("data:")) {
         const uploadsDir = path.join(process.cwd(), "uploads");
         if (!fs.existsSync(uploadsDir)) {
           fs.mkdirSync(uploadsDir, { recursive: true });
         }
-        
+
         let subDir = "media";
         if (mimeType.startsWith("image/")) {
           subDir = "images";
@@ -1484,30 +1592,30 @@ export async function registerRoutes(
         ) {
           subDir = "documents";
         }
-        
+
         const targetDir = path.join(uploadsDir, subDir);
         if (!fs.existsSync(targetDir)) {
           fs.mkdirSync(targetDir, { recursive: true });
         }
-        
+
         const base64Data = url.split(",")[1];
         if (!base64Data) {
           return res.status(400).json({ message: "Invalid base64 data" });
         }
-        
+
         const buffer = Buffer.from(base64Data, "base64");
         const filePath = path.join(targetDir, safeFilename);
-        
+
         const resolvedPath = path.resolve(filePath);
         const resolvedTargetDir = path.resolve(targetDir);
         if (!resolvedPath.startsWith(resolvedTargetDir)) {
           return res.status(400).json({ message: "Invalid file path" });
         }
-        
+
         fs.writeFileSync(filePath, buffer);
         savedUrl = `/uploads/${subDir}/${safeFilename}`;
       }
-      
+
       const mediaItem = await storage.createMedia({
         filename: safeFilename,
         originalName,
@@ -1540,7 +1648,7 @@ export async function registerRoutes(
       if (!mediaItem) {
         return res.status(404).json({ message: "Media not found" });
       }
-      
+
       if (mediaItem.url.startsWith("/uploads/")) {
         const relativePath = mediaItem.url.replace(/^\//, "");
         const filePath = path.join(process.cwd(), relativePath);
@@ -1548,7 +1656,7 @@ export async function registerRoutes(
           fs.unlinkSync(filePath);
         }
       }
-      
+
       const success = await storage.deleteMedia(parseInt(req.params.id));
       if (!success) {
         return res.status(404).json({ message: "Failed to delete media record" });
@@ -1566,30 +1674,30 @@ export async function registerRoutes(
       const folders = ["images", "documents", "media"];
       const syncedFiles: any[] = [];
       const skippedFiles: string[] = [];
-      
+
       // Get all existing media URLs from database
       const existingMedia = await storage.getAllMedia();
       const existingUrls = new Set(existingMedia.map(m => m.url));
-      
+
       for (const folder of folders) {
         const folderPath = path.join(uploadsDir, folder);
         if (!fs.existsSync(folderPath)) continue;
-        
+
         const files = fs.readdirSync(folderPath);
         for (const filename of files) {
           const filePath = path.join(folderPath, filename);
           const stat = fs.statSync(filePath);
-          
+
           if (!stat.isFile()) continue;
-          
+
           const url = `/uploads/${folder}/${filename}`;
-          
+
           // Skip if already exists in database
           if (existingUrls.has(url)) {
             skippedFiles.push(filename);
             continue;
           }
-          
+
           // Determine mime type
           const ext = path.extname(filename).toLowerCase();
           let mimeType = "application/octet-stream";
@@ -1603,7 +1711,7 @@ export async function registerRoutes(
             ".txt": "text/plain", ".mp4": "video/mp4", ".mp3": "audio/mpeg"
           };
           if (mimeTypes[ext]) mimeType = mimeTypes[ext];
-          
+
           // Create media record
           const mediaItem = await storage.createMedia({
             filename,
@@ -1616,7 +1724,7 @@ export async function registerRoutes(
           syncedFiles.push(mediaItem);
         }
       }
-      
+
       res.json({
         message: `Synced ${syncedFiles.length} files, skipped ${skippedFiles.length} existing files`,
         synced: syncedFiles,
@@ -1637,10 +1745,10 @@ export async function registerRoutes(
         storage.getAllComments(),
         storage.getAllReviews()
       ]);
-      
+
       const totalViews = projects.reduce((sum, p) => sum + (p.views || 0), 0) +
                         posts.reduce((sum, p) => sum + (p.views || 0), 0);
-      
+
       res.json({
         totalProjects: projects.length,
         publishedProjects: projects.filter(p => p.status === "Published").length,
@@ -1668,7 +1776,7 @@ export async function registerRoutes(
       const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
       const pending = req.query.pending === "true";
       const approved = req.query.approved === "true";
-      
+
       let comments;
       if (pending) {
         comments = await storage.getPendingComments();
@@ -1717,23 +1825,23 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
       const comment = await storage.createComment(parsed.data);
-      
+
       // Create notification and broadcast
       const post = comment.postId ? await storage.getPost(comment.postId) : null;
       const project = comment.projectId ? await storage.getProject(comment.projectId) : null;
       const target = post?.title || project?.title || "Unknown";
-      
+
       await storage.createNotification({
         message: `New comment from ${comment.authorName} on "${target}"`,
         type: "comment"
       });
-      
+
       broadcastNotification({
         type: "NEW_COMMENT",
         message: `New comment from ${comment.authorName}`,
         data: comment
       });
-      
+
       // Send notification email asynchronously
       const postLink = post ? `/blog/${post.id}` : project ? `/projects/${project.id}` : '/';
       sendNotificationEmail('comment', {
@@ -1742,7 +1850,7 @@ export async function registerRoutes(
         commentContent: comment.content,
         postLink: postLink
       }).catch(err => console.error('Failed to send comment notification email:', err));
-      
+
       res.status(201).json(comment);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1815,7 +1923,7 @@ export async function registerRoutes(
       const projectId = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
       const pending = req.query.pending === "true";
       const approved = req.query.approved === "true";
-      
+
       let reviews;
       if (pending) {
         reviews = await storage.getPendingReviews();
@@ -1860,21 +1968,21 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
       const review = await storage.createReview(parsed.data);
-      
+
       // Create notification and broadcast
       const project = await storage.getProject(review.projectId);
-      
+
       await storage.createNotification({
         message: `New ${review.rating}-star review from ${review.authorName} on "${project?.title || "Unknown"}"`,
         type: "review"
       });
-      
+
       broadcastNotification({
         type: "NEW_REVIEW",
         message: `New ${review.rating}-star review from ${review.authorName}`,
         data: review
       });
-      
+
       res.status(201).json(review);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -2010,14 +2118,14 @@ export async function registerRoutes(
         performanceProfiling,
         updatedAt: new Date()
       }));
-      
+
       await storage.createActivityLog({
         action: `Debug settings updated: Debug Mode=${debugMode}, Query Debug=${showQueryDebug}, Performance Profiling=${performanceProfiling}`,
         userId: req.session.userId,
         userName: req.session.username,
         type: "info"
       });
-      
+
       res.json({ message: "Debug settings saved", debugMode, showQueryDebug, performanceProfiling });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -2322,7 +2430,7 @@ export async function registerRoutes(
   app.post("/api/auth/webauthn/login/options", async (req, res) => {
     try {
       const { email } = req.body;
-      
+
       // Only allow WebAuthn login options when 2FA is pending
       // This prevents challenge farming with stolen session cookies
       // Require BOTH flags to be present
@@ -2471,7 +2579,7 @@ export async function registerRoutes(
     try {
       const settings = await storage.getAllSecuritySettings();
       const settingsObject: Record<string, any> = {};
-      
+
       // Build nested structure for frontend
       settings.forEach(s => {
         const keys = s.key.split('.');
@@ -2488,7 +2596,7 @@ export async function registerRoutes(
           current[keys[keys.length - 1]] = s.value;
         }
       });
-      
+
       res.json(settingsObject);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -2660,18 +2768,13 @@ export async function registerRoutes(
     }
   });
 
-  // Login History
+  // Login History - All login-related events
   app.get("/api/security/login-history", requireAuth, async (req, res) => {
     try {
-      const logs = await storage.getSecurityLogs();
-      const loginLogs = logs.filter(l => 
-        l.eventType?.includes('login') || 
-        l.eventType?.includes('2fa') ||
-        l.action?.toLowerCase().includes('login')
-      ).slice(0, 50);
-      res.json(loginLogs);
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      const logs = await storage.getSecurityLogs(100, 0, 'login');
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch login history' });
     }
   });
 
@@ -2882,9 +2985,9 @@ export async function registerRoutes(
           success: false 
         });
       }
-      
+
       const { to, subject, body } = req.body;
-      
+
       if (!to || !subject || !body) {
         return res.status(400).json({ 
           message: "Missing required fields: to, subject, body" 
@@ -2908,15 +3011,15 @@ export async function registerRoutes(
 
       // Try to send actual email using nodemailer
       try {
-        
+
         // Parse port to number
         const port = typeof smtpPort.value === 'string' 
           ? parseInt(smtpPort.value) 
           : smtpPort.value;
-        
+
         // Parse secure flag
         const secure = smtpSecure?.value === true || smtpSecure?.value === 'true';
-        
+
         const transporter = nodemailer.createTransport({
           host: smtpHost.value as string,
           port: port as number,
@@ -2960,9 +3063,9 @@ export async function registerRoutes(
         });
       } catch (smtpError: any) {
         console.error("SMTP Error:", smtpError);
-        
+
         let errorMessage = smtpError.message || 'Unknown SMTP error';
-        
+
         // Provide more helpful error messages
         if (errorMessage.includes('ECONNREFUSED')) {
           errorMessage = 'Cannot connect to SMTP server. Please check host and port.';
@@ -2975,14 +3078,14 @@ export async function registerRoutes(
         } else if (errorMessage.includes('ENOTFOUND')) {
           errorMessage = 'SMTP host not found. Please check the hostname.';
         }
-        
+
         await storage.createActivityLog({
           action: `Failed to send test email to ${to}: ${errorMessage}`,
           userId: req.session.userId,
           userName: req.session.username,
           type: "error"
         });
-        
+
         return res.status(500).json({ 
           message: errorMessage,
           error: smtpError.message,
@@ -3047,7 +3150,7 @@ You're receiving this because you subscribed to our newsletter.
 <p><a href="{{postLink}}">View Post</a></p>`
         }
       };
-      
+
       if (templates?.value) {
         const value = typeof templates.value === 'string' ? JSON.parse(templates.value) : templates.value;
         res.json({ ...defaultTemplates, ...value });
@@ -3063,27 +3166,27 @@ You're receiving this because you subscribed to our newsletter.
     try {
       const { name } = req.params;
       const { subject, body } = req.body;
-      
+
       if (!subject || !body) {
         return res.status(400).json({ message: "Subject and body are required" });
       }
-      
+
       const existingTemplates = await storage.getSetting("email-templates");
       const templates = existingTemplates?.value 
         ? (typeof existingTemplates.value === 'string' ? JSON.parse(existingTemplates.value) : existingTemplates.value)
         : {};
-      
+
       templates[name] = { subject, body };
-      
+
       await storage.upsertSetting("email-templates", templates);
-      
+
       await storage.createActivityLog({
         action: `Email template "${name}" updated`,
         userId: req.session.userId,
         userName: req.session.username,
         type: "info"
       });
-      
+
       res.json({ message: "Template updated successfully", template: templates[name] });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3101,12 +3204,12 @@ You're receiving this because you subscribed to our newsletter.
         : type === 'comment' ? 'emailNotifyNewComment'
         : type === 'newsletter' ? 'emailNotifyNewsletter'
         : 'emailNotifySecurityAlert';
-      
+
       const notifySetting = await storage.getSetting(settingKey);
       if (notifySetting?.value === false || notifySetting?.value === 'false') {
         return { sent: false, reason: 'Notifications disabled for this type' };
       }
-      
+
       // Get SMTP settings
       const smtpHost = await storage.getSetting("smtpHost");
       const smtpPort = await storage.getSetting("smtpPort");
@@ -3116,20 +3219,20 @@ You're receiving this because you subscribed to our newsletter.
       const emailFromName = await storage.getSetting("emailFromName");
       const emailFromAddress = await storage.getSetting("emailFromAddress");
       const adminEmail = await storage.getSetting("contactEmail");
-      
+
       if (!smtpHost?.value || !smtpPort?.value || !smtpUser?.value || !smtpPassword?.value) {
         return { sent: false, reason: 'SMTP not configured' };
       }
-      
+
       // Get email template
       const templates = await storage.getSetting("email-templates");
       let template = { subject: '', body: '' };
-      
+
       if (templates?.value) {
         const allTemplates = typeof templates.value === 'string' ? JSON.parse(templates.value) : templates.value;
         template = allTemplates[type] || template;
       }
-      
+
       // Default templates if not found
       if (!template.subject || !template.body) {
         const siteTitleForDefault = (await storage.getSetting("siteTitle"))?.value as string || 'Portfolio';
@@ -3138,11 +3241,11 @@ You're receiving this because you subscribed to our newsletter.
           body: `<h1>New ${type} notification</h1><p>${JSON.stringify(data)}</p>`
         };
       }
-      
+
       // Replace placeholders in template
       let subject = template.subject;
       let body = template.body;
-      
+
       const siteTitleSetting = await storage.getSetting("siteTitle");
       const siteTitleValue = (siteTitleSetting?.value as string) || 'Portfolio';
       const replacements: Record<string, string> = {
@@ -3150,17 +3253,17 @@ You're receiving this because you subscribed to our newsletter.
         siteName: siteTitleValue,
         date: new Date().toLocaleDateString()
       };
-      
+
       for (const [key, value] of Object.entries(replacements)) {
         const regex = new RegExp(`{{${key}}}`, 'g');
         subject = subject.replace(regex, value);
         body = body.replace(regex, value);
       }
-      
+
       // Send email
       const port = typeof smtpPort.value === 'string' ? parseInt(smtpPort.value) : smtpPort.value;
       const secure = smtpSecure?.value === true || smtpSecure?.value === 'true';
-      
+
       const transporter = nodemailer.createTransport({
         host: smtpHost.value as string,
         port: port as number,
@@ -3174,7 +3277,7 @@ You're receiving this because you subscribed to our newsletter.
         greetingTimeout: 10000,
         socketTimeout: 10000,
       });
-      
+
       const toEmail = (adminEmail?.value as string) || (smtpUser.value as string);
       await transporter.sendMail({
         from: `"${(emailFromName?.value as string) || 'Portfolio'}" <${(emailFromAddress?.value as string) || smtpUser.value}>`,
@@ -3182,7 +3285,7 @@ You're receiving this because you subscribed to our newsletter.
         subject,
         html: body,
       });
-      
+
       return { sent: true };
     } catch (error: any) {
       console.error('Failed to send notification email:', error.message);
@@ -3191,21 +3294,21 @@ You're receiving this because you subscribed to our newsletter.
   }
 
   // ==================== STORAGE MANAGEMENT API ====================
-  
+
   // Get real storage statistics from uploads folder
   app.get("/api/storage/stats", requireAdmin, async (req, res) => {
     try {
       const uploadsPath = path.join(process.cwd(), "uploads");
-      
+
       // Function to get folder size recursively
       const getFolderSize = (folderPath: string): { size: number; files: number } => {
         let totalSize = 0;
         let fileCount = 0;
-        
+
         if (!fs.existsSync(folderPath)) {
           return { size: 0, files: 0 };
         }
-        
+
         const items = fs.readdirSync(folderPath);
         for (const item of items) {
           const itemPath = path.join(folderPath, item);
@@ -3221,16 +3324,16 @@ You're receiving this because you subscribed to our newsletter.
         }
         return { size: totalSize, files: fileCount };
       };
-      
+
       // Get stats for each folder
       const imagesStats = getFolderSize(path.join(uploadsPath, "images"));
       const documentsStats = getFolderSize(path.join(uploadsPath, "documents"));
       const mediaStats = getFolderSize(path.join(uploadsPath, "media"));
-      
+
       const totalSize = imagesStats.size + documentsStats.size + mediaStats.size;
       const totalFiles = imagesStats.files + documentsStats.files + mediaStats.files;
       const maxStorage = 10 * 1024 * 1024 * 1024; // 10GB limit
-      
+
       // Format size for display
       const formatSize = (bytes: number): string => {
         if (bytes === 0) return '0 B';
@@ -3239,7 +3342,7 @@ You're receiving this because you subscribed to our newsletter.
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
       };
-      
+
       res.json({
         total: {
           size: totalSize,
@@ -3278,7 +3381,7 @@ You're receiving this because you subscribed to our newsletter.
       const { folder = "all" } = req.query;
       const uploadsPath = path.join(process.cwd(), "uploads");
       const files: Array<{ name: string; path: string; size: number; sizeFormatted: string; type: string; folder: string; modified: Date }> = [];
-      
+
       const formatSize = (bytes: number): string => {
         if (bytes === 0) return '0 B';
         const k = 1024;
@@ -3286,11 +3389,11 @@ You're receiving this because you subscribed to our newsletter.
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
       };
-      
+
       const scanFolder = (folderName: string) => {
         const folderPath = path.join(uploadsPath, folderName);
         if (!fs.existsSync(folderPath)) return;
-        
+
         const items = fs.readdirSync(folderPath);
         for (const item of items) {
           const itemPath = path.join(folderPath, item);
@@ -3308,7 +3411,7 @@ You're receiving this because you subscribed to our newsletter.
           }
         }
       };
-      
+
       if (folder === "all") {
         scanFolder("images");
         scanFolder("documents");
@@ -3316,10 +3419,10 @@ You're receiving this because you subscribed to our newsletter.
       } else {
         scanFolder(folder as string);
       }
-      
+
       // Sort by modified date, newest first
       files.sort((a, b) => new Date(b.modified).getTime() - new Date(a.modified).getTime());
-      
+
       res.json(files);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3331,20 +3434,20 @@ You're receiving this because you subscribed to our newsletter.
     try {
       const { folder, filename } = req.params;
       const filePath = path.join(process.cwd(), "uploads", folder, filename);
-      
+
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: "File not found" });
       }
-      
+
       fs.unlinkSync(filePath);
-      
+
       await storage.createActivityLog({
         action: `Deleted file: ${folder}/${filename}`,
         userId: req.session.userId,
         userName: req.session.username,
         type: "warning"
       });
-      
+
       res.json({ message: "File deleted successfully", success: true });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3352,12 +3455,12 @@ You're receiving this because you subscribed to our newsletter.
   });
 
   // ==================== LOGGING SYSTEM API ====================
-  
+
   const logsDir = path.join(process.cwd(), "logs");
   if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
   }
-  
+
   // Write log to file
   const writeLogToFile = (level: string, message: string, details?: any) => {
     const timestamp = new Date().toISOString();
@@ -3367,10 +3470,10 @@ You're receiving this because you subscribed to our newsletter.
       message,
       details: details || null
     };
-    
+
     const today = new Date().toISOString().split('T')[0];
     const logFile = path.join(logsDir, `app-${today}.log`);
-    
+
     fs.appendFileSync(logFile, JSON.stringify(logEntry) + '\n');
   };
 
@@ -3379,7 +3482,7 @@ You're receiving this because you subscribed to our newsletter.
     try {
       const { level, limit = 100, source = "all" } = req.query;
       const logs: any[] = [];
-      
+
       // Get logs from database (activity logs)
       if (source === "all" || source === "database") {
         const dbLogs = await storage.getAllActivityLogs(Number(limit));
@@ -3389,16 +3492,16 @@ You're receiving this because you subscribed to our newsletter.
           timestamp: log.createdAt
         })));
       }
-      
+
       // Get logs from file system
       if (source === "all" || source === "file") {
         const logFiles = fs.existsSync(logsDir) ? fs.readdirSync(logsDir).filter(f => f.endsWith('.log')) : [];
-        
+
         for (const logFile of logFiles.slice(-7)) { // Last 7 days
           const filePath = path.join(logsDir, logFile);
           const content = fs.readFileSync(filePath, 'utf-8');
           const lines = content.split('\n').filter(line => line.trim());
-          
+
           for (const line of lines) {
             try {
               const logEntry = JSON.parse(line);
@@ -3413,20 +3516,20 @@ You're receiving this because you subscribed to our newsletter.
           }
         }
       }
-      
+
       // Filter by level
       let filteredLogs = logs;
       if (level && level !== 'all') {
         filteredLogs = logs.filter(log => log.type === level || log.level === level);
       }
-      
+
       // Sort by timestamp, newest first
       filteredLogs.sort((a, b) => {
         const timeA = new Date(a.timestamp || a.createdAt).getTime();
         const timeB = new Date(b.timestamp || b.createdAt).getTime();
         return timeB - timeA;
       });
-      
+
       res.json(filteredLogs.slice(0, Number(limit)));
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3439,7 +3542,7 @@ You're receiving this because you subscribed to our newsletter.
       if (!fs.existsSync(logsDir)) {
         return res.json([]);
       }
-      
+
       const logFiles = fs.readdirSync(logsDir)
         .filter(f => f.endsWith('.log'))
         .map(filename => {
@@ -3456,7 +3559,7 @@ You're receiving this because you subscribed to our newsletter.
           };
         })
         .sort((a, b) => new Date(b.modified).getTime() - new Date(a.modified).getTime());
-      
+
       res.json(logFiles);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3467,9 +3570,9 @@ You're receiving this because you subscribed to our newsletter.
   app.post("/api/logs", requireAdmin, async (req, res) => {
     try {
       const { level, message, details } = req.body;
-      
+
       writeLogToFile(level || 'info', message, details);
-      
+
       res.json({ success: true, message: "Log entry created" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3481,20 +3584,20 @@ You're receiving this because you subscribed to our newsletter.
     try {
       const { filename } = req.params;
       const filePath = path.join(logsDir, filename);
-      
+
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: "Log file not found" });
       }
-      
+
       fs.unlinkSync(filePath);
-      
+
       await storage.createActivityLog({
         action: `Deleted log file: ${filename}`,
         userId: req.session.userId,
         userName: req.session.username,
         type: "warning"
       });
-      
+
       res.json({ message: "Log file deleted successfully", success: true });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3510,14 +3613,14 @@ You're receiving this because you subscribed to our newsletter.
           fs.unlinkSync(path.join(logsDir, file));
         }
       }
-      
+
       await storage.createActivityLog({
         action: "Cleared all log files",
         userId: req.session.userId,
         userName: req.session.username,
         type: "warning"
       });
-      
+
       res.json({ message: "All log files cleared", success: true });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3532,22 +3635,22 @@ You're receiving this because you subscribed to our newsletter.
         exportedAt: new Date().toISOString(),
         logs: []
       };
-      
+
       // Get database logs
       if (source === "all" || source === "database") {
         const dbLogs = await storage.getAllActivityLogs(1000);
         exportData.logs.push(...dbLogs.map(log => ({ ...log, source: "database" })));
       }
-      
+
       // Get file logs
       if (source === "all" || source === "file") {
         const logFiles = fs.existsSync(logsDir) ? fs.readdirSync(logsDir).filter(f => f.endsWith('.log')) : [];
-        
+
         for (const logFile of logFiles) {
           const filePath = path.join(logsDir, logFile);
           const content = fs.readFileSync(filePath, 'utf-8');
           const lines = content.split('\n').filter(line => line.trim());
-          
+
           for (const line of lines) {
             try {
               const logEntry = JSON.parse(line);
@@ -3556,9 +3659,9 @@ You're receiving this because you subscribed to our newsletter.
           }
         }
       }
-      
+
       const logData = JSON.stringify(exportData, null, 2);
-      
+
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Content-Disposition', `attachment; filename="logs-export-${Date.now()}.json"`);
       res.send(logData);
@@ -3568,7 +3671,7 @@ You're receiving this because you subscribed to our newsletter.
   });
 
   // ==================== DATABASE BACKUP/RESTORE API ====================
-  
+
   const backupsDir = path.join(process.cwd(), "backups");
   if (!fs.existsSync(backupsDir)) {
     fs.mkdirSync(backupsDir, { recursive: true });
@@ -3578,7 +3681,7 @@ You're receiving this because you subscribed to our newsletter.
   app.get("/api/database/status", requireAdmin, async (req, res) => {
     try {
       const stats = await storage.getSystemStats();
-      
+
       // Count records in each table
       const users = await storage.getAllUsers();
       const projects = await storage.getAllProjects();
@@ -3590,7 +3693,7 @@ You're receiving this because you subscribed to our newsletter.
       const comments = await storage.getAllComments();
       const reviews = await storage.getAllReviews();
       const media = await storage.getAllMedia();
-      
+
       res.json({
         status: "Connected",
         uptime: "99.9%",
@@ -3641,21 +3744,21 @@ You're receiving this because you subscribed to our newsletter.
           notifications: await storage.getAllNotifications()
         }
       };
-      
+
       // Save backup file
       const filename = `backup-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
       const filePath = path.join(backupsDir, filename);
       fs.writeFileSync(filePath, JSON.stringify(backup, null, 2));
-      
+
       const stats = fs.statSync(filePath);
-      
+
       await storage.createActivityLog({
         action: `Database backup created: ${filename}`,
         userId: req.session.userId,
         userName: req.session.username,
         type: "info"
       });
-      
+
       res.json({
         success: true,
         message: "Backup created successfully",
@@ -3675,11 +3778,11 @@ You're receiving this because you subscribed to our newsletter.
     try {
       const { filename } = req.params;
       const filePath = path.join(backupsDir, filename);
-      
+
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: "Backup file not found" });
       }
-      
+
       res.download(filePath, filename);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3692,7 +3795,7 @@ You're receiving this because you subscribed to our newsletter.
       if (!fs.existsSync(backupsDir)) {
         return res.json([]);
       }
-      
+
       const backupFiles = fs.readdirSync(backupsDir)
         .filter(f => f.endsWith('.json'))
         .map(filename => {
@@ -3707,7 +3810,7 @@ You're receiving this because you subscribed to our newsletter.
           };
         })
         .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
-      
+
       res.json(backupFiles);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3719,20 +3822,20 @@ You're receiving this because you subscribed to our newsletter.
     try {
       const { filename } = req.params;
       const filePath = path.join(backupsDir, filename);
-      
+
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: "Backup file not found" });
       }
-      
+
       fs.unlinkSync(filePath);
-      
+
       await storage.createActivityLog({
         action: `Deleted backup file: ${filename}`,
         userId: req.session.userId,
         userName: req.session.username,
         type: "warning"
       });
-      
+
       res.json({ message: "Backup file deleted successfully", success: true });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3745,15 +3848,15 @@ You're receiving this because you subscribed to our newsletter.
       if (!req.file) {
         return res.status(400).json({ message: "No backup file uploaded" });
       }
-      
+
       // Read and parse backup file
       const backupContent = fs.readFileSync(req.file.path, 'utf-8');
       const backup = JSON.parse(backupContent);
-      
+
       if (!backup.version || !backup.data) {
         return res.status(400).json({ message: "Invalid backup file format" });
       }
-      
+
       // Restore process would go here
       // For safety, we'll just validate the backup and report what would be restored
       const summary = {
@@ -3764,17 +3867,17 @@ You're receiving this because you subscribed to our newsletter.
           records: Array.isArray(data) ? data.length : 0
         }))
       };
-      
+
       await storage.createActivityLog({
         action: `Database restore validated from backup (${backup.timestamp})`,
         userId: req.session.userId,
         userName: req.session.username,
         type: "warning"
       });
-      
+
       // Clean up uploaded file
       fs.unlinkSync(req.file.path);
-      
+
       res.json({
         success: true,
         message: "Backup file validated successfully. Full restore requires confirmation.",
@@ -3794,7 +3897,7 @@ You're receiving this because you subscribed to our newsletter.
         userName: req.session.username,
         type: "info"
       });
-      
+
       res.json({ message: "Cache cleared successfully", success: true });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -3861,7 +3964,7 @@ You're receiving this because you subscribed to our newsletter.
       if (!email) {
         return res.status(400).json({ message: "Email is required" });
       }
-      
+
       await storage.createActivityLog({
         action: `User subscribed to newsletter: ${email}`,
         userId: req.session.userId,
