@@ -424,152 +424,16 @@ export const api = {
   },
 
   updateSettings: async (settings: Record<string, any>) => {
-    const res = await fetch(`${API_BASE}/settings`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(settings),
+    return apiRequest<void>("/api/settings", {
+      method: "PUT",
+      body: settings,
     });
-    return handleResponse<any>(res);
   },
 
-  getDashboardStats: async () => {
-    const res = await fetch(`${API_BASE}/dashboard/stats`, { credentials: 'include' });
-    return handleResponse<any>(res);
-  },
-
-  getCategories: async (type?: string) => {
-    const url = type ? `${API_BASE}/categories?type=${type}` : `${API_BASE}/categories`;
-    const res = await fetch(url, { credentials: 'include' });
-    return handleResponse<any[]>(res);
-  },
-
-  createCategory: async (data: any) => {
-    const res = await fetch(`${API_BASE}/categories`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    });
-    return handleResponse<any>(res);
-  },
-
-  updateCategory: async (id: number, data: any) => {
-    const res = await fetch(`${API_BASE}/categories/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    });
-    return handleResponse<any>(res);
-  },
-
-  deleteCategory: async (id: number) => {
-    const res = await fetch(`${API_BASE}/categories/${id}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    return handleResponse<any>(res);
-  },
-
-  getMedia: async () => {
-    const res = await fetch(`${API_BASE}/media`, { credentials: 'include' });
-    return handleResponse<any[]>(res);
-  },
-
-  createMedia: async (data: { filename: string; originalName: string; mimeType: string; size: number; url: string; alt?: string }) => {
-    const res = await fetch(`${API_BASE}/media`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    });
-    return handleResponse<any>(res);
-  },
-
-  deleteMedia: async (id: number) => {
-    const res = await fetch(`${API_BASE}/media/${id}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    return handleResponse<any>(res);
-  },
-
-  syncMedia: async () => {
-    const res = await fetch(`${API_BASE}/media/sync`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    return handleResponse<{ message: string; synced: any[]; skipped: string[] }>(res);
-  },
-
-  // System
-  getSystemStats: async () => {
-    const res = await fetch(`${API_BASE}/system/stats`, { credentials: 'include' });
-    return handleResponse<{
-      databaseSize: string;
-      tableStats: { name: string; count: number }[];
-      serverUptime: number;
-      lastCheck: string;
-      status: "Healthy" | "Warning" | "Error";
-    }>(res);
-  },
-
-  getSystemActivityLogs: async (limit = 50, offset = 0) => {
-    const res = await fetch(`${API_BASE}/system/activity-logs?limit=${limit}&offset=${offset}`, { credentials: 'include' });
-    return handleResponse<any[]>(res);
-  },
-
-  clearActivityLogs: async () => {
-    const res = await fetch(`${API_BASE}/system/clear-logs`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    return handleResponse<{ message: string }>(res);
-  },
-
-  resetSystem: async () => {
-    const res = await fetch(`${API_BASE}/system/reset`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    return handleResponse<{ message: string }>(res);
-  },
-
-  // Debug Mode
-  getDebugSettings: async () => {
-    const res = await fetch(`${API_BASE}/debug/settings`, { credentials: 'include' });
-    return handleResponse<{
-      debugMode: boolean;
-      showQueryDebug: boolean;
-      performanceProfiling: boolean;
-    }>(res);
-  },
-
-  saveDebugSettings: async (settings: { debugMode: boolean; showQueryDebug: boolean; performanceProfiling: boolean }) => {
-    const res = await fetch(`${API_BASE}/debug/settings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(settings),
-    });
-    return handleResponse<{ message: string }>(res);
-  },
-
-  // Security Stats
-  async getSecurityStats() {
-    return apiRequest<{
-      totalBlocked: number;
-      totalAllowed: number;
-      byEventType: { type: string; count: number }[];
-    }>("/api/security/stats");
-  },
-
-  // Email API
   async sendTestEmail(data: { to: string; subject: string; body: string }) {
-    return apiRequest("/api/email/test", {
+    return apiRequest<{ message: string; success: boolean }>("/api/email/test", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 
