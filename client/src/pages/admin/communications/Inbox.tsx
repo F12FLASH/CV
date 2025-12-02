@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Search, 
   Star, 
@@ -14,9 +15,12 @@ import {
   Mail,
   Loader2,
   Eye,
-  RefreshCw
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
+  Send
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -35,14 +39,29 @@ interface Message {
   archived: boolean;
 }
 
+interface SmtpStatus {
+  configured: boolean;
+  active?: boolean;
+  message: string;
+}
+
 export default function AdminInbox() {
   const { toast } = useToast();
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [replyContent, setReplyContent] = useState("");
 
   const { data: messages = [], isLoading, refetch } = useQuery<Message[]>({
     queryKey: ['/api/messages'],
   });
+
+  const { data: smtpStatus } = useQuery<SmtpStatus>({
+    queryKey: ['/api/messages/smtp/status'],
+  });
+
+  useEffect(() => {
+    setReplyContent("");
+  }, [selectedMessageId]);
 
   const markAsReadMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -86,6 +105,28 @@ export default function AdminInbox() {
       toast({ title: "Error", description: error.message || "Failed to archive message", variant: "destructive" });
     },
   });
+
+  const replyMutation = useMutation({
+    mutationFn: async ({ id, replyContent }: { id: number; replyContent: string }) => {
+      return apiRequest("POST", `/api/messages/${id}/reply`, { replyContent });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+      toast({ title: "Reply sent", description: "Your reply has been sent successfully" });
+      setReplyContent("");
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to send reply", description: error.message || "Failed to send reply", variant: "destructive" });
+    },
+  });
+
+  const handleSendReply = () => {
+    if (!selectedMessage || !replyContent.trim()) {
+      toast({ title: "Error", description: "Please write a reply first", variant: "destructive" });
+      return;
+    }
+    replyMutation.mutate({ id: selectedMessage.id, replyContent: replyContent.trim() });
+  };
 
   const filteredMessages = messages.filter(m => 
     !m.archived && (
@@ -285,18 +326,53 @@ export default function AdminInbox() {
                 </div>
                 
                 <div className="mt-8 border border-border rounded-lg p-4 bg-card">
-                  <div className="text-sm text-muted-foreground mb-2">Reply to {selectedMessage.sender}</div>
-                  <textarea 
-                    className="w-full bg-transparent border-none focus:ring-0 resize-none min-h-[100px] text-sm outline-none" 
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <div className="text-sm text-muted-foreground">Reply to {selectedMessage.sender}</div>
+                    {smtpStatus && (
+                      <div className="flex items-center gap-1.5 text-xs">
+                        {smtpStatus.configured && smtpStatus.active ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                            <span className="text-green-600 dark:text-green-400">Email ready</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="text-amber-600 dark:text-amber-400">
+                              {smtpStatus.configured ? "SMTP inactive" : "SMTP not configured"}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <Textarea 
+                    className="w-full bg-transparent resize-none min-h-[100px] text-sm border-muted" 
                     placeholder="Write your reply..."
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
                     data-testid="textarea-reply"
+                    disabled={replyMutation.isPending}
                   />
                   <div className="flex justify-between items-center mt-4 gap-2 flex-wrap">
-                    <Button variant="ghost" size="sm">
-                      <Paperclip className="w-4 h-4 mr-2" /> Attach
-                    </Button>
-                    <Button size="sm" data-testid="button-send-reply">
-                      <Reply className="w-4 h-4 mr-2" /> Send Reply
+                    <div className="text-xs text-muted-foreground">
+                      {replyContent.length > 0 && `${replyContent.length} characters`}
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={handleSendReply}
+                      disabled={!replyContent.trim() || replyMutation.isPending || !smtpStatus?.configured}
+                      data-testid="button-send-reply"
+                    >
+                      {replyMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" /> Send Reply
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>

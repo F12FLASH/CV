@@ -47,6 +47,24 @@ router.get("/", requireAdmin, async (req, res) => {
   }
 });
 
+router.get("/smtp/status", requireAdmin, async (req, res) => {
+  try {
+    const transporter = await getSmtpTransporter();
+    if (!transporter) {
+      return res.json({ configured: false, message: "SMTP is not configured" });
+    }
+    
+    try {
+      await transporter.verify();
+      res.json({ configured: true, active: true, message: "SMTP is configured and active" });
+    } catch (verifyError: any) {
+      res.json({ configured: true, active: false, message: `SMTP configured but not active: ${verifyError.message}` });
+    }
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/:id", requireAdmin, async (req, res) => {
   try {
     const message = await storage.getMessage(parseInt(req.params.id));
@@ -108,24 +126,6 @@ router.delete("/:id", requireAdmin, async (req, res) => {
       return res.status(404).json({ message: "Message not found" });
     }
     res.json({ message: "Message deleted" });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-router.get("/smtp/status", requireAdmin, async (req, res) => {
-  try {
-    const transporter = await getSmtpTransporter();
-    if (!transporter) {
-      return res.json({ configured: false, message: "SMTP is not configured" });
-    }
-    
-    try {
-      await transporter.verify();
-      res.json({ configured: true, active: true, message: "SMTP is configured and active" });
-    } catch (verifyError: any) {
-      res.json({ configured: true, active: false, message: `SMTP configured but not active: ${verifyError.message}` });
-    }
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
