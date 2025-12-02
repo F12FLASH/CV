@@ -31,15 +31,15 @@ const AdminDashboard = lazy(() => import("@/pages/admin/dashboard/Dashboard"));
 const AdminAnalytics = lazy(() => import("@/pages/admin/dashboard/Analytics"));
 
 // Admin Content - Posts
-const AdminPostsEnhanced = lazy(() => import("@/pages/admin/content/posts/PostsEnhanced"));
+const AdminPosts = lazy(() => import("@/pages/admin/content/posts/Posts"));
 const AdminPostCategories = lazy(() => import("@/pages/admin/content/posts/PostCategories"));
 
 // Admin Content - Projects
-const AdminProjectsEnhanced = lazy(() => import("@/pages/admin/content/projects/ProjectsEnhanced"));
+const AdminProjects = lazy(() => import("@/pages/admin/content/projects/Projects"));
 const AdminProjectCategories = lazy(() => import("@/pages/admin/content/projects/ProjectCategories"));
 
 // Admin Content - Services
-const AdminServicesEnhanced = lazy(() => import("@/pages/admin/content/services/ServicesEnhanced"));
+const AdminServices = lazy(() => import("@/pages/admin/content/services/Services"));
 
 // Admin Content - Skills
 const AdminSkills = lazy(() => import("@/pages/admin/content/skills/Skills"));
@@ -55,12 +55,12 @@ const AdminNewsletter = lazy(() => import("@/pages/admin/communications/Newslett
 const AdminEmailTemplates = lazy(() => import("@/pages/admin/communications/EmailTemplates"));
 
 // Admin Settings
-const AdminSettingsEnhanced = lazy(() => import("@/pages/admin/settings/SettingsEnhanced"));
-const AdminThemeEnhanced = lazy(() => import("@/pages/admin/settings/ThemeEnhanced"));
+const AdminSettings = lazy(() => import("@/pages/admin/settings/Settings"));
+const AdminTheme = lazy(() => import("@/pages/admin/settings/Theme"));
 const AdminLanguageManager = lazy(() => import("@/pages/admin/settings/LanguageManager"));
 
 // Admin Security
-const AdminSecurityEnhanced = lazy(() => import("@/pages/admin/security/SecurityEnhanced"));
+const AdminSecurity = lazy(() => import("@/pages/admin/security/Security"));
 const AdminWebhooks = lazy(() => import("@/pages/admin/security/Webhooks"));
 
 // Admin System
@@ -141,7 +141,7 @@ function Router() {
       <Route path="/admin/posts">
         {() => (
           <Suspense fallback={<PageLoader />}>
-            <AdminPostsEnhanced />
+            <AdminPosts />
           </Suspense>
         )}
       </Route>
@@ -162,7 +162,7 @@ function Router() {
       <Route path="/admin/projects">
         {() => (
           <Suspense fallback={<PageLoader />}>
-            <AdminProjectsEnhanced />
+            <AdminProjects />
           </Suspense>
         )}
       </Route>
@@ -176,7 +176,7 @@ function Router() {
       <Route path="/admin/services">
         {() => (
           <Suspense fallback={<PageLoader />}>
-            <AdminServicesEnhanced />
+            <AdminServices />
           </Suspense>
         )}
       </Route>
@@ -225,7 +225,7 @@ function Router() {
       <Route path="/admin/theme">
         {() => (
           <Suspense fallback={<PageLoader />}>
-            <AdminThemeEnhanced />
+            <AdminTheme />
           </Suspense>
         )}
       </Route>
@@ -284,14 +284,14 @@ function Router() {
       <Route path="/admin/security">
         {() => (
           <Suspense fallback={<PageLoader />}>
-            <AdminSecurityEnhanced />
+            <AdminSecurity />
           </Suspense>
         )}
       </Route>
       <Route path="/admin/settings">
         {() => (
           <Suspense fallback={<PageLoader />}>
-            <AdminSettingsEnhanced />
+            <AdminSettings />
           </Suspense>
         )}
       </Route>
