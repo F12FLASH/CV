@@ -430,11 +430,20 @@ export const api = {
     });
   },
 
-  async sendTestEmail(data: { to: string; subject: string; body: string }) {
-    return apiRequest<{ message: string; success: boolean }>("/api/email/test", {
+  sendTestEmail: async (data: { to: string; subject: string; body: string }) => {
+    const res = await fetch("/api/email/test", {
       method: "POST",
-      body: data,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+      credentials: "include",
     });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to send test email");
+    }
+    return res.json();
   },
 
   // Logging API
