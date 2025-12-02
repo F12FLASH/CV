@@ -26,6 +26,14 @@ import homepageRouter from "./homepage";
 import faqsRouter from "./faqs";
 import performanceRouter from "./performance";
 import searchRouter from "./search";
+import passwordResetRouter from "./password-reset";
+import subscribersRouter from "./subscribers";
+import emailCampaignsRouter from "./email-campaigns";
+import contentManagementRouter from "./content-management";
+import analyticsRouter from "./analytics";
+import sitemapRouter from "./sitemap";
+import commentsExtendedRouter from "./comments-extended";
+import translationsRouter from "./translations";
 
 export function registerApiRoutes(app: Express) {
   app.use("/api/auth", authRouter);
@@ -55,4 +63,14 @@ export function registerApiRoutes(app: Express) {
   app.use("/api/faqs", faqsRouter);
   app.use("/api/performance", performanceRouter);
   app.use("/api/search", searchRouter);
+  
+  app.use("/api/password-reset", passwordResetRouter);
+  app.use("/api/subscribers", subscribersRouter);
+  app.use("/api/email-campaigns", emailCampaignsRouter);
+  app.use("/api/content", contentManagementRouter);
+  app.use("/api/analytics", analyticsRouter);
+  app.use("/api/comments-extended", commentsExtendedRouter);
+  app.use("/api/translations", translationsRouter);
+  
+  app.use("/", sitemapRouter);
 }

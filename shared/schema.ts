@@ -564,3 +564,361 @@ export const ipRulesRelations = relations(ipRules, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// Password Reset Tokens table
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
+  id: true,
+  used: true,
+  createdAt: true,
+});
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+
+// Newsletter Subscribers table
+export const subscribers = pgTable("subscribers", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  status: text("status").notNull().default("active"), // active, unsubscribed, bounced
+  source: text("source").default("website"),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  unsubscribeToken: text("unsubscribe_token"),
+  confirmedAt: timestamp("confirmed_at"),
+  unsubscribedAt: timestamp("unsubscribed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSubscriberSchema = createInsertSchema(subscribers).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSubscriber = z.infer<typeof insertSubscriberSchema>;
+export type Subscriber = typeof subscribers.$inferSelect;
+
+// Email Templates table
+export const emailTemplates = pgTable("email_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  htmlContent: text("html_content").notNull(),
+  textContent: text("text_content"),
+  type: text("type").notNull().default("newsletter"), // newsletter, notification, transactional
+  variables: jsonb("variables").$type<string[]>().default([]),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+
+// Email Campaigns table
+export const emailCampaigns = pgTable("email_campaigns", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  content: text("content").notNull(),
+  templateId: integer("template_id"),
+  status: text("status").notNull().default("draft"), // draft, scheduled, sending, sent, cancelled
+  scheduledAt: timestamp("scheduled_at"),
+  sentAt: timestamp("sent_at"),
+  recipientCount: integer("recipient_count").default(0),
+  openCount: integer("open_count").default(0),
+  clickCount: integer("click_count").default(0),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertEmailCampaignSchema = createInsertSchema(emailCampaigns).omit({
+  id: true,
+  openCount: true,
+  clickCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertEmailCampaign = z.infer<typeof insertEmailCampaignSchema>;
+export type EmailCampaign = typeof emailCampaigns.$inferSelect;
+
+// Content Versions table (for version control)
+export const contentVersions = pgTable("content_versions", {
+  id: serial("id").primaryKey(),
+  contentType: text("content_type").notNull(), // post, page, project
+  contentId: integer("content_id").notNull(),
+  version: integer("version").notNull().default(1),
+  title: text("title").notNull(),
+  content: text("content"),
+  metadata: jsonb("metadata"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertContentVersionSchema = createInsertSchema(contentVersions).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertContentVersion = z.infer<typeof insertContentVersionSchema>;
+export type ContentVersion = typeof contentVersions.$inferSelect;
+
+// Content Drafts table (for auto-save)
+export const contentDrafts = pgTable("content_drafts", {
+  id: serial("id").primaryKey(),
+  contentType: text("content_type").notNull(), // post, page, project
+  contentId: integer("content_id"), // null for new content
+  title: text("title"),
+  content: text("content"),
+  metadata: jsonb("metadata"),
+  userId: integer("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertContentDraftSchema = createInsertSchema(contentDrafts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertContentDraft = z.infer<typeof insertContentDraftSchema>;
+export type ContentDraft = typeof contentDrafts.$inferSelect;
+
+// Scheduled Content table
+export const scheduledContent = pgTable("scheduled_content", {
+  id: serial("id").primaryKey(),
+  contentType: text("content_type").notNull(), // post, page
+  contentId: integer("content_id").notNull(),
+  action: text("action").notNull(), // publish, unpublish
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  executed: boolean("executed").notNull().default(false),
+  executedAt: timestamp("executed_at"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertScheduledContentSchema = createInsertSchema(scheduledContent).omit({
+  id: true,
+  executed: true,
+  executedAt: true,
+  createdAt: true,
+});
+export type InsertScheduledContent = z.infer<typeof insertScheduledContentSchema>;
+export type ScheduledContent = typeof scheduledContent.$inferSelect;
+
+// Comment Likes table
+export const commentLikes = pgTable("comment_likes", {
+  id: serial("id").primaryKey(),
+  commentId: integer("comment_id").notNull(),
+  visitorId: text("visitor_id").notNull(), // IP hash or session ID
+  isLike: boolean("is_like").notNull(), // true = like, false = dislike
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertCommentLikeSchema = createInsertSchema(commentLikes).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertCommentLike = z.infer<typeof insertCommentLikeSchema>;
+export type CommentLike = typeof commentLikes.$inferSelect;
+
+// Comment Reports table
+export const commentReports = pgTable("comment_reports", {
+  id: serial("id").primaryKey(),
+  commentId: integer("comment_id").notNull(),
+  reason: text("reason").notNull(),
+  reporterEmail: text("reporter_email"),
+  status: text("status").notNull().default("pending"), // pending, reviewed, dismissed
+  reviewedBy: integer("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertCommentReportSchema = createInsertSchema(commentReports).omit({
+  id: true,
+  status: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  createdAt: true,
+});
+export type InsertCommentReport = z.infer<typeof insertCommentReportSchema>;
+export type CommentReport = typeof commentReports.$inferSelect;
+
+// Search History table
+export const searchHistory = pgTable("search_history", {
+  id: serial("id").primaryKey(),
+  query: text("query").notNull(),
+  resultsCount: integer("results_count").default(0),
+  visitorId: text("visitor_id"),
+  userId: integer("user_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSearchHistorySchema = createInsertSchema(searchHistory).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSearchHistory = z.infer<typeof insertSearchHistorySchema>;
+export type SearchHistory = typeof searchHistory.$inferSelect;
+
+// Page Views / Analytics table
+export const pageViews = pgTable("page_views", {
+  id: serial("id").primaryKey(),
+  path: text("path").notNull(),
+  contentType: text("content_type"), // post, page, project
+  contentId: integer("content_id"),
+  visitorId: text("visitor_id").notNull(),
+  referrer: text("referrer"),
+  userAgent: text("user_agent"),
+  ipAddress: text("ip_address"),
+  country: text("country"),
+  city: text("city"),
+  device: text("device"),
+  browser: text("browser"),
+  os: text("os"),
+  sessionDuration: integer("session_duration"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPageViewSchema = createInsertSchema(pageViews).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertPageView = z.infer<typeof insertPageViewSchema>;
+export type PageView = typeof pageViews.$inferSelect;
+
+// Translations table (for i18n)
+export const translations = pgTable("translations", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull(),
+  locale: text("locale").notNull(),
+  value: text("value").notNull(),
+  namespace: text("namespace").default("common"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTranslationSchema = createInsertSchema(translations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
+export type Translation = typeof translations.$inferSelect;
+
+// Content Templates table
+export const contentTemplates = pgTable("content_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // post, page
+  content: text("content"),
+  metadata: jsonb("metadata"),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertContentTemplateSchema = createInsertSchema(contentTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertContentTemplate = z.infer<typeof insertContentTemplateSchema>;
+export type ContentTemplate = typeof contentTemplates.$inferSelect;
+
+// Media Folders table
+export const mediaFolders = pgTable("media_folders", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  parentId: integer("parent_id"),
+  path: text("path").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertMediaFolderSchema = createInsertSchema(mediaFolders).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertMediaFolder = z.infer<typeof insertMediaFolderSchema>;
+export type MediaFolder = typeof mediaFolders.$inferSelect;
+
+// Relations for new tables
+export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [passwordResetTokens.userId],
+    references: [users.id],
+  }),
+}));
+
+export const emailCampaignsRelations = relations(emailCampaigns, ({ one }) => ({
+  template: one(emailTemplates, {
+    fields: [emailCampaigns.templateId],
+    references: [emailTemplates.id],
+  }),
+}));
+
+export const contentVersionsRelations = relations(contentVersions, ({ one }) => ({
+  creator: one(users, {
+    fields: [contentVersions.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const contentDraftsRelations = relations(contentDrafts, ({ one }) => ({
+  user: one(users, {
+    fields: [contentDrafts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const scheduledContentRelations = relations(scheduledContent, ({ one }) => ({
+  creator: one(users, {
+    fields: [scheduledContent.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const commentLikesRelations = relations(commentLikes, ({ one }) => ({
+  comment: one(comments, {
+    fields: [commentLikes.commentId],
+    references: [comments.id],
+  }),
+}));
+
+export const commentReportsRelations = relations(commentReports, ({ one }) => ({
+  comment: one(comments, {
+    fields: [commentReports.commentId],
+    references: [comments.id],
+  }),
+  reviewer: one(users, {
+    fields: [commentReports.reviewedBy],
+    references: [users.id],
+  }),
+}));
+
+export const searchHistoryRelations = relations(searchHistory, ({ one }) => ({
+  user: one(users, {
+    fields: [searchHistory.userId],
+    references: [users.id],
+  }),
+}));
+
+export const mediaFoldersRelations = relations(mediaFolders, ({ one, many }) => ({
+  parent: one(mediaFolders, {
+    fields: [mediaFolders.parentId],
+    references: [mediaFolders.id],
+    relationName: "children",
+  }),
+  children: many(mediaFolders, { relationName: "children" }),
+}));

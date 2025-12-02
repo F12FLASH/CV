@@ -21,7 +21,21 @@ import {
   securityLogs, type SecurityLog, type InsertSecurityLog,
   homepageSections, type HomepageSection, type InsertHomepageSection,
   faqs, type FAQ, type InsertFAQ,
-  webauthnCredentials, type WebAuthnCredential, type InsertWebAuthnCredential
+  webauthnCredentials, type WebAuthnCredential, type InsertWebAuthnCredential,
+  passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken,
+  subscribers, type Subscriber, type InsertSubscriber,
+  emailTemplates, type EmailTemplate, type InsertEmailTemplate,
+  emailCampaigns, type EmailCampaign, type InsertEmailCampaign,
+  contentVersions, type ContentVersion, type InsertContentVersion,
+  contentDrafts, type ContentDraft, type InsertContentDraft,
+  scheduledContent, type ScheduledContent, type InsertScheduledContent,
+  commentLikes, type CommentLike, type InsertCommentLike,
+  commentReports, type CommentReport, type InsertCommentReport,
+  searchHistory, type SearchHistory, type InsertSearchHistory,
+  pageViews, type PageView, type InsertPageView,
+  translations, type Translation, type InsertTranslation,
+  contentTemplates, type ContentTemplate, type InsertContentTemplate,
+  mediaFolders, type MediaFolder, type InsertMediaFolder
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, ilike, sql, lt } from "drizzle-orm";
@@ -1241,6 +1255,439 @@ export class DatabaseStorage implements IStorage {
     // Delete all WebAuthn credentials for this user
     await this.db.delete(webauthnCredentials).where(eq(webauthnCredentials.userId, userId));
     return await this.getUser(userId);
+  }
+
+  // Password Reset Tokens
+  async createPasswordResetToken(data: InsertPasswordResetToken): Promise<PasswordResetToken> {
+    const [token] = await this.db.insert(passwordResetTokens).values(data).returning();
+    return token;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const [result] = await this.db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+    return result;
+  }
+
+  async markPasswordResetTokenUsed(id: number): Promise<void> {
+    await this.db.update(passwordResetTokens).set({ used: true }).where(eq(passwordResetTokens.id, id));
+  }
+
+  async deleteExpiredPasswordResetTokens(): Promise<void> {
+    await this.db.delete(passwordResetTokens).where(lt(passwordResetTokens.expiresAt, new Date()));
+  }
+
+  // Subscribers
+  async getSubscriber(id: number): Promise<Subscriber | undefined> {
+    const [subscriber] = await this.db.select().from(subscribers).where(eq(subscribers.id, id));
+    return subscriber;
+  }
+
+  async getSubscriberByEmail(email: string): Promise<Subscriber | undefined> {
+    const [subscriber] = await this.db.select().from(subscribers).where(eq(subscribers.email, email));
+    return subscriber;
+  }
+
+  async getAllSubscribers(): Promise<Subscriber[]> {
+    return this.db.select().from(subscribers).orderBy(desc(subscribers.createdAt));
+  }
+
+  async getActiveSubscribers(): Promise<Subscriber[]> {
+    return this.db.select().from(subscribers).where(eq(subscribers.status, 'active')).orderBy(desc(subscribers.createdAt));
+  }
+
+  async createSubscriber(data: InsertSubscriber): Promise<Subscriber> {
+    const [subscriber] = await this.db.insert(subscribers).values(data).returning();
+    return subscriber;
+  }
+
+  async updateSubscriber(id: number, data: Partial<InsertSubscriber>): Promise<Subscriber | undefined> {
+    const [subscriber] = await this.db.update(subscribers).set(data).where(eq(subscribers.id, id)).returning();
+    return subscriber;
+  }
+
+  async deleteSubscriber(id: number): Promise<boolean> {
+    const result = await this.db.delete(subscribers).where(eq(subscribers.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Email Templates
+  async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
+    const [template] = await this.db.select().from(emailTemplates).where(eq(emailTemplates.id, id));
+    return template;
+  }
+
+  async getAllEmailTemplates(): Promise<EmailTemplate[]> {
+    return this.db.select().from(emailTemplates).orderBy(desc(emailTemplates.createdAt));
+  }
+
+  async createEmailTemplate(data: InsertEmailTemplate): Promise<EmailTemplate> {
+    const [template] = await this.db.insert(emailTemplates).values(data).returning();
+    return template;
+  }
+
+  async updateEmailTemplate(id: number, data: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined> {
+    const [template] = await this.db.update(emailTemplates).set({ ...data, updatedAt: new Date() }).where(eq(emailTemplates.id, id)).returning();
+    return template;
+  }
+
+  async deleteEmailTemplate(id: number): Promise<boolean> {
+    const result = await this.db.delete(emailTemplates).where(eq(emailTemplates.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Email Campaigns
+  async getEmailCampaign(id: number): Promise<EmailCampaign | undefined> {
+    const [campaign] = await this.db.select().from(emailCampaigns).where(eq(emailCampaigns.id, id));
+    return campaign;
+  }
+
+  async getAllEmailCampaigns(): Promise<EmailCampaign[]> {
+    return this.db.select().from(emailCampaigns).orderBy(desc(emailCampaigns.createdAt));
+  }
+
+  async createEmailCampaign(data: InsertEmailCampaign): Promise<EmailCampaign> {
+    const [campaign] = await this.db.insert(emailCampaigns).values(data).returning();
+    return campaign;
+  }
+
+  async updateEmailCampaign(id: number, data: Partial<InsertEmailCampaign>): Promise<EmailCampaign | undefined> {
+    const [campaign] = await this.db.update(emailCampaigns).set({ ...data, updatedAt: new Date() }).where(eq(emailCampaigns.id, id)).returning();
+    return campaign;
+  }
+
+  async deleteEmailCampaign(id: number): Promise<boolean> {
+    const result = await this.db.delete(emailCampaigns).where(eq(emailCampaigns.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Content Versions
+  async getContentVersions(contentType: string, contentId: number): Promise<ContentVersion[]> {
+    return this.db.select().from(contentVersions)
+      .where(and(eq(contentVersions.contentType, contentType), eq(contentVersions.contentId, contentId)))
+      .orderBy(desc(contentVersions.version));
+  }
+
+  async createContentVersion(data: InsertContentVersion): Promise<ContentVersion> {
+    const [version] = await this.db.insert(contentVersions).values(data).returning();
+    return version;
+  }
+
+  async getLatestVersionNumber(contentType: string, contentId: number): Promise<number> {
+    const [latest] = await this.db.select({ version: contentVersions.version }).from(contentVersions)
+      .where(and(eq(contentVersions.contentType, contentType), eq(contentVersions.contentId, contentId)))
+      .orderBy(desc(contentVersions.version)).limit(1);
+    return latest?.version ?? 0;
+  }
+
+  // Content Drafts
+  async getContentDraft(userId: number, contentType: string, contentId?: number): Promise<ContentDraft | undefined> {
+    const conditions = [eq(contentDrafts.userId, userId), eq(contentDrafts.contentType, contentType)];
+    if (contentId !== undefined) {
+      conditions.push(eq(contentDrafts.contentId, contentId));
+    }
+    const [draft] = await this.db.select().from(contentDrafts).where(and(...conditions));
+    return draft;
+  }
+
+  async upsertContentDraft(data: InsertContentDraft): Promise<ContentDraft> {
+    const existing = await this.getContentDraft(data.userId, data.contentType, data.contentId ?? undefined);
+    if (existing) {
+      const [updated] = await this.db.update(contentDrafts)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(contentDrafts.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [draft] = await this.db.insert(contentDrafts).values(data).returning();
+    return draft;
+  }
+
+  async deleteContentDraft(id: number): Promise<boolean> {
+    const result = await this.db.delete(contentDrafts).where(eq(contentDrafts.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Scheduled Content
+  async getScheduledContent(id: number): Promise<ScheduledContent | undefined> {
+    const [scheduled] = await this.db.select().from(scheduledContent).where(eq(scheduledContent.id, id));
+    return scheduled;
+  }
+
+  async getAllScheduledContent(): Promise<ScheduledContent[]> {
+    return this.db.select().from(scheduledContent).where(eq(scheduledContent.executed, false)).orderBy(asc(scheduledContent.scheduledAt));
+  }
+
+  async getPendingScheduledContent(): Promise<ScheduledContent[]> {
+    return this.db.select().from(scheduledContent)
+      .where(and(eq(scheduledContent.executed, false), lt(scheduledContent.scheduledAt, new Date())))
+      .orderBy(asc(scheduledContent.scheduledAt));
+  }
+
+  async createScheduledContent(data: InsertScheduledContent): Promise<ScheduledContent> {
+    const [scheduled] = await this.db.insert(scheduledContent).values(data).returning();
+    return scheduled;
+  }
+
+  async markScheduledContentExecuted(id: number): Promise<void> {
+    await this.db.update(scheduledContent).set({ executed: true, executedAt: new Date() }).where(eq(scheduledContent.id, id));
+  }
+
+  async deleteScheduledContent(id: number): Promise<boolean> {
+    const result = await this.db.delete(scheduledContent).where(eq(scheduledContent.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Comment Likes
+  async getCommentLikes(commentId: number): Promise<{ likes: number; dislikes: number }> {
+    const likes = await this.db.select().from(commentLikes).where(and(eq(commentLikes.commentId, commentId), eq(commentLikes.isLike, true)));
+    const dislikes = await this.db.select().from(commentLikes).where(and(eq(commentLikes.commentId, commentId), eq(commentLikes.isLike, false)));
+    return { likes: likes.length, dislikes: dislikes.length };
+  }
+
+  async getVisitorCommentLike(commentId: number, visitorId: string): Promise<CommentLike | undefined> {
+    const [like] = await this.db.select().from(commentLikes).where(and(eq(commentLikes.commentId, commentId), eq(commentLikes.visitorId, visitorId)));
+    return like;
+  }
+
+  async upsertCommentLike(data: InsertCommentLike): Promise<CommentLike> {
+    const existing = await this.getVisitorCommentLike(data.commentId, data.visitorId);
+    if (existing) {
+      const [updated] = await this.db.update(commentLikes).set({ isLike: data.isLike }).where(eq(commentLikes.id, existing.id)).returning();
+      return updated;
+    }
+    const [like] = await this.db.insert(commentLikes).values(data).returning();
+    return like;
+  }
+
+  async deleteCommentLike(commentId: number, visitorId: string): Promise<boolean> {
+    const result = await this.db.delete(commentLikes).where(and(eq(commentLikes.commentId, commentId), eq(commentLikes.visitorId, visitorId)));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Comment Reports
+  async getCommentReport(id: number): Promise<CommentReport | undefined> {
+    const [report] = await this.db.select().from(commentReports).where(eq(commentReports.id, id));
+    return report;
+  }
+
+  async getAllCommentReports(): Promise<CommentReport[]> {
+    return this.db.select().from(commentReports).orderBy(desc(commentReports.createdAt));
+  }
+
+  async getPendingCommentReports(): Promise<CommentReport[]> {
+    return this.db.select().from(commentReports).where(eq(commentReports.status, 'pending')).orderBy(desc(commentReports.createdAt));
+  }
+
+  async createCommentReport(data: InsertCommentReport): Promise<CommentReport> {
+    const [report] = await this.db.insert(commentReports).values(data).returning();
+    return report;
+  }
+
+  async updateCommentReportStatus(id: number, status: string, reviewedBy: number): Promise<CommentReport | undefined> {
+    const [report] = await this.db.update(commentReports).set({ status, reviewedBy, reviewedAt: new Date() }).where(eq(commentReports.id, id)).returning();
+    return report;
+  }
+
+  // Search History
+  async createSearchHistory(data: InsertSearchHistory): Promise<SearchHistory> {
+    const [history] = await this.db.insert(searchHistory).values(data).returning();
+    return history;
+  }
+
+  async getPopularSearches(limit: number = 10): Promise<{ query: string; count: number }[]> {
+    const results = await this.db.select({
+      query: searchHistory.query,
+      count: sql<number>`count(*)`
+    }).from(searchHistory)
+      .groupBy(searchHistory.query)
+      .orderBy(desc(sql`count(*)`))
+      .limit(limit);
+    return results;
+  }
+
+  async getUserSearchHistory(userId: number, limit: number = 10): Promise<SearchHistory[]> {
+    return this.db.select().from(searchHistory)
+      .where(eq(searchHistory.userId, userId))
+      .orderBy(desc(searchHistory.createdAt))
+      .limit(limit);
+  }
+
+  // Page Views / Analytics
+  async createPageView(data: InsertPageView): Promise<PageView> {
+    const [view] = await this.db.insert(pageViews).values(data).returning();
+    return view;
+  }
+
+  async getPageViewStats(startDate?: Date, endDate?: Date): Promise<{ path: string; views: number }[]> {
+    let query = this.db.select({
+      path: pageViews.path,
+      views: sql<number>`count(*)`
+    }).from(pageViews);
+    
+    const conditions = [];
+    if (startDate) conditions.push(sql`${pageViews.createdAt} >= ${startDate}`);
+    if (endDate) conditions.push(sql`${pageViews.createdAt} <= ${endDate}`);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return query.groupBy(pageViews.path).orderBy(desc(sql`count(*)`));
+  }
+
+  async getPopularContent(contentType?: string, limit: number = 10): Promise<{ contentId: number; contentType: string; views: number }[]> {
+    let query = this.db.select({
+      contentId: pageViews.contentId,
+      contentType: pageViews.contentType,
+      views: sql<number>`count(*)`
+    }).from(pageViews).where(sql`${pageViews.contentId} IS NOT NULL`);
+    
+    if (contentType) {
+      query = query.where(eq(pageViews.contentType, contentType)) as any;
+    }
+    
+    return query.groupBy(pageViews.contentId, pageViews.contentType).orderBy(desc(sql`count(*)`)).limit(limit) as any;
+  }
+
+  async getReferrerStats(limit: number = 10): Promise<{ referrer: string; count: number }[]> {
+    return this.db.select({
+      referrer: pageViews.referrer,
+      count: sql<number>`count(*)`
+    }).from(pageViews)
+      .where(sql`${pageViews.referrer} IS NOT NULL AND ${pageViews.referrer} != ''`)
+      .groupBy(pageViews.referrer)
+      .orderBy(desc(sql`count(*)`))
+      .limit(limit) as any;
+  }
+
+  async getDeviceStats(): Promise<{ device: string; count: number }[]> {
+    return this.db.select({
+      device: pageViews.device,
+      count: sql<number>`count(*)`
+    }).from(pageViews)
+      .where(sql`${pageViews.device} IS NOT NULL`)
+      .groupBy(pageViews.device)
+      .orderBy(desc(sql`count(*)`)) as any;
+  }
+
+  async getBrowserStats(): Promise<{ browser: string; count: number }[]> {
+    return this.db.select({
+      browser: pageViews.browser,
+      count: sql<number>`count(*)`
+    }).from(pageViews)
+      .where(sql`${pageViews.browser} IS NOT NULL`)
+      .groupBy(pageViews.browser)
+      .orderBy(desc(sql`count(*)`)) as any;
+  }
+
+  async getCountryStats(): Promise<{ country: string; count: number }[]> {
+    return this.db.select({
+      country: pageViews.country,
+      count: sql<number>`count(*)`
+    }).from(pageViews)
+      .where(sql`${pageViews.country} IS NOT NULL`)
+      .groupBy(pageViews.country)
+      .orderBy(desc(sql`count(*)`)) as any;
+  }
+
+  // Translations
+  async getTranslation(key: string, locale: string): Promise<Translation | undefined> {
+    const [translation] = await this.db.select().from(translations).where(and(eq(translations.key, key), eq(translations.locale, locale)));
+    return translation;
+  }
+
+  async getTranslationsByLocale(locale: string, namespace?: string): Promise<Translation[]> {
+    const conditions = [eq(translations.locale, locale)];
+    if (namespace) conditions.push(eq(translations.namespace, namespace));
+    return this.db.select().from(translations).where(and(...conditions));
+  }
+
+  async upsertTranslation(data: InsertTranslation): Promise<Translation> {
+    const existing = await this.getTranslation(data.key, data.locale);
+    if (existing) {
+      const [updated] = await this.db.update(translations).set({ ...data, updatedAt: new Date() }).where(eq(translations.id, existing.id)).returning();
+      return updated;
+    }
+    const [translation] = await this.db.insert(translations).values(data).returning();
+    return translation;
+  }
+
+  async deleteTranslation(id: number): Promise<boolean> {
+    const result = await this.db.delete(translations).where(eq(translations.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Content Templates
+  async getContentTemplate(id: number): Promise<ContentTemplate | undefined> {
+    const [template] = await this.db.select().from(contentTemplates).where(eq(contentTemplates.id, id));
+    return template;
+  }
+
+  async getAllContentTemplates(): Promise<ContentTemplate[]> {
+    return this.db.select().from(contentTemplates).orderBy(desc(contentTemplates.createdAt));
+  }
+
+  async getContentTemplatesByType(type: string): Promise<ContentTemplate[]> {
+    return this.db.select().from(contentTemplates).where(eq(contentTemplates.type, type)).orderBy(desc(contentTemplates.createdAt));
+  }
+
+  async createContentTemplate(data: InsertContentTemplate): Promise<ContentTemplate> {
+    const [template] = await this.db.insert(contentTemplates).values(data).returning();
+    return template;
+  }
+
+  async updateContentTemplate(id: number, data: Partial<InsertContentTemplate>): Promise<ContentTemplate | undefined> {
+    const [template] = await this.db.update(contentTemplates).set({ ...data, updatedAt: new Date() }).where(eq(contentTemplates.id, id)).returning();
+    return template;
+  }
+
+  async deleteContentTemplate(id: number): Promise<boolean> {
+    const result = await this.db.delete(contentTemplates).where(eq(contentTemplates.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Media Folders
+  async getMediaFolder(id: number): Promise<MediaFolder | undefined> {
+    const [folder] = await this.db.select().from(mediaFolders).where(eq(mediaFolders.id, id));
+    return folder;
+  }
+
+  async getAllMediaFolders(): Promise<MediaFolder[]> {
+    return this.db.select().from(mediaFolders).orderBy(asc(mediaFolders.path));
+  }
+
+  async getChildMediaFolders(parentId: number | null): Promise<MediaFolder[]> {
+    if (parentId === null) {
+      return this.db.select().from(mediaFolders).where(sql`${mediaFolders.parentId} IS NULL`).orderBy(asc(mediaFolders.name));
+    }
+    return this.db.select().from(mediaFolders).where(eq(mediaFolders.parentId, parentId)).orderBy(asc(mediaFolders.name));
+  }
+
+  async createMediaFolder(data: InsertMediaFolder): Promise<MediaFolder> {
+    const [folder] = await this.db.insert(mediaFolders).values(data).returning();
+    return folder;
+  }
+
+  async deleteMediaFolder(id: number): Promise<boolean> {
+    const result = await this.db.delete(mediaFolders).where(eq(mediaFolders.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Media search
+  async searchMedia(query: string): Promise<Media[]> {
+    return this.db.select().from(media)
+      .where(or(
+        ilike(media.filename, `%${query}%`),
+        ilike(media.originalName, `%${query}%`),
+        ilike(media.alt, `%${query}%`)
+      ))
+      .orderBy(desc(media.createdAt));
+  }
+
+  async getMediaByType(mimeTypePrefix: string): Promise<Media[]> {
+    return this.db.select().from(media)
+      .where(ilike(media.mimeType, `${mimeTypePrefix}%`))
+      .orderBy(desc(media.createdAt));
   }
 }
 
