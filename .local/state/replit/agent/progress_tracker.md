@@ -140,3 +140,11 @@
     - Vấn đề: Route sử dụng `lazy()` không có Suspense wrapper, gây ra trang trống
     - Giải pháp: Thay thế lazy loading bằng import trực tiếp component AdminMedia
     - Kết quả: Trang media hoạt động bình thường, chuyển hướng đến login khi chưa đăng nhập
+[x] 129. **FEATURE (Dec 2, 2025 - 3:32 AM)** - Liên kết admin/media với thư mục uploads
+    - Đổi tên thư mục Images -> images, Documents -> documents (phù hợp với code)
+    - Thêm API endpoint POST /api/media/sync để quét và đồng bộ file từ thư mục uploads vào database
+    - Thêm hàm syncMedia vào client API (client/src/lib/api.ts)
+    - Thêm nút "Sync Folder" vào giao diện Media page
+    - Khi nhấn Sync: quét thư mục uploads/images, uploads/documents, uploads/media và thêm file mới vào database
+    - File đã tồn tại trong database sẽ được bỏ qua (không tạo trùng lặp)
+    - Upload mới sẽ tự động lưu vào thư mục uploads/images hoặc uploads/documents tùy theo loại file

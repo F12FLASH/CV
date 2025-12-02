@@ -478,6 +478,14 @@ export const api = {
     return handleResponse<any>(res);
   },
 
+  syncMedia: async () => {
+    const res = await fetch(`${API_BASE}/media/sync`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    return handleResponse<{ message: string; synced: any[]; skipped: string[] }>(res);
+  },
+
   // System
   getSystemStats: async () => {
     const res = await fetch(`${API_BASE}/system/stats`, { credentials: 'include' });

@@ -1382,6 +1382,74 @@ export async function registerRoutes(
     }
   });
 
+  // Sync files from uploads folder to database
+  app.post("/api/media/sync", requireAuth, async (req, res) => {
+    try {
+      const uploadsDir = path.join(process.cwd(), "uploads");
+      const folders = ["images", "documents", "media"];
+      const syncedFiles: any[] = [];
+      const skippedFiles: string[] = [];
+      
+      // Get all existing media URLs from database
+      const existingMedia = await storage.getAllMedia();
+      const existingUrls = new Set(existingMedia.map(m => m.url));
+      
+      for (const folder of folders) {
+        const folderPath = path.join(uploadsDir, folder);
+        if (!fs.existsSync(folderPath)) continue;
+        
+        const files = fs.readdirSync(folderPath);
+        for (const filename of files) {
+          const filePath = path.join(folderPath, filename);
+          const stat = fs.statSync(filePath);
+          
+          if (!stat.isFile()) continue;
+          
+          const url = `/uploads/${folder}/${filename}`;
+          
+          // Skip if already exists in database
+          if (existingUrls.has(url)) {
+            skippedFiles.push(filename);
+            continue;
+          }
+          
+          // Determine mime type
+          const ext = path.extname(filename).toLowerCase();
+          let mimeType = "application/octet-stream";
+          const mimeTypes: Record<string, string> = {
+            ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+            ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml",
+            ".pdf": "application/pdf", ".doc": "application/msword",
+            ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xls": "application/vnd.ms-excel",
+            ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".txt": "text/plain", ".mp4": "video/mp4", ".mp3": "audio/mpeg"
+          };
+          if (mimeTypes[ext]) mimeType = mimeTypes[ext];
+          
+          // Create media record
+          const mediaItem = await storage.createMedia({
+            filename,
+            originalName: filename,
+            mimeType,
+            size: stat.size,
+            url,
+            alt: null
+          });
+          syncedFiles.push(mediaItem);
+        }
+      }
+      
+      res.json({
+        message: `Synced ${syncedFiles.length} files, skipped ${skippedFiles.length} existing files`,
+        synced: syncedFiles,
+        skipped: skippedFiles
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
       const [projects, posts, messages, users, comments, reviews] = await Promise.all([

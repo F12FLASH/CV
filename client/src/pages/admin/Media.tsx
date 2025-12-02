@@ -16,7 +16,8 @@ import {
   Grid3x3,
   List,
   FileText,
-  Folder
+  Folder,
+  RefreshCw
 } from "lucide-react";
 import {
   Dialog,
@@ -98,6 +99,20 @@ export default function AdminMedia() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/media'] });
       toast({ title: "Success", description: "File deleted successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const syncMediaMutation = useMutation({
+    mutationFn: api.syncMedia,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/media'] });
+      toast({ 
+        title: "Sync Complete", 
+        description: `${data.synced.length} new files synced, ${data.skipped.length} already existed` 
+      });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -230,6 +245,15 @@ export default function AdminMedia() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => syncMediaMutation.mutate()}
+              disabled={syncMediaMutation.isPending}
+              data-testid="button-sync-files"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${syncMediaMutation.isPending ? 'animate-spin' : ''}`} /> 
+              {syncMediaMutation.isPending ? 'Syncing...' : 'Sync Folder'}
+            </Button>
             <Button 
               onClick={() => setUploadDialogOpen(true)}
               data-testid="button-upload-files"
