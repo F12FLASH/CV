@@ -385,22 +385,33 @@ export async function registerRoutes(
 
       // Check password expiration
       const passwordExpirationSetting = await storage.getSecuritySetting('passwordExpiration');
-      if (passwordExpirationSetting?.value === 'true' && user.passwordUpdatedAt) {
-        const passwordAge = Date.now() - new Date(user.passwordUpdatedAt).getTime();
-        const maxAge = 90 * 24 * 60 * 60 * 1000; // 90 days
-        if (passwordAge > maxAge) {
-          await storage.createSecurityLog({
-            action: `Login blocked - password expired`,
-            userId: user.id,
-            userName: user.username,
-            ipAddress: clientIp,
-            userAgent: userAgent,
-            eventType: "password_expired",
-            blocked: true
-          });
-          return res.status(403).json({ 
-            passwordExpired: true,
-            message: "Your password has expired. Please reset it."
+      if (passwordExpirationSetting?.value === 'true' || passwordExpirationSetting?.value === true) {
+        if (user.passwordUpdatedAt) {
+          const passwordAge = Date.now() - new Date(user.passwordUpdatedAt).getTime();
+          const maxAge = 90 * 24 * 60 * 60 * 1000; // 90 days
+          if (passwordAge > maxAge) {
+            await storage.createSecurityLog({
+              action: `Login blocked - password expired`,
+              userId: user.id,
+              userName: user.username,
+              ipAddress: clientIp,
+              userAgent: userAgent,
+              eventType: "password_expired",
+              blocked: true
+            });
+            return res.status(403).json({ 
+              passwordExpired: true,
+              userId: user.id,
+              message: "Your password has expired. Please reset it to continue."
+            });
+          }
+        } else {
+          // If no passwordUpdatedAt, set it to now and calculate expiry
+          const now = new Date();
+          const expiresAt = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+          await storage.updateUser(user.id, {
+            passwordUpdatedAt: now,
+            passwordExpiresAt: expiresAt
           });
         }
       }
@@ -515,6 +526,48 @@ export async function registerRoutes(
     }
   });
 
+  // Force password reset for expired passwords (without authentication)
+  app.post("/api/auth/force-password-reset", async (req, res) => {
+    try {
+      const { userId, currentPassword, newPassword } = req.body;
+      
+      if (!userId || !currentPassword || !newPassword) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const isValid = await verifyPassword(currentPassword, user.password);
+      if (!isValid) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+      
+      const hashedPassword = await hashPassword(newPassword);
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+      
+      await storage.updateUser(userId, { 
+        password: hashedPassword,
+        passwordUpdatedAt: now,
+        passwordExpiresAt: expiresAt
+      });
+      
+      await storage.createActivityLog({
+        action: 'Forced password reset due to expiration',
+        userId: user.id,
+        userName: user.username,
+        type: 'warning'
+      });
+      
+      res.json({ message: "Password reset successfully. You can now login." });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Password change endpoint
   app.put("/api/auth/password", requireAuth, async (req, res) => {
     try {
@@ -536,7 +589,21 @@ export async function registerRoutes(
       }
       
       const hashedPassword = await hashPassword(newPassword);
-      await storage.updateUser(userId, { password: hashedPassword });
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000); // 90 days from now
+      
+      await storage.updateUser(userId, { 
+        password: hashedPassword,
+        passwordUpdatedAt: now,
+        passwordExpiresAt: expiresAt
+      });
+      
+      await storage.createActivityLog({
+        action: 'Password changed successfully',
+        userId: userId,
+        userName: req.session.username || 'Unknown',
+        type: 'success'
+      });
       
       res.json({ message: "Password updated successfully" });
     } catch (error: any) {

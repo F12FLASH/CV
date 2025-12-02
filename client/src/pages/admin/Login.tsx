@@ -108,11 +108,22 @@ export default function AdminLogin() {
           }, 100);
         }
       } else {
-        toast({
-          title: "Login Failed",
-          description: data.message || "Invalid credentials",
-          variant: "destructive",
-        });
+        if (data.passwordExpired && data.userId) {
+          toast({
+            title: "Password Expired",
+            description: "Your password has expired. Redirecting to reset...",
+            variant: "destructive",
+          });
+          setTimeout(() => {
+            window.location.href = `/admin/force-password-reset?userId=${data.userId}`;
+          }, 1500);
+        } else {
+          toast({
+            title: "Login Failed",
+            description: data.message || "Invalid credentials",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({

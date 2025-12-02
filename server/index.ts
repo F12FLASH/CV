@@ -6,6 +6,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { setupWebSocket } from "./websocket";
 import { pool } from "./db";
+import { startPasswordExpiryCron } from "./cron";
 import path from "path";
 import fs from "fs";
 
@@ -148,6 +149,9 @@ app.use((req, res, next) => {
     () => {
       log(`serving on port ${port}`);
       log(`WebSocket server ready at ws://0.0.0.0:${port}/ws`);
+      
+      // Start password expiry cron job
+      startPasswordExpiryCron();
     },
   );
 })();
