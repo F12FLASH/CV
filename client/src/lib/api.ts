@@ -617,6 +617,47 @@ export const api = {
     return handleResponse<any>(res);
   },
 
+  // ==================== CATEGORIES API ====================
+  
+  getCategories: async (type?: string) => {
+    const url = type ? `${API_BASE}/categories?type=${type}` : `${API_BASE}/categories`;
+    const res = await fetch(url, { credentials: 'include' });
+    return handleResponse<any[]>(res);
+  },
+
+  getCategory: async (id: number) => {
+    const res = await fetch(`${API_BASE}/categories/${id}`, { credentials: 'include' });
+    return handleResponse<any>(res);
+  },
+
+  createCategory: async (data: any) => {
+    const res = await fetch(`${API_BASE}/categories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return handleResponse<any>(res);
+  },
+
+  updateCategory: async (id: number, data: any) => {
+    const res = await fetch(`${API_BASE}/categories/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return handleResponse<any>(res);
+  },
+
+  deleteCategory: async (id: number) => {
+    const res = await fetch(`${API_BASE}/categories/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    return handleResponse<any>(res);
+  },
+
   // ==================== PERFORMANCE API ====================
   
   async clearCache() {
