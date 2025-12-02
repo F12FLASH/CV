@@ -35,7 +35,16 @@ const multerStorage = multer.diskStorage({
     let subDir = "media";
     if (file.mimetype.startsWith("image/")) {
       subDir = "images";
-    } else if (file.mimetype === "application/pdf" || file.mimetype.startsWith("application/")) {
+    } else if (
+      file.mimetype === "application/pdf" ||
+      file.mimetype === "application/msword" ||
+      file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.mimetype === "application/vnd.ms-excel" ||
+      file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      file.mimetype === "application/vnd.ms-powerpoint" ||
+      file.mimetype === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+      file.mimetype === "text/plain"
+    ) {
       subDir = "documents";
     }
     
@@ -1192,7 +1201,16 @@ export async function registerRoutes(
       let subDir = "media";
       if (file.mimetype.startsWith("image/")) {
         subDir = "images";
-      } else if (file.mimetype === "application/pdf" || file.mimetype.startsWith("application/")) {
+      } else if (
+        file.mimetype === "application/pdf" ||
+        file.mimetype === "application/msword" ||
+        file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.mimetype === "application/vnd.ms-excel" ||
+        file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+        file.mimetype === "application/vnd.ms-powerpoint" ||
+        file.mimetype === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+        file.mimetype === "text/plain"
+      ) {
         subDir = "documents";
       }
       
@@ -1228,7 +1246,16 @@ export async function registerRoutes(
         let subDir = "media";
         if (file.mimetype.startsWith("image/")) {
           subDir = "images";
-        } else if (file.mimetype === "application/pdf" || file.mimetype.startsWith("application/")) {
+        } else if (
+          file.mimetype === "application/pdf" ||
+          file.mimetype === "application/msword" ||
+          file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+          file.mimetype === "application/vnd.ms-excel" ||
+          file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+          file.mimetype === "application/vnd.ms-powerpoint" ||
+          file.mimetype === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+          file.mimetype === "text/plain"
+        ) {
           subDir = "documents";
         }
         
@@ -1304,7 +1331,16 @@ export async function registerRoutes(
         let subDir = "media";
         if (mimeType.startsWith("image/")) {
           subDir = "images";
-        } else if (mimeType === "application/pdf" || mimeType.startsWith("application/")) {
+        } else if (
+          mimeType === "application/pdf" ||
+          mimeType === "application/msword" ||
+          mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+          mimeType === "application/vnd.ms-excel" ||
+          mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+          mimeType === "application/vnd.ms-powerpoint" ||
+          mimeType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+          mimeType === "text/plain"
+        ) {
           subDir = "documents";
         }
         

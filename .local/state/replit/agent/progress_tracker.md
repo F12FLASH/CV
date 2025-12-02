@@ -155,3 +155,14 @@
     - Tất cả ảnh website bây giờ được lấy từ thư mục uploads/images/
     - File mới tải lên sẽ được lưu vào uploads/images/ (ảnh) hoặc uploads/documents/ (tài liệu)
     - Website đã hoạt động bình thường với preloader animation
+[x] 131. **FIX (Dec 2, 2025 - 3:47 AM)** - Sửa lỗi upload file không lưu vào uploads folder
+    - Vấn đề: File type logic xác định subdirectory không khớp allowedTypes
+    - Chi tiết: File text/plain được lưu vào media/ thay vì documents/
+    - Giải pháp: Cập nhật logic xác định subdirectory tại 4 nơi trong routes.ts:
+      * multerStorage destination (line 36-52)
+      * /api/upload/file endpoint (line 1203-1220)
+      * /api/upload/files endpoint (line 1248-1265)
+      * /api/media POST endpoint (line 1334-1348)
+    - Fix: Kiểm tra rõ ràng từng MIME type (text/plain, application/msword, etc.)
+    - Kết quả: Test upload thành công - file text lưu vào uploads/documents/ folder
+    - Tất cả upload hoạt động bình thường từ giao diện Media page
