@@ -558,10 +558,27 @@ export default function AdminMedia() {
                   alt={previewItem.alt || previewItem.originalName}
                   className="max-w-full max-h-[400px] mx-auto rounded-lg"
                 />
+              ) : previewItem?.mimeType === "application/pdf" ? (
+                <iframe 
+                  src={previewItem.url}
+                  className="w-full h-[500px] rounded-lg border"
+                />
+              ) : previewItem?.mimeType === "text/plain" || previewItem?.mimeType?.includes("text/") ? (
+                <div className="bg-muted p-4 rounded-lg max-h-[500px] overflow-auto">
+                  <pre className="text-sm font-mono whitespace-pre-wrap break-words">
+                    <a href={previewItem.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                      Open {previewItem.originalName} →
+                    </a>
+                  </pre>
+                </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-12">
                   {getFileIcon(previewItem?.mimeType || '')}
-                  <p className="text-muted-foreground mt-4">Preview not available</p>
+                  <p className="text-muted-foreground mt-4">
+                    <a href={previewItem.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                      Download {previewItem.originalName}
+                    </a>
+                  </p>
                 </div>
               )}
             </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,8 @@ import {
   Calendar,
   ExternalLink,
   Layers,
-  Star
+  Star,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -89,6 +90,8 @@ export default function AdminProjects() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState<ProjectFormData>(getDefaultFormData());
   const [techInput, setTechInput] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Load projects and categories from API
   useEffect(() => {
@@ -118,6 +121,28 @@ export default function AdminProjects() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setFormData(prev => ({ ...prev, image: data.url }));
+      toast({ title: "Success", description: "Image uploaded" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -565,12 +590,24 @@ export default function AdminProjects() {
               </div>
 
               <div className="col-span-2">
-                <Label htmlFor="image">Image URL</Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
+                <Label htmlFor="image">Project Image</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="image"
+                    value={formData.image}
+                    readOnly
+                    placeholder="No image selected"
+                  />
+                  <Button variant="outline" onClick={() => imageInputRef.current?.click()} disabled={uploading}>
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upload"}
+                  </Button>
+                </div>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
                 />
               </div>
 

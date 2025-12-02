@@ -35,7 +35,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import {
   AlertDialog,
@@ -129,6 +129,9 @@ export default function AdminSettings() {
   const { user, logoutMutation } = useAuth();
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
   const [hasChanges, setHasChanges] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const cvInputRef = useRef<HTMLInputElement>(null);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
@@ -188,6 +191,28 @@ export default function AdminSettings() {
   const handleChange = (key: keyof SiteSettings, value: string | boolean) => {
     setSettings(prev => ({ ...prev, [key]: value }));
     setHasChanges(true);
+  };
+
+  const handleFileUpload = async (file: File, field: "aboutImage" | "cvFileUrl") => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      handleChange(field, data.url);
+      toast({ title: "Success", description: "File uploaded" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = () => {
@@ -617,30 +642,54 @@ export default function AdminSettings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="aboutImage" className="font-semibold flex items-center gap-2">
-                        <ImageIcon className="w-4 h-4" /> Profile Image URL
+                        <ImageIcon className="w-4 h-4" /> Profile Image
                       </Label>
-                      <p className="text-xs text-muted-foreground mb-2">URL to your profile picture</p>
-                      <Input 
-                        id="aboutImage"
-                        value={settings.aboutImage}
-                        onChange={(e) => handleChange("aboutImage", e.target.value)}
-                        placeholder="https://example.com/your-photo.jpg"
-                        data-testid="input-about-image"
-                        className="text-base"
+                      <p className="text-xs text-muted-foreground mb-2">Your profile picture (uploads to /uploads/images/)</p>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="aboutImage"
+                          value={settings.aboutImage}
+                          readOnly
+                          placeholder="No image selected"
+                          data-testid="input-about-image"
+                          className="text-base flex-1"
+                        />
+                        <Button variant="outline" onClick={() => imageInputRef.current?.click()} disabled={uploading}>
+                          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upload"}
+                        </Button>
+                      </div>
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], "aboutImage")}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cvFileUrl" className="font-semibold flex items-center gap-2">
-                        <Download className="w-4 h-4" /> CV/Resume URL
+                        <Download className="w-4 h-4" /> CV/Resume File
                       </Label>
-                      <p className="text-xs text-muted-foreground mb-2">Direct link to your CV file</p>
-                      <Input 
-                        id="cvFileUrl"
-                        value={settings.cvFileUrl}
-                        onChange={(e) => handleChange("cvFileUrl", e.target.value)}
-                        placeholder="https://example.com/your-cv.pdf"
-                        data-testid="input-cv-url"
-                        className="text-base"
+                      <p className="text-xs text-muted-foreground mb-2">PDF or document (uploads to /uploads/documents/)</p>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="cvFileUrl"
+                          value={settings.cvFileUrl}
+                          readOnly
+                          placeholder="No file selected"
+                          data-testid="input-cv-url"
+                          className="text-base flex-1"
+                        />
+                        <Button variant="outline" onClick={() => cvInputRef.current?.click()} disabled={uploading}>
+                          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upload"}
+                        </Button>
+                      </div>
+                      <input
+                        ref={cvInputRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        className="hidden"
+                        onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], "cvFileUrl")}
                       />
                     </div>
                   </div>
