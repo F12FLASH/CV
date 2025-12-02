@@ -304,11 +304,18 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const saveSettings = async () => {
     setIsSaving(true);
     try {
-      await api.updateSettings(settings);
+      console.log("Saving settings:", settings);
+      const response = await api.updateSettings(settings);
+      console.log("Settings saved successfully:", response);
       localStorage.setItem("siteSettings", JSON.stringify(settings));
       return { success: true };
     } catch (error: any) {
       console.error("Failed to save settings to API:", error);
+      console.error("Error details:", {
+        message: error?.message,
+        response: error?.response,
+        status: error?.status
+      });
       localStorage.setItem("siteSettings", JSON.stringify(settings));
       return { success: false, error: error?.message || "Failed to save settings" };
     } finally {

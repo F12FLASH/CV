@@ -137,13 +137,18 @@ export default function AdminSettingsEnhanced() {
   };
 
   const handleSave = async () => {
+    console.log("handleSave called with current settings:", settings);
     const result = await saveSettings();
+    console.log("Save result:", result);
     if (result?.success) {
-      toast({ title: "Saved", description: "Settings saved successfully" });
+      toast({ 
+        title: "Thành công ✓", 
+        description: "Cài đặt được lưu thành công" 
+      });
     } else {
       toast({
-        title: "Error",
-        description: result?.error || "Failed to save settings",
+        title: "Lỗi",
+        description: result?.error || "Không thể lưu cài đặt",
         variant: "destructive",
       });
     }

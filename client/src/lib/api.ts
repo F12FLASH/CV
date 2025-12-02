@@ -424,10 +424,18 @@ export const api = {
   },
 
   updateSettings: async (settings: Record<string, any>) => {
-    return apiRequest<void>("/api/settings", {
+    console.log("API: Updating settings with:", settings);
+    const res = await fetch(`${API_BASE}/settings`, {
       method: "PUT",
-      body: settings,
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(settings),
     });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ message: 'Save failed' }));
+      throw new Error(error.message || `HTTP ${res.status}`);
+    }
+    return res.json();
   },
 
   sendTestEmail: async (data: { to: string; subject: string; body: string }) => {
