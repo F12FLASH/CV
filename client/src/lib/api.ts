@@ -454,58 +454,176 @@ export const api = {
     return res.json();
   },
 
-  // Logging API
-  async getLogs(level?: string, limit?: number) {
+  // ==================== STORAGE API ====================
+  
+  async getStorageStats() {
+    const res = await fetch(`${API_BASE}/storage/stats`, { credentials: 'include' });
+    return handleResponse<{
+      total: { size: number; sizeFormatted: string; files: number; maxStorage: number; maxStorageFormatted: string; usagePercent: string };
+      folders: {
+        images: { size: number; sizeFormatted: string; files: number };
+        documents: { size: number; sizeFormatted: string; files: number };
+        media: { size: number; sizeFormatted: string; files: number };
+      };
+    }>(res);
+  },
+
+  async getStorageFiles(folder?: string) {
+    const url = folder ? `${API_BASE}/storage/files?folder=${folder}` : `${API_BASE}/storage/files`;
+    const res = await fetch(url, { credentials: 'include' });
+    return handleResponse<Array<{ name: string; path: string; size: number; sizeFormatted: string; type: string; folder: string; modified: string }>>(res);
+  },
+
+  async deleteStorageFile(folder: string, filename: string) {
+    const res = await fetch(`${API_BASE}/storage/files/${folder}/${filename}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    return handleResponse<{ message: string; success: boolean }>(res);
+  },
+
+  async uploadFile(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${API_BASE}/storage/upload`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+    return handleResponse<any>(res);
+  },
+
+  // ==================== LOGGING API ====================
+  
+  async getLogs(level?: string, limit?: number, source?: string) {
     const params = new URLSearchParams();
     if (level) params.append("level", level);
     if (limit) params.append("limit", limit.toString());
-    return apiRequest(`/api/logs?${params.toString()}`);
+    if (source) params.append("source", source);
+    const res = await fetch(`${API_BASE}/logs?${params.toString()}`, { credentials: 'include' });
+    return handleResponse<any[]>(res);
   },
 
-  async exportLogs() {
-    const response = await fetch("/api/logs/export", {
+  async getLogFiles() {
+    const res = await fetch(`${API_BASE}/logs/files`, { credentials: 'include' });
+    return handleResponse<Array<{ filename: string; size: number; sizeFormatted: string; modified: string; date: string }>>(res);
+  },
+
+  async writeLog(level: string, message: string, details?: any) {
+    const res = await fetch(`${API_BASE}/logs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ level, message, details })
+    });
+    return handleResponse<{ success: boolean; message: string }>(res);
+  },
+
+  async deleteLogFile(filename: string) {
+    const res = await fetch(`${API_BASE}/logs/files/${filename}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    return handleResponse<{ message: string; success: boolean }>(res);
+  },
+
+  async clearAllLogs() {
+    const res = await fetch(`${API_BASE}/logs/clear`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    return handleResponse<{ message: string; success: boolean }>(res);
+  },
+
+  async exportLogs(source?: string) {
+    const url = source ? `${API_BASE}/logs/export?source=${source}` : `${API_BASE}/logs/export`;
+    const response = await fetch(url, {
       credentials: "include",
     });
     if (!response.ok) throw new Error("Failed to export logs");
     const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
+    const downloadUrl = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
+    a.href = downloadUrl;
     a.download = `logs-${Date.now()}.json`;
     a.click();
-    window.URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(downloadUrl);
   },
 
-  // Database Backup API
+  // ==================== DATABASE API ====================
+  
+  async getDatabaseStatus() {
+    const res = await fetch(`${API_BASE}/database/status`, { credentials: 'include' });
+    return handleResponse<{
+      status: string;
+      uptime: string;
+      tables: Record<string, number>;
+      totalRecords: number;
+      databaseSize: string;
+    }>(res);
+  },
+
   async createBackup() {
-    return apiRequest("/api/database/backup", {
-      method: "POST",
+    const res = await fetch(`${API_BASE}/database/backup`, {
+      method: 'POST',
+      credentials: 'include'
     });
+    return handleResponse<{
+      success: boolean;
+      message: string;
+      filename: string;
+      size: number;
+      sizeFormatted: string;
+      timestamp: string;
+      recordCount: number;
+    }>(res);
+  },
+
+  async getBackups() {
+    const res = await fetch(`${API_BASE}/database/backups`, { credentials: 'include' });
+    return handleResponse<Array<{ filename: string; size: number; sizeFormatted: string; created: string; modified: string }>>(res);
+  },
+
+  async downloadBackup(filename: string) {
+    const response = await fetch(`${API_BASE}/database/backup/${filename}`, {
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error("Failed to download backup");
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(downloadUrl);
+  },
+
+  async deleteBackup(filename: string) {
+    const res = await fetch(`${API_BASE}/database/backup/${filename}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    return handleResponse<{ message: string; success: boolean }>(res);
   },
 
   async restoreBackup(file: File) {
     const formData = new FormData();
     formData.append("backup", file);
-    return apiRequest("/api/database/restore", {
+    const res = await fetch(`${API_BASE}/database/restore`, {
       method: "POST",
       body: formData,
+      credentials: "include",
     });
+    return handleResponse<any>(res);
   },
 
-  // Performance API
+  // ==================== PERFORMANCE API ====================
+  
   async clearCache() {
-    return apiRequest("/api/performance/clear-cache", {
-      method: "POST",
+    const res = await fetch(`${API_BASE}/performance/clear-cache`, {
+      method: 'POST',
+      credentials: 'include'
     });
-  },
-
-  // Storage API
-  async uploadFile(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    return apiRequest("/api/storage/upload", {
-      method: "POST",
-      body: formData,
-    });
+    return handleResponse<{ message: string; success: boolean }>(res);
   },
 };
