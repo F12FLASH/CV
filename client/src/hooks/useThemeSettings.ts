@@ -3,6 +3,18 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
 interface ThemeSettings {
+
+function loadGoogleFont(fontName: string) {
+  const fontId = `google-font-${fontName.replace(/\s+/g, '-')}`;
+  if (document.getElementById(fontId)) return;
+  
+  const link = document.createElement('link');
+  link.id = fontId;
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@300;400;500;600;700&display=swap`;
+  document.head.appendChild(link);
+}
+
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;
@@ -13,13 +25,14 @@ interface ThemeSettings {
 }
 
 export function useThemeSettings() {
-  const { data: settings } = useQuery({
+  const { data: settings, isLoading } = useQuery({
     queryKey: ['/api/settings'],
     refetchInterval: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   useEffect(() => {
-    if (!settings) return;
+    if (!settings || isLoading) return;
 
     let theme = (settings as any).theme;
     
@@ -57,10 +70,12 @@ export function useThemeSettings() {
 
     // Apply font settings
     if (theme.bodyFont) {
+      loadGoogleFont(theme.bodyFont);
       root.style.setProperty('--font-sans', `"${theme.bodyFont}", sans-serif`);
     }
 
     if (theme.headingFont) {
+      loadGoogleFont(theme.headingFont);
       root.style.setProperty('--font-heading', `"${theme.headingFont}", sans-serif`);
     }
 
@@ -82,6 +97,22 @@ export function useThemeSettings() {
     // Apply letter spacing
     if (theme.letterSpacing) {
       root.style.setProperty('--letter-spacing', `${theme.letterSpacing}px`);
+    }
+
+    // Apply container width
+    if (theme.containerWidth) {
+      root.style.setProperty('--container-width', theme.containerWidth === '100%' ? '100%' : `${theme.containerWidth}px`);
+    }
+
+    // Apply shadow preset
+    if (theme.shadowPreset) {
+      const shadowValues = {
+        none: 'none',
+        soft: '0 1px 3px rgba(0,0,0,0.1)',
+        medium: '0 4px 6px rgba(0,0,0,0.1)',
+        bold: '0 10px 15px rgba(0,0,0,0.1)',
+      };
+      root.style.setProperty('--shadow', shadowValues[theme.shadowPreset as keyof typeof shadowValues] || shadowValues.soft);
     }
 
     // Apply custom CSS if provided
