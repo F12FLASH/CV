@@ -61,12 +61,57 @@ export default function AdminSettingsEnhanced() {
   const [logoFile, setLogoFile] = useState<string | null>(null);
   const [profileImageUploading, setProfileImageUploading] = useState(false);
   const [cvFileUploading, setCVFileUploading] = useState(false);
+  const [brandingUploading, setBrandingUploading] = useState(false);
   const [showSmtpPassword, setShowSmtpPassword] = useState(false);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const cvFileInputRef = useRef<HTMLInputElement>(null);
   const { settings, updateSettings, saveSettings, isSaving } =
     useSiteSettings();
   const { toast } = useToast();
+
+  const handleBrandingUpload = async (
+    file: File,
+    settingKey: "logoUrl" | "faviconUrl"
+  ) => {
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Error",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setBrandingUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/storage/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      updateSettings({ [settingKey]: data.url });
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setBrandingUploading(false);
+    }
+  };
 
   const handleProfileImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -731,39 +776,33 @@ export default function AdminSettingsEnhanced() {
 
           {/* BRANDING TAB */}
           <TabsContent value="branding" className="space-y-4">
-            <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm">
-                <p className="font-medium text-yellow-700 dark:text-yellow-400">Feature Preview</p>
-                <p className="text-muted-foreground text-xs">Logo and favicon uploads are stored as base64. For production, consider using cloud storage for better performance.</p>
-              </div>
-            </div>
             <Card>
               <CardHeader>
                 <CardTitle>Logo & Favicon</CardTitle>
                 <CardDescription>
-                  Upload your site logo and favicon.
+                  Upload your site logo and favicon from the uploads folder.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
                   <Label htmlFor="logo-upload">Site Logo</Label>
-                  <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 transition">
+                  <div
+                    className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 transition"
+                    onClick={() => {
+                      const input = document.getElementById("logo-upload") as HTMLInputElement;
+                      input?.click();
+                    }}
+                  >
                     <input
                       id="logo-upload"
                       type="file"
                       accept="image/*"
                       className="hidden"
+                      disabled={brandingUploading}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            const logoUrl = event.target?.result as string;
-                            settings.logoUrl = logoUrl;
-                            updateSettings({ logoUrl });
-                          };
-                          reader.readAsDataURL(file);
+                          handleBrandingUpload(file, "logoUrl");
                         }
                       }}
                       data-testid="input-logo-upload"
@@ -776,7 +815,7 @@ export default function AdminSettingsEnhanced() {
                           className="h-12 w-auto"
                         />
                         <p className="text-xs text-muted-foreground">
-                          Click to replace
+                          {brandingUploading ? "Uploading..." : "Click to replace"}
                         </p>
                       </div>
                     ) : (
@@ -791,18 +830,6 @@ export default function AdminSettingsEnhanced() {
                       </>
                     )}
                   </div>
-                  <label htmlFor="logo-upload" className="cursor-pointer">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      asChild
-                    >
-                      <span>
-                        {settings.logoUrl ? "Change Logo" : "Select Logo"}
-                      </span>
-                    </Button>
-                  </label>
                 </div>
                 <Separator />
                 <div className="space-y-3">
@@ -824,28 +851,30 @@ export default function AdminSettingsEnhanced() {
                       type="file"
                       accept="image/*"
                       className="hidden"
+                      disabled={brandingUploading}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            const faviconUrl = event.target?.result as string;
-                            updateSettings({ faviconUrl });
-                          };
-                          reader.readAsDataURL(file);
+                          handleBrandingUpload(file, "faviconUrl");
                         }
                       }}
                       data-testid="input-favicon-upload"
                     />
-                    <label htmlFor="favicon-upload" className="flex-1">
-                      <Button variant="outline" className="w-full" asChild>
-                        <span>
-                          {settings.faviconUrl
-                            ? "Change Favicon"
-                            : "Upload Favicon"}
-                        </span>
-                      </Button>
-                    </label>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      disabled={brandingUploading}
+                      onClick={() => {
+                        const input = document.getElementById("favicon-upload") as HTMLInputElement;
+                        input?.click();
+                      }}
+                    >
+                      {brandingUploading
+                        ? "Uploading..."
+                        : settings.faviconUrl
+                          ? "Change Favicon"
+                          : "Upload Favicon"}
+                    </Button>
                   </div>
                 </div>
               </CardContent>
