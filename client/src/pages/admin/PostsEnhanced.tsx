@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pagination } from "@/components/admin/pagination";
-import { useState } from "react";
-import { Plus, Eye, Edit, Trash, Calendar, Save, X } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, Eye, Edit, Trash, Calendar, Save, X, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { Post, InsertPost } from "@shared/schema";
@@ -82,6 +82,28 @@ function generateSlug(title: string): string {
 
 export default function AdminPostsEnhanced() {
   const queryClient = useQueryClient();
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (file: File, setFeaturedImage: (url: string) => void) => {
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setFeaturedImage(data.url);
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+    } finally {
+      setUploading(false);
+    }
+  };
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["admin-posts"],
     queryFn: () => api.getPosts(),
@@ -539,7 +561,7 @@ export default function AdminPostsEnhanced() {
                 <div className="flex gap-2">
                   <Input
                     id="image"
-                    placeholder="Image URL (e.g., /images/blog/bg-1.png or https://...)"
+                    placeholder="Image URL (e.g., /uploads/images/... or https://...)"
                     value={formData.featuredImage || ''}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, featuredImage: e.target.value || null }))
@@ -549,40 +571,37 @@ export default function AdminPostsEnhanced() {
                   <Button
                     type="button"
                     variant="outline"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploading}
+                    data-testid="button-upload-image"
+                  >
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upload"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => setFormData((prev) => ({ ...prev, featuredImage: null }))}
                     data-testid="button-clear-image"
                   >
                     Clear
                   </Button>
                 </div>
-                <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          const result = event.target?.result as string;
-                          setFormData((prev) => ({ ...prev, featuredImage: result }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    data-testid="input-file-upload"
-                    className="block w-full text-sm text-muted-foreground
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-md file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-primary file:text-primary-foreground
-                      hover:file:bg-primary/90
-                      file:cursor-pointer cursor-pointer"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Hỗ trợ tải ảnh từ thiết bị (JPG, PNG, GIF, WebP, v.v.)
-                  </p>
-                </div>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleImageUpload(file, (url) => setFormData((prev) => ({ ...prev, featuredImage: url })));
+                    }
+                  }}
+                  data-testid="input-file-upload"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Tải ảnh từ thiết bị (JPG, PNG, GIF, WebP) - được lưu vào /uploads/images/
+                </p>
               </div>
               {formData.featuredImage && (
                 <div className="mt-2 border border-border rounded-md overflow-hidden">
