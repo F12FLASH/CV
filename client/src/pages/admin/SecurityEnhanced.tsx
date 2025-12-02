@@ -1105,14 +1105,39 @@ export default function AdminSecurityEnhanced() {
                       />
                       <Button 
                         onClick={() => {
-                          // IPv4, IPv6, và CIDR validation
-                          const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/;
-                          const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/;
+                          // More comprehensive IP validation
+                          const validateIP = (ip: string) => {
+                            // IPv4 with optional CIDR
+                            const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/;
+                            // IPv6 with optional CIDR
+                            const ipv6Regex = /^(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/;
+                            
+                            if (ipv4Regex.test(ip)) {
+                              // Validate CIDR range if present
+                              const parts = ip.split('/');
+                              if (parts.length === 2) {
+                                const cidr = parseInt(parts[1]);
+                                return cidr >= 0 && cidr <= 32;
+                              }
+                              return true;
+                            }
+                            
+                            if (ipv6Regex.test(ip)) {
+                              const parts = ip.split('/');
+                              if (parts.length === 2) {
+                                const cidr = parseInt(parts[1]);
+                                return cidr >= 0 && cidr <= 128;
+                              }
+                              return true;
+                            }
+                            
+                            return false;
+                          };
                           
-                          if (newWhitelistIp && (ipv4Regex.test(newWhitelistIp) || ipv6Regex.test(newWhitelistIp))) {
+                          if (newWhitelistIp && validateIP(newWhitelistIp)) {
                             addIpRuleMutation.mutate({ ipAddress: newWhitelistIp, type: 'whitelist' });
                           } else {
-                            toast({ title: "Invalid IP address format. Use IPv4, IPv6, or CIDR notation", variant: "destructive" });
+                            toast({ title: "Invalid IP address format. Use IPv4/IPv6 with optional CIDR notation", variant: "destructive" });
                           }
                         }}
                         disabled={!newWhitelistIp || addIpRuleMutation.isPending}
@@ -1163,14 +1188,35 @@ export default function AdminSecurityEnhanced() {
                       />
                       <Button 
                         onClick={() => {
-                          // IPv4, IPv6, và CIDR validation
-                          const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/;
-                          const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/;
+                          const validateIP = (ip: string) => {
+                            const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/;
+                            const ipv6Regex = /^(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/;
+                            
+                            if (ipv4Regex.test(ip)) {
+                              const parts = ip.split('/');
+                              if (parts.length === 2) {
+                                const cidr = parseInt(parts[1]);
+                                return cidr >= 0 && cidr <= 32;
+                              }
+                              return true;
+                            }
+                            
+                            if (ipv6Regex.test(ip)) {
+                              const parts = ip.split('/');
+                              if (parts.length === 2) {
+                                const cidr = parseInt(parts[1]);
+                                return cidr >= 0 && cidr <= 128;
+                              }
+                              return true;
+                            }
+                            
+                            return false;
+                          };
                           
-                          if (newBlacklistIp && (ipv4Regex.test(newBlacklistIp) || ipv6Regex.test(newBlacklistIp))) {
+                          if (newBlacklistIp && validateIP(newBlacklistIp)) {
                             addIpRuleMutation.mutate({ ipAddress: newBlacklistIp, type: 'blacklist' });
                           } else {
-                            toast({ title: "Invalid IP address format. Use IPv4, IPv6, or CIDR notation", variant: "destructive" });
+                            toast({ title: "Invalid IP address format. Use IPv4/IPv6 with optional CIDR notation", variant: "destructive" });
                           }
                         }}
                         disabled={!newBlacklistIp || addIpRuleMutation.isPending}

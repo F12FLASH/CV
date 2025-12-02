@@ -6,6 +6,58 @@ import { storage } from '../storage';
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const loginAttemptStore = new Map<string, { attempts: number; lockoutUntil: number }>();
 
+// IP whitelist/blacklist enforcement
+export async function ipFilterMiddleware(req: Request, res: Response, next: NextFunction) {
+  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+  
+  const ipRules = await storage.getAllIpRules();
+  const whitelist = ipRules.filter(r => r.type === 'whitelist');
+  const blacklist = ipRules.filter(r => r.type === 'blacklist');
+  
+  // Check blacklist first
+  const isBlacklisted = blacklist.some(rule => {
+    if (rule.ipAddress.includes('/')) {
+      // CIDR notation - simple check (should use ip-range-check library in production)
+      return clientIp.startsWith(rule.ipAddress.split('/')[0].split('.').slice(0, 3).join('.'));
+    }
+    return rule.ipAddress === clientIp;
+  });
+  
+  if (isBlacklisted) {
+    await storage.createSecurityLog({
+      action: 'Blocked by IP blacklist',
+      ipAddress: clientIp,
+      userAgent: req.get('User-Agent'),
+      eventType: 'ip_blocked',
+      blocked: true
+    });
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  
+  // If whitelist exists and IP not in whitelist, block
+  if (whitelist.length > 0) {
+    const isWhitelisted = whitelist.some(rule => {
+      if (rule.ipAddress.includes('/')) {
+        return clientIp.startsWith(rule.ipAddress.split('/')[0].split('.').slice(0, 3).join('.'));
+      }
+      return rule.ipAddress === clientIp;
+    });
+    
+    if (!isWhitelisted) {
+      await storage.createSecurityLog({
+        action: 'Not in IP whitelist',
+        ipAddress: clientIp,
+        userAgent: req.get('User-Agent'),
+        eventType: 'ip_not_whitelisted',
+        blocked: true
+      });
+      return res.status(403).json({ message: 'Access denied' });
+    }
+  }
+  
+  next();
+}
+
 export async function rateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
   const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
   const now = Date.now();
