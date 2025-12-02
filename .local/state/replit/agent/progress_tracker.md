@@ -287,3 +287,23 @@
 [x] 180. All API endpoints responding correctly (only 401 errors for auth endpoints - expected when not logged in)
 [x] 181. **✅ MIGRATION COMPLETE** - Project fully migrated and operational in new environment!
 [x] 182. **✅ IMPORT COMPLETED** - All migration tasks finished, project is ready for development!
+
+## Admin Pages API Integration Fix (Dec 2, 2025 - 8:45 AM)
+[x] 183. **FIX** - Sửa lỗi admin/Posts.tsx sử dụng dữ liệu mock thay vì API thật
+    - Vấn đề: Trang sử dụng useMockData() thay vì gọi API thực tế
+    - Dữ liệu không được lưu vào database, chỉ là mock data tạm thời
+    - Giải pháp: Viết lại hoàn toàn trang Posts.tsx với:
+      * useQuery hook cho fetching posts (queryKey: ["/api/posts"])
+      * useQuery hook cho fetching categories (queryKey: ["/api/categories", "post"])
+      * useMutation hooks cho createPost, updatePost, deletePost
+      * Proper queryClient.invalidateQueries để cập nhật cache
+      * Error handling và toast notifications
+      * Loading states từ mutation.isPending
+    - Kết quả: CRUD operations hoạt động đúng với database persistence
+[x] 184. **VERIFIED** - Kiểm tra tất cả admin pages đều sử dụng API thật:
+    - admin/Posts: ✅ Đã sửa - sử dụng TanStack Query
+    - admin/Projects: ✅ Hoàn chỉnh - sử dụng api.getProjects(), api.createProject(), etc.
+    - admin/PostCategories: ✅ Hoàn chỉnh - sử dụng TanStack Query
+    - admin/ProjectCategories: ✅ Hoàn chỉnh - sử dụng TanStack Query
+    - admin/Analytics: ✅ Hoàn chỉnh - sử dụng TanStack Query cho /api/dashboard/stats
+[x] 185. **✅ ADMIN PAGES FIX COMPLETE** - Tất cả trang admin đều hoạt động với real API và database persistence!
