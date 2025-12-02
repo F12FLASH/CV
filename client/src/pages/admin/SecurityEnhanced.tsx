@@ -191,6 +191,7 @@ export default function AdminSecurityEnhanced() {
 
   const { data: sessions = [], refetch: refetchSessions } = useQuery<UserSession[]>({
     queryKey: ['/api/security/sessions'],
+    refetchInterval: 30000, // Auto refresh every 30 seconds
   });
 
   const { data: ipRules = [], refetch: refetchIpRules } = useQuery<IpRule[]>({
@@ -368,7 +369,12 @@ export default function AdminSecurityEnhanced() {
 
   const handle2FAToggle = (enabled: boolean) => {
     if (enabled) {
-      generate2FAMutation.mutate();
+      // Auto show setup dialog sau khi generate thành công
+      generate2FAMutation.mutate(undefined, {
+        onSuccess: () => {
+          // Modal sẽ tự động hiện nhờ state show2FASetup được set trong mutation
+        }
+      });
     } else {
       setShow2FADisable(true);
     }
@@ -743,6 +749,9 @@ export default function AdminSecurityEnhanced() {
                               onChange={(e) => updateNestedSetting('captchaSettings', 'googleSiteKey', e.target.value)}
                               data-testid="input-google-site-key"
                             />
+                            {localSettings.captchaType === 'google' && !localSettings.captchaSettings?.googleSiteKey && (
+                              <p className="text-xs text-destructive">Site key is required for Google reCAPTCHA</p>
+                            )}
                           </div>
                           <div className="space-y-1">
                             <Label className="text-xs">Secret Key</Label>
@@ -999,13 +1008,21 @@ export default function AdminSecurityEnhanced() {
                   </div>
                   <div className="flex gap-2">
                     <Input 
-                      placeholder="Add IP address..." 
+                      placeholder="Add IP address (e.g., 192.168.1.1)" 
                       value={newWhitelistIp}
                       onChange={(e) => setNewWhitelistIp(e.target.value)}
                       data-testid="input-whitelist-ip"
+                      pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
                     />
                     <Button 
-                      onClick={() => newWhitelistIp && addIpRuleMutation.mutate({ ipAddress: newWhitelistIp, type: 'whitelist' })}
+                      onClick={() => {
+                        const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+                        if (newWhitelistIp && ipRegex.test(newWhitelistIp)) {
+                          addIpRuleMutation.mutate({ ipAddress: newWhitelistIp, type: 'whitelist' });
+                        } else {
+                          toast({ title: "Invalid IP address format", variant: "destructive" });
+                        }
+                      }}
                       disabled={!newWhitelistIp || addIpRuleMutation.isPending}
                       data-testid="button-add-whitelist"
                     >
@@ -1585,6 +1602,19 @@ export default function AdminSecurityEnhanced() {
                 <CardDescription>Monitor user actions and security events</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <select className="text-sm border rounded px-3 py-2" defaultValue="all">
+                    <option value="all">All Events</option>
+                    <option value="login_success">Successful Logins</option>
+                    <option value="login_failed">Failed Logins</option>
+                    <option value="two_factor">2FA Events</option>
+                  </select>
+                  <select className="text-sm border rounded px-3 py-2" defaultValue="24h">
+                    <option value="24h">Last 24 Hours</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                  </select>
+                </div>
                 <div className="space-y-3">
                   <div className="p-3 border rounded-lg bg-blue-500/5">
                     <div className="flex items-center justify-between">
