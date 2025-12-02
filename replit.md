@@ -29,21 +29,21 @@ client/src/pages/
 │   └── not-found.tsx       # 404 page
 │
 └── admin/                   # Admin dashboard (10 functional domains)
-    ├── auth/               # Login
-    ├── dashboard/          # Dashboard, Analytics
+    ├── auth/               # Login.tsx
+    ├── dashboard/          # Dashboard.tsx, Analytics.tsx
     ├── content/            # Organized by content type
-    │   ├── posts/          # Posts, PostCategories
-    │   ├── projects/       # Projects, ProjectCategories
-    │   ├── services/       # Services management
-    │   ├── skills/         # Skills management
-    │   └── testimonials/   # Testimonials
-    ├── communications/     # Inbox, Comments, Notifications, Newsletter, EmailTemplates
-    ├── settings/           # Site settings, Theme, Language, SEO
-    ├── security/           # Security, Webhooks, APIKeys
-    ├── system/             # System, Cache, Logs, ActivityLog, ExportImport, APIDocs
-    ├── tools/              # Media, ImageOptimizer, Scheduler, FileManager
-    ├── pages/              # CMS Pages, PageBuilder, FAQs, Editor
-    └── users/              # Profile, Users, Roles
+    │   ├── posts/          # Posts.tsx, PostCategories.tsx
+    │   ├── projects/       # Projects.tsx, ProjectCategories.tsx
+    │   ├── services/       # Services.tsx
+    │   ├── skills/         # Skills.tsx
+    │   └── testimonials/   # Testimonials.tsx
+    ├── communications/     # Inbox.tsx, Comments.tsx, Notifications.tsx, Newsletter.tsx, EmailTemplates.tsx
+    ├── settings/           # Settings.tsx, Theme.tsx, LanguageManager.tsx, ThemeComparison.tsx, SettingsPerformance.tsx, SettingsIntegrations.tsx
+    ├── security/           # Security.tsx, Webhooks.tsx
+    ├── system/             # System.tsx, Cache.tsx, Logs.tsx, ActivityLog.tsx, ExportImport.tsx, APIDocs.tsx
+    ├── tools/              # Tools.tsx, Media.tsx, ImageOptimizer.tsx, Scheduler.tsx, FileManager.tsx
+    ├── pages/              # Pages.tsx, PageBuilder.tsx, FAQs.tsx, Editor.tsx
+    └── users/              # Profile.tsx, Users.tsx, Roles.tsx
 ```
 
 All admin pages use React.lazy() for code splitting to optimize bundle size.
