@@ -50,7 +50,7 @@ export function Navbar() {
 
   const scrollToSection = (id: string) => {
     const sectionId = id.replace("#", "");
-    
+
     if (location !== "/") {
       setLocation("/");
       setTimeout(() => {
@@ -79,16 +79,25 @@ export function Navbar() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-        isScrolled ? "bg-background/80 backdrop-blur-md shadow-md h-16" : "bg-transparent h-20"
+        isScrolled
+          ? "bg-background/80 backdrop-blur-md shadow-md h-16"
+          : "bg-transparent h-20"
       }`}
     >
       <div className="container mx-auto h-full flex items-center justify-between px-4 md:px-8">
         <div className="group cursor-pointer" onClick={handleLogoClick}>
           {settings.logoUrl ? (
-            <img src={settings.logoUrl} alt="Logo" className="h-10 w-auto" data-testid="img-logo" />
+            <img
+              src={settings.logoUrl}
+              alt="Logo"
+              className="h-10 w-auto"
+              data-testid="img-logo"
+            />
           ) : (
             <div className="relative w-10 h-10 flex items-center justify-center border-2 border-foreground rounded hover:bg-primary hover:border-primary transition-all duration-500 group-hover:rotate-90">
-              <span className="font-heading font-bold text-xl group-hover:text-white transition-colors">L</span>
+              <span className="font-heading font-bold text-xl group-hover:text-white transition-colors">
+                L
+              </span>
             </div>
           )}
         </div>
@@ -99,20 +108,21 @@ export function Navbar() {
               key={link.name}
               onClick={() => scrollToSection(link.href)}
               className={`group relative text-sm font-medium transition-colors ${
-                location === "/" && activeSection === link.href.replace("#", "") 
-                  ? "text-primary" 
+                location === "/" && activeSection === link.href.replace("#", "")
+                  ? "text-primary"
                   : "text-foreground/80 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-primary hover:to-secondary"
               }`}
               data-testid={`nav-${link.href.replace("#", "")}`}
             >
               {link.name}
               <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all duration-300 group-hover:w-full" />
-              {location === "/" && activeSection === link.href.replace("#", "") && (
-                <motion.div
-                  layoutId="activeSection"
-                  className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary"
-                />
-              )}
+              {location === "/" &&
+                activeSection === link.href.replace("#", "") && (
+                  <motion.div
+                    layoutId="activeSection"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary"
+                  />
+                )}
             </button>
           ))}
         </nav>
@@ -145,7 +155,7 @@ export function Navbar() {
           >
             <span className="absolute inset-0 bg-gradient-to-r from-primary to-secondary translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300 ease-out" />
             <span className="relative z-10 flex items-center gap-2">
-                <Download size={16} /> {t("hero.download_cv") || "Download CV"}
+              <Download size={16} /> {t("Download CV") || "Download CV"}
             </span>
           </Button>
         </div>
@@ -179,7 +189,10 @@ export function Navbar() {
             ))}
             <div className="flex gap-6 mt-8 items-center">
               <LanguageSwitcher />
-              <button onClick={toggleTheme} className="p-4 bg-muted rounded-full">
+              <button
+                onClick={toggleTheme}
+                className="p-4 bg-muted rounded-full"
+              >
                 {theme === "dark" ? <Moon size={24} /> : <Sun size={24} />}
               </button>
             </div>
