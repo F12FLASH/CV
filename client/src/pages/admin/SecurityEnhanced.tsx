@@ -204,6 +204,7 @@ export default function AdminSecurityEnhanced() {
 
   const { data: loginHistory = [], refetch: refetchLoginHistory } = useQuery<SecurityLog[]>({
     queryKey: ['/api/security/login-history'],
+    refetchInterval: showLoginHistory ? 30000 : false, // Auto refresh every 30s when viewing
   });
 
   const { data: user = null, refetch: refetchUser } = useQuery<any>({
@@ -369,13 +370,24 @@ export default function AdminSecurityEnhanced() {
 
   const handle2FAToggle = (enabled: boolean) => {
     if (enabled) {
+      if (user?.twoFactorEnabled) {
+        toast({ title: "2FA is already enabled", variant: "default" });
+        return;
+      }
       // Auto show setup dialog sau khi generate thành công
       generate2FAMutation.mutate(undefined, {
         onSuccess: () => {
           // Modal sẽ tự động hiện nhờ state show2FASetup được set trong mutation
+        },
+        onError: () => {
+          toast({ title: "Failed to generate 2FA setup", variant: "destructive" });
         }
       });
     } else {
+      if (!user?.twoFactorEnabled) {
+        toast({ title: "2FA is not enabled", variant: "default" });
+        return;
+      }
       setShow2FADisable(true);
     }
   };
@@ -565,21 +577,11 @@ export default function AdminSecurityEnhanced() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  Session & Login History
+                  Login History
                 </CardTitle>
+                <CardDescription>View recent login activity and security events</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => logoutAllDevicesMutation.mutate()}
-                  disabled={logoutAllDevicesMutation.isPending}
-                  data-testid="button-logout-all-devices"
-                >
-                  {logoutAllDevicesMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout All Devices
-                </Button>
                 <Button 
                   variant="outline" 
                   className="w-full" 
@@ -750,7 +752,10 @@ export default function AdminSecurityEnhanced() {
                               data-testid="input-google-site-key"
                             />
                             {localSettings.captchaType === 'google' && !localSettings.captchaSettings?.googleSiteKey && (
-                              <p className="text-xs text-destructive">Site key is required for Google reCAPTCHA</p>
+                              <p className="text-xs text-yellow-600 dark:text-yellow-500 flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" />
+                                Site key is required for Google reCAPTCHA to work
+                              </p>
                             )}
                           </div>
                           <div className="space-y-1">
@@ -821,6 +826,12 @@ export default function AdminSecurityEnhanced() {
                               onChange={(e) => updateNestedSetting('captchaSettings', 'cloudflareSiteKey', e.target.value)}
                               data-testid="input-cloudflare-site-key"
                             />
+                            {localSettings.captchaType === 'cloudflare' && !localSettings.captchaSettings?.cloudflareSiteKey && (
+                              <p className="text-xs text-yellow-600 dark:text-yellow-500 flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" />
+                                Site key is required for Cloudflare Turnstile to work
+                              </p>
+                            )}
                           </div>
                           <div className="space-y-1">
                             <Label className="text-xs">Secret Key</Label>
@@ -1006,28 +1017,33 @@ export default function AdminSecurityEnhanced() {
                       ))
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="Add IP address (e.g., 192.168.1.1)" 
-                      value={newWhitelistIp}
-                      onChange={(e) => setNewWhitelistIp(e.target.value)}
-                      data-testid="input-whitelist-ip"
-                      pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
-                    />
-                    <Button 
-                      onClick={() => {
-                        const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-                        if (newWhitelistIp && ipRegex.test(newWhitelistIp)) {
-                          addIpRuleMutation.mutate({ ipAddress: newWhitelistIp, type: 'whitelist' });
-                        } else {
-                          toast({ title: "Invalid IP address format", variant: "destructive" });
-                        }
-                      }}
-                      disabled={!newWhitelistIp || addIpRuleMutation.isPending}
-                      data-testid="button-add-whitelist"
-                    >
-                      <Plus className="w-4 h-4 mr-1" /> Add
-                    </Button>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="Add IP address (e.g., 192.168.1.1)" 
+                        value={newWhitelistIp}
+                        onChange={(e) => setNewWhitelistIp(e.target.value)}
+                        data-testid="input-whitelist-ip"
+                        className={newWhitelistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(newWhitelistIp) ? 'border-red-500' : ''}
+                      />
+                      <Button 
+                        onClick={() => {
+                          const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+                          if (newWhitelistIp && ipRegex.test(newWhitelistIp)) {
+                            addIpRuleMutation.mutate({ ipAddress: newWhitelistIp, type: 'whitelist' });
+                          } else {
+                            toast({ title: "Invalid IP address format", variant: "destructive" });
+                          }
+                        }}
+                        disabled={!newWhitelistIp || addIpRuleMutation.isPending}
+                        data-testid="button-add-whitelist"
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Add
+                      </Button>
+                    </div>
+                    {newWhitelistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(newWhitelistIp) && (
+                      <p className="text-xs text-red-500">Please enter a valid IPv4 address</p>
+                    )}
                   </div>
                 </div>
 
@@ -1055,20 +1071,33 @@ export default function AdminSecurityEnhanced() {
                       ))
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="Add IP to block..." 
-                      value={newBlacklistIp}
-                      onChange={(e) => setNewBlacklistIp(e.target.value)}
-                      data-testid="input-blacklist-ip"
-                    />
-                    <Button 
-                      onClick={() => newBlacklistIp && addIpRuleMutation.mutate({ ipAddress: newBlacklistIp, type: 'blacklist' })}
-                      disabled={!newBlacklistIp || addIpRuleMutation.isPending}
-                      data-testid="button-add-blacklist"
-                    >
-                      <Ban className="w-4 h-4 mr-1" /> Block
-                    </Button>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="Add IP to block..." 
+                        value={newBlacklistIp}
+                        onChange={(e) => setNewBlacklistIp(e.target.value)}
+                        data-testid="input-blacklist-ip"
+                        className={newBlacklistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(newBlacklistIp) ? 'border-red-500' : ''}
+                      />
+                      <Button 
+                        onClick={() => {
+                          const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+                          if (newBlacklistIp && ipRegex.test(newBlacklistIp)) {
+                            addIpRuleMutation.mutate({ ipAddress: newBlacklistIp, type: 'blacklist' });
+                          } else {
+                            toast({ title: "Invalid IP address format", variant: "destructive" });
+                          }
+                        }}
+                        disabled={!newBlacklistIp || addIpRuleMutation.isPending}
+                        data-testid="button-add-blacklist"
+                      >
+                        <Ban className="w-4 h-4 mr-1" /> Block
+                      </Button>
+                    </div>
+                    {newBlacklistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(newBlacklistIp) && (
+                      <p className="text-xs text-red-500">Please enter a valid IPv4 address</p>
+                    )}
                   </div>
                 </div>
               </CardContent>
