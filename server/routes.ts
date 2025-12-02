@@ -2639,15 +2639,19 @@ export async function registerRoutes(
         const transporter = nodemailer.createTransport({
           host: smtpHost.value as string,
           port: port as number,
-          secure: secure,
+          secure: secure, // true cho port 465, false cho port 587
           auth: {
             user: smtpUser.value as string,
             pass: smtpPassword.value as string,
           },
+          // Tự động nâng cấp lên TLS nếu server hỗ trợ STARTTLS
+          requireTLS: !secure, // Yêu cầu STARTTLS nếu không dùng SSL
           // Add timeout and debug options
           connectionTimeout: 10000,
           greetingTimeout: 10000,
           socketTimeout: 10000,
+          logger: false,
+          debug: false,
         });
 
         // Verify connection configuration
@@ -2685,6 +2689,10 @@ export async function registerRoutes(
           errorMessage = 'SMTP authentication failed. Please check username and password.';
         } else if (errorMessage.includes('ETIMEDOUT')) {
           errorMessage = 'Connection timeout. Please check your network and SMTP settings.';
+        } else if (errorMessage.includes('wrong version number') || errorMessage.includes('SSL routines')) {
+          errorMessage = 'SSL/TLS configuration error. For Gmail: Use port 587 with TLS/SSL OFF, or port 465 with TLS/SSL ON.';
+        } else if (errorMessage.includes('ENOTFOUND')) {
+          errorMessage = 'SMTP host not found. Please check the hostname.';
         }
         
         await storage.createActivityLog({
