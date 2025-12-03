@@ -1,31 +1,53 @@
+
 import { Router, Request, Response } from "express";
 import { storage } from "../storage";
 
 const router = Router();
 
-const cacheStore: Map<string, { data: any; expires: number; size: number }> = new Map();
+interface CacheItem {
+  data: any;
+  expires: number;
+  size: number;
+  createdAt: number;
+}
+
+const cacheStore: Map<string, CacheItem> = new Map();
 
 function getCacheStats() {
   let totalSize = 0;
-  let hits = 0;
-  let misses = 0;
-  const items: { key: string; type: string; size: number; expires: Date }[] = [];
+  let expiredCount = 0;
+  const now = Date.now();
+  const items: { key: string; type: string; size: number; expires: Date; isExpired: boolean }[] = [];
   
   for (const [key, value] of cacheStore.entries()) {
     totalSize += value.size;
+    const isExpired = value.expires < now;
+    if (isExpired) expiredCount++;
+    
     items.push({
       key,
       type: key.split(':')[0] || 'general',
       size: value.size,
-      expires: new Date(value.expires)
+      expires: new Date(value.expires),
+      isExpired
     });
+  }
+  
+  const typeStats: Record<string, { count: number; size: number }> = {};
+  for (const item of items) {
+    if (!typeStats[item.type]) {
+      typeStats[item.type] = { count: 0, size: 0 };
+    }
+    typeStats[item.type].count++;
+    typeStats[item.type].size += item.size;
   }
   
   return {
     totalSize,
     itemCount: cacheStore.size,
-    hitRate: hits / (hits + misses) * 100 || 0,
-    items
+    expiredCount,
+    items,
+    typeStats
   };
 }
 
@@ -33,23 +55,27 @@ router.get("/stats", async (req: Request, res: Response) => {
   try {
     const stats = getCacheStats();
     
-    const dbStats = await storage.getSystemStats();
-    
+    const cacheTypes = [
+      { name: "Application Cache", type: "app", size: 0, items: 0 },
+      { name: "Database Queries", type: "db", size: 0, items: 0 },
+      { name: "Image Cache", type: "image", size: 0, items: 0 },
+      { name: "Page Cache", type: "page", size: 0, items: 0 },
+    ];
+
+    for (const cacheType of cacheTypes) {
+      const typeStat = stats.typeStats[cacheType.type];
+      if (typeStat) {
+        cacheType.size = typeStat.size;
+        cacheType.items = typeStat.count;
+      }
+    }
+
     res.json({
-      memory: {
-        total: stats.totalSize,
-        used: stats.totalSize,
-        items: stats.itemCount
-      },
-      database: {
-        size: dbStats.databaseSize,
-        tables: dbStats.tableStats.length
-      },
-      performance: {
-        hitRate: Math.round(Math.random() * 30 + 70),
-        avgResponseTime: Math.round(Math.random() * 50 + 10)
-      },
-      items: stats.items
+      totalSize: stats.totalSize,
+      itemCount: stats.itemCount,
+      expiredCount: stats.expiredCount,
+      cacheTypes,
+      lastCleared: null
     });
   } catch (error) {
     console.error("Error getting cache stats:", error);
@@ -59,15 +85,8 @@ router.get("/stats", async (req: Request, res: Response) => {
 
 router.get("/items", async (req: Request, res: Response) => {
   try {
-    const items = Array.from(cacheStore.entries()).map(([key, value]) => ({
-      key,
-      type: key.split(':')[0] || 'general',
-      size: value.size,
-      expires: new Date(value.expires),
-      isExpired: value.expires < Date.now()
-    }));
-    
-    res.json(items);
+    const stats = getCacheStats();
+    res.json(stats.items);
   } catch (error) {
     console.error("Error getting cache items:", error);
     res.status(500).json({ error: "Failed to get cache items" });
@@ -79,23 +98,35 @@ router.post("/clear", async (req: Request, res: Response) => {
     const { type } = req.body;
     
     if (type) {
-      for (const key of cacheStore.keys()) {
+      let cleared = 0;
+      for (const key of Array.from(cacheStore.keys())) {
         if (key.startsWith(type + ':')) {
           cacheStore.delete(key);
+          cleared++;
         }
       }
+      
+      await storage.createActivityLog({
+        action: `Cleared ${cleared} items from ${type} cache`,
+        userId: (req as any).user?.id,
+        userName: (req as any).user?.name || "System",
+        type: "system"
+      });
+      
+      res.json({ success: true, message: `Cleared ${cleared} items from ${type} cache` });
     } else {
+      const count = cacheStore.size;
       cacheStore.clear();
+      
+      await storage.createActivityLog({
+        action: `Cleared all cache (${count} items)`,
+        userId: (req as any).user?.id,
+        userName: (req as any).user?.name || "System",
+        type: "system"
+      });
+      
+      res.json({ success: true, message: `All cache cleared (${count} items)` });
     }
-    
-    await storage.createActivityLog({
-      action: type ? `Cleared ${type} cache` : "Cleared all cache",
-      userId: (req as any).user?.id,
-      userName: (req as any).user?.name || "System",
-      type: "system"
-    });
-    
-    res.json({ success: true, message: type ? `${type} cache cleared` : "All cache cleared" });
   } catch (error) {
     console.error("Error clearing cache:", error);
     res.status(500).json({ error: "Failed to clear cache" });
@@ -130,32 +161,13 @@ router.post("/warmup", async (req: Request, res: Response) => {
     const pages = await storage.getAllPages();
     const settings = await storage.getAllSettings();
     
-    cacheStore.set('projects:all', {
-      data: projects,
-      expires: Date.now() + 3600000,
-      size: JSON.stringify(projects).length
-    });
-    
-    cacheStore.set('posts:all', {
-      data: posts,
-      expires: Date.now() + 3600000,
-      size: JSON.stringify(posts).length
-    });
-    
-    cacheStore.set('pages:all', {
-      data: pages,
-      expires: Date.now() + 3600000,
-      size: JSON.stringify(pages).length
-    });
-    
-    cacheStore.set('settings:all', {
-      data: settings,
-      expires: Date.now() + 3600000,
-      size: JSON.stringify(settings).length
-    });
+    setCache('app:projects:all', projects, 3600000);
+    setCache('app:posts:all', posts, 3600000);
+    setCache('page:all', pages, 3600000);
+    setCache('app:settings:all', settings, 3600000);
     
     await storage.createActivityLog({
-      action: "Warmed up cache",
+      action: "Cache warmed up with projects, posts, pages, and settings",
       userId: (req as any).user?.id,
       userName: (req as any).user?.name || "System",
       type: "system"
@@ -176,7 +188,8 @@ export function setCache(key: string, data: any, ttl: number = 3600000): void {
   cacheStore.set(key, {
     data,
     expires: Date.now() + ttl,
-    size: JSON.stringify(data).length
+    size: JSON.stringify(data).length,
+    createdAt: Date.now()
   });
 }
 

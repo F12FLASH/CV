@@ -38,6 +38,7 @@ import translationsRouter from "./translations";
 import scheduledTasksRouter from "./scheduled-tasks";
 import webhooksRouter from "./webhooks";
 import cacheRouter from "./cache";
+import imageOptimizerRouter from "./image-optimizer";
 
 export function registerApiRoutes(app: Express) {
   app.use("/api/auth", authRouter);
@@ -79,6 +80,7 @@ export function registerApiRoutes(app: Express) {
   app.use("/api/scheduled-tasks", scheduledTasksRouter);
   app.use("/api/webhooks", webhooksRouter);
   app.use("/api/cache", cacheRouter);
+  app.use("/api/image-optimizer", imageOptimizerRouter);
   
   app.use("/", sitemapRouter);
 }

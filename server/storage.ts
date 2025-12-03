@@ -1738,6 +1738,24 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  async getScheduledTask(id: number): Promise<ScheduledTask | undefined> {
+    const [task] = await this.db.select().from(scheduledTasks).where(eq(scheduledTasks.id, id));
+    return task;
+  }
+
+  async getAllScheduledTasks(): Promise<ScheduledTask[]> {
+    return this.db.select().from(scheduledTasks).orderBy(desc(scheduledTasks.createdAt));
+  }
+
+  async getActiveScheduledTasks(): Promise<ScheduledTask[]> {
+    return this.db.select().from(scheduledTasks).where(eq(scheduledTasks.status, "active")).orderBy(desc(scheduledTasks.createdAt));
+  }
+
+  async createScheduledTask(data: InsertScheduledTask): Promise<ScheduledTask> {
+    const [task] = await this.db.insert(scheduledTasks).values(data).returning();
+    return task;
+  }
+
   // Webhooks
   async getWebhook(id: number): Promise<Webhook | undefined> {
     const [webhook] = await this.db.select().from(webhooks).where(eq(webhooks.id, id));
