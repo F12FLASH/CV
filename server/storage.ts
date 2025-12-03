@@ -597,8 +597,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Activity Logs
-  async getAllActivityLogs(limit: number = 50): Promise<ActivityLog[]> {
-    return await this.db.select().from(activityLogs).orderBy(desc(activityLogs.createdAt)).limit(limit);
+  async getAllActivityLogs(limit: number = 50, offset: number = 0): Promise<ActivityLog[]> {
+    const logs = await db.select()
+      .from(activityLogs)
+      .orderBy(desc(activityLogs.createdAt))
+      .limit(limit)
+      .offset(offset);
+    return logs;
   }
 
   async createActivityLog(insertLog: InsertActivityLog): Promise<ActivityLog> {
@@ -1523,15 +1528,15 @@ export class DatabaseStorage implements IStorage {
       path: pageViews.path,
       views: sql<number>`count(*)`
     }).from(pageViews);
-    
+
     const conditions = [];
     if (startDate) conditions.push(sql`${pageViews.createdAt} >= ${startDate}`);
     if (endDate) conditions.push(sql`${pageViews.createdAt} <= ${endDate}`);
-    
+
     if (conditions.length > 0) {
       query = query.where(and(...conditions)) as any;
     }
-    
+
     return query.groupBy(pageViews.path).orderBy(desc(sql`count(*)`));
   }
 
@@ -1541,11 +1546,11 @@ export class DatabaseStorage implements IStorage {
       contentType: pageViews.contentType,
       views: sql<number>`count(*)`
     }).from(pageViews).where(sql`${pageViews.contentId} IS NOT NULL`);
-    
+
     if (contentType) {
       query = query.where(eq(pageViews.contentType, contentType)) as any;
     }
-    
+
     return query.groupBy(pageViews.contentId, pageViews.contentType).orderBy(desc(sql`count(*)`)).limit(limit) as any;
   }
 

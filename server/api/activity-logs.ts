@@ -8,9 +8,11 @@ const router = Router();
 router.get("/", requireAdmin, async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-    const logs = await storage.getAllActivityLogs(limit);
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+    const logs = await storage.getAllActivityLogs(limit, offset);
     res.json(logs);
   } catch (error: any) {
+    console.error('Error fetching activity logs:', error);
     res.status(500).json({ message: error.message });
   }
 });

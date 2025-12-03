@@ -115,13 +115,21 @@ export default function AdminActivityLog() {
   const pageSize = 20;
   const { toast } = useToast();
 
-  const { data: logs = [], isLoading, refetch } = useQuery<ActivityLog[]>({
+  const { data: logs = [], isLoading, refetch, error } = useQuery<ActivityLog[]>({
     queryKey: ['/api/system/activity-logs'],
     queryFn: async () => {
       const res = await fetch(`/api/system/activity-logs?limit=1000&offset=0`, { credentials: 'include' });
-      if (!res.ok) throw new Error('Failed to fetch activity logs');
-      return res.json();
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Failed to fetch activity logs:', errorText);
+        throw new Error('Failed to fetch activity logs');
+      }
+      const data = await res.json();
+      console.log('Activity logs loaded:', data.length);
+      return data;
     },
+    retry: 2,
+    refetchOnWindowFocus: false,
   });
 
   const { data: systemLogs = [], isLoading: isLoadingSystemLogs, refetch: refetchSystemLogs } = useQuery<SystemLog[]>({
