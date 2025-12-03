@@ -8,7 +8,7 @@ import { SiteProvider, useSiteSettings } from "@/context/SiteContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider } from "next-themes";
 import { lazy, Suspense } from "react";
-import { useThemeSettings } from "@/hooks/useThemeSettings";
+import { useThemeSettings } from "@/hooks/use-theme-settings";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";

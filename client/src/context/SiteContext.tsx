@@ -397,9 +397,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const saveSettings = async () => {
     setIsSaving(true);
     try {
-      console.log("Saving settings:", localSettings);
       await api.updateSettings(localSettings);
-      console.log("Settings saved successfully");
       localStorage.setItem("siteSettings", JSON.stringify(localSettings));
       return { success: true };
     } catch (error: any) {

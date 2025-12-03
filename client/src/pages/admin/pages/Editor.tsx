@@ -23,8 +23,6 @@ const DEFAULT_CSS = `/* Add your custom CSS here */
 
 const DEFAULT_JS = `// Add your custom JS here
 
-console.log('Custom script loaded');
-
 document.addEventListener('DOMContentLoaded', () => {
   // Your code here
 });`;

@@ -123,9 +123,6 @@ export function DatabaseTab() {
             title: result.success ? "Success" : "Info",
             description: result.message
           });
-          if (result.summary) {
-            console.log("Restore summary:", result.summary);
-          }
         } catch (error: any) {
           toast({
             title: "Error",

@@ -270,9 +270,7 @@ export default function AdminSettingsEnhanced() {
   };
 
   const handleSave = async () => {
-    console.log("handleSave called with current settings:", settings);
     const result = await saveSettings();
-    console.log("Save result:", result);
     if (result?.success) {
       toast({ 
         title: "Thành công ✓", 

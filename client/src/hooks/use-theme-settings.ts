@@ -83,9 +83,7 @@ export function useThemeSettings() {
 
     try {
       const root = document.documentElement;
-      console.log('Applying theme settings:', theme);
     
-      // Apply color settings
       if (theme.primaryColor) {
         const rgb = hexToHsl(theme.primaryColor);
         root.style.setProperty('--primary', rgb);

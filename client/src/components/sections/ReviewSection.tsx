@@ -75,7 +75,6 @@ export function ReviewSection({ projectId, title = "Reviews", compact = false }:
         projectId,
         status: 'Approved',
       };
-      console.log('Submitting review:', payload);
       const response = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -83,14 +82,12 @@ export function ReviewSection({ projectId, title = "Reviews", compact = false }:
         body: JSON.stringify(payload),
       });
       const responseText = await response.text();
-      console.log('Response status:', response.status, 'Body:', responseText);
       if (!response.ok) {
         throw new Error(`Failed to submit review: ${responseText}`);
       }
       return JSON.parse(responseText);
     },
-    onSuccess: (data) => {
-      console.log('Review created successfully:', data);
+    onSuccess: () => {
       toast({
         title: "Review submitted",
         description: "Your review is pending approval and will appear shortly.",

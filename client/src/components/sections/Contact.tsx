@@ -199,7 +199,6 @@ export function Contact() {
     e.preventDefault();
     
     if (honeypot) {
-      console.log('Honeypot triggered - bot detected');
       toast({
         title: "Message sent!",
         description: "Thank you for reaching out.",

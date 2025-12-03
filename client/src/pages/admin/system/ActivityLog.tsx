@@ -125,7 +125,6 @@ export default function AdminActivityLog() {
         throw new Error('Failed to fetch activity logs');
       }
       const data = await res.json();
-      console.log('Activity logs loaded:', data.length);
       return data;
     },
     retry: 2,

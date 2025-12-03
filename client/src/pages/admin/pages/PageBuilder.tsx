@@ -64,7 +64,7 @@ export default function PageBuilder() {
   };
 
   const handleSave = () => {
-    console.log("Saving page:", { title: pageTitle, slug: pageSlug, isPublished, blocks });
+    // TODO: Implement page save functionality
   };
 
   return (

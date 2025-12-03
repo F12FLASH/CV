@@ -75,13 +75,6 @@ export default function AdminMedia() {
     retry: 3,
   });
 
-  // Debug logging
-  console.log('Media page state:', { 
-    isLoading, 
-    error: error?.message, 
-    itemsCount: mediaItems.length 
-  });
-
   const createMediaMutation = useMutation({
     mutationFn: api.createMedia,
     onSuccess: () => {
@@ -227,11 +220,6 @@ export default function AdminMedia() {
         </div>
       </AdminLayout>
     );
-  }
-
-  // Add explicit check for empty state
-  if (!isLoading && !error && mediaItems.length === 0) {
-    console.log('Media: No items found, showing empty state');
   }
 
   return (

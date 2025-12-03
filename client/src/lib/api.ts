@@ -424,7 +424,6 @@ export const api = {
   },
 
   updateSettings: async (settings: Record<string, any>) => {
-    console.log("API: Updating settings with:", settings);
     const res = await fetch(`${API_BASE}/settings`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
