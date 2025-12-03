@@ -922,3 +922,105 @@ export const mediaFoldersRelations = relations(mediaFolders, ({ one, many }) => 
   }),
   children: many(mediaFolders, { relationName: "children" }),
 }));
+
+// Scheduled Tasks table (Cron Jobs)
+export const scheduledTasks = pgTable("scheduled_tasks", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  schedule: text("schedule").notNull(), // Cron expression
+  type: text("type").notNull().default("custom"), // backup, email, maintenance, custom
+  command: text("command"), // Command to execute
+  status: text("status").notNull().default("active"), // active, paused, completed
+  lastRun: timestamp("last_run"),
+  nextRun: timestamp("next_run"),
+  lastResult: text("last_result"), // success, failed, null
+  lastError: text("last_error"),
+  runCount: integer("run_count").notNull().default(0),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertScheduledTaskSchema = createInsertSchema(scheduledTasks).omit({
+  id: true,
+  lastRun: true,
+  nextRun: true,
+  lastResult: true,
+  lastError: true,
+  runCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertScheduledTask = z.infer<typeof insertScheduledTaskSchema>;
+export type ScheduledTask = typeof scheduledTasks.$inferSelect;
+
+// Webhooks table
+export const webhooks = pgTable("webhooks", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  events: jsonb("events").$type<string[]>().default([]),
+  secret: text("secret"),
+  status: text("status").notNull().default("active"), // active, inactive
+  lastTriggered: timestamp("last_triggered"),
+  successCount: integer("success_count").notNull().default(0),
+  failureCount: integer("failure_count").notNull().default(0),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertWebhookSchema = createInsertSchema(webhooks).omit({
+  id: true,
+  lastTriggered: true,
+  successCount: true,
+  failureCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertWebhook = z.infer<typeof insertWebhookSchema>;
+export type Webhook = typeof webhooks.$inferSelect;
+
+// Webhook Logs table
+export const webhookLogs = pgTable("webhook_logs", {
+  id: serial("id").primaryKey(),
+  webhookId: integer("webhook_id").notNull(),
+  event: text("event").notNull(),
+  payload: jsonb("payload"),
+  responseStatus: integer("response_status"),
+  responseBody: text("response_body"),
+  success: boolean("success").notNull().default(false),
+  duration: integer("duration"), // in milliseconds
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWebhookLogSchema = createInsertSchema(webhookLogs).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertWebhookLog = z.infer<typeof insertWebhookLogSchema>;
+export type WebhookLog = typeof webhookLogs.$inferSelect;
+
+// Relations for new tables
+export const scheduledTasksRelations = relations(scheduledTasks, ({ one }) => ({
+  creator: one(users, {
+    fields: [scheduledTasks.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const webhooksRelations = relations(webhooks, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [webhooks.createdBy],
+    references: [users.id],
+  }),
+  logs: many(webhookLogs),
+}));
+
+export const webhookLogsRelations = relations(webhookLogs, ({ one }) => ({
+  webhook: one(webhooks, {
+    fields: [webhookLogs.webhookId],
+    references: [webhooks.id],
+  }),
+}));

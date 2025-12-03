@@ -35,7 +35,10 @@ import {
   pageViews, type PageView, type InsertPageView,
   translations, type Translation, type InsertTranslation,
   contentTemplates, type ContentTemplate, type InsertContentTemplate,
-  mediaFolders, type MediaFolder, type InsertMediaFolder
+  mediaFolders, type MediaFolder, type InsertMediaFolder,
+  scheduledTasks, type ScheduledTask, type InsertScheduledTask,
+  webhooks, type Webhook, type InsertWebhook,
+  webhookLogs, type WebhookLog, type InsertWebhookLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, ilike, sql, lt } from "drizzle-orm";
@@ -1693,6 +1696,164 @@ export class DatabaseStorage implements IStorage {
     return this.db.select().from(media)
       .where(ilike(media.mimeType, `${mimeTypePrefix}%`))
       .orderBy(desc(media.createdAt));
+  }
+
+  // Scheduled Tasks
+  async getScheduledTask(id: number): Promise<ScheduledTask | undefined> {
+    const [task] = await this.db.select().from(scheduledTasks).where(eq(scheduledTasks.id, id));
+    return task;
+  }
+
+  async getAllScheduledTasks(): Promise<ScheduledTask[]> {
+    return this.db.select().from(scheduledTasks).orderBy(desc(scheduledTasks.createdAt));
+  }
+
+  async getActiveScheduledTasks(): Promise<ScheduledTask[]> {
+    return this.db.select().from(scheduledTasks).where(eq(scheduledTasks.status, "active")).orderBy(asc(scheduledTasks.nextRun));
+  }
+
+  async createScheduledTask(data: InsertScheduledTask): Promise<ScheduledTask> {
+    const [task] = await this.db.insert(scheduledTasks).values(data).returning();
+    return task;
+  }
+
+  async updateScheduledTask(id: number, data: Partial<InsertScheduledTask>): Promise<ScheduledTask | undefined> {
+    const [task] = await this.db.update(scheduledTasks).set({ ...data, updatedAt: new Date() }).where(eq(scheduledTasks.id, id)).returning();
+    return task;
+  }
+
+  async updateScheduledTaskRun(id: number, result: 'success' | 'failed', error?: string): Promise<ScheduledTask | undefined> {
+    const [task] = await this.db.update(scheduledTasks).set({
+      lastRun: new Date(),
+      lastResult: result,
+      lastError: error || null,
+      runCount: sql`${scheduledTasks.runCount} + 1`,
+      updatedAt: new Date()
+    }).where(eq(scheduledTasks.id, id)).returning();
+    return task;
+  }
+
+  async deleteScheduledTask(id: number): Promise<boolean> {
+    const result = await this.db.delete(scheduledTasks).where(eq(scheduledTasks.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Webhooks
+  async getWebhook(id: number): Promise<Webhook | undefined> {
+    const [webhook] = await this.db.select().from(webhooks).where(eq(webhooks.id, id));
+    return webhook;
+  }
+
+  async getAllWebhooks(): Promise<Webhook[]> {
+    return this.db.select().from(webhooks).orderBy(desc(webhooks.createdAt));
+  }
+
+  async getActiveWebhooks(): Promise<Webhook[]> {
+    return this.db.select().from(webhooks).where(eq(webhooks.status, "active"));
+  }
+
+  async getWebhooksByEvent(event: string): Promise<Webhook[]> {
+    return this.db.select().from(webhooks)
+      .where(and(
+        eq(webhooks.status, "active"),
+        sql`${webhooks.events}::jsonb ? ${event}`
+      ));
+  }
+
+  async createWebhook(data: InsertWebhook): Promise<Webhook> {
+    const [webhook] = await this.db.insert(webhooks).values(data).returning();
+    return webhook;
+  }
+
+  async updateWebhook(id: number, data: Partial<InsertWebhook>): Promise<Webhook | undefined> {
+    const [webhook] = await this.db.update(webhooks).set({ ...data, updatedAt: new Date() }).where(eq(webhooks.id, id)).returning();
+    return webhook;
+  }
+
+  async incrementWebhookSuccess(id: number): Promise<void> {
+    await this.db.update(webhooks).set({
+      lastTriggered: new Date(),
+      successCount: sql`${webhooks.successCount} + 1`,
+      updatedAt: new Date()
+    }).where(eq(webhooks.id, id));
+  }
+
+  async incrementWebhookFailure(id: number): Promise<void> {
+    await this.db.update(webhooks).set({
+      lastTriggered: new Date(),
+      failureCount: sql`${webhooks.failureCount} + 1`,
+      updatedAt: new Date()
+    }).where(eq(webhooks.id, id));
+  }
+
+  async deleteWebhook(id: number): Promise<boolean> {
+    await this.db.delete(webhookLogs).where(eq(webhookLogs.webhookId, id));
+    const result = await this.db.delete(webhooks).where(eq(webhooks.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Webhook Logs
+  async getWebhookLog(id: number): Promise<WebhookLog | undefined> {
+    const [log] = await this.db.select().from(webhookLogs).where(eq(webhookLogs.id, id));
+    return log;
+  }
+
+  async getWebhookLogs(webhookId: number, limit: number = 50): Promise<WebhookLog[]> {
+    return this.db.select().from(webhookLogs)
+      .where(eq(webhookLogs.webhookId, webhookId))
+      .orderBy(desc(webhookLogs.createdAt))
+      .limit(limit);
+  }
+
+  async getAllWebhookLogs(limit: number = 100): Promise<WebhookLog[]> {
+    return this.db.select().from(webhookLogs).orderBy(desc(webhookLogs.createdAt)).limit(limit);
+  }
+
+  async createWebhookLog(data: InsertWebhookLog): Promise<WebhookLog> {
+    const [log] = await this.db.insert(webhookLogs).values(data).returning();
+    return log;
+  }
+
+  async deleteWebhookLogs(webhookId: number): Promise<boolean> {
+    const result = await this.db.delete(webhookLogs).where(eq(webhookLogs.webhookId, webhookId));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Get daily page views for analytics
+  async getDailyPageViews(days: number = 30): Promise<{ date: string; views: number; visitors: number }[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    const result = await this.db.select({
+      date: sql<string>`DATE(${pageViews.createdAt})`,
+      views: sql<number>`COUNT(*)`,
+      visitors: sql<number>`COUNT(DISTINCT ${pageViews.visitorId})`
+    }).from(pageViews)
+      .where(sql`${pageViews.createdAt} >= ${startDate}`)
+      .groupBy(sql`DATE(${pageViews.createdAt})`)
+      .orderBy(sql`DATE(${pageViews.createdAt})`);
+    
+    return result as any;
+  }
+
+  // Get all translations
+  async getAllTranslations(): Promise<Translation[]> {
+    return this.db.select().from(translations).orderBy(translations.locale, translations.namespace, translations.key);
+  }
+
+  // Get translations by key (all locales)
+  async getTranslationsByKey(key: string): Promise<Translation[]> {
+    return this.db.select().from(translations).where(eq(translations.key, key));
+  }
+
+  // Bulk upsert translations
+  async bulkUpsertTranslations(data: InsertTranslation[]): Promise<Translation[]> {
+    const results: Translation[] = [];
+    for (const t of data) {
+      const result = await this.upsertTranslation(t);
+      results.push(result);
+    }
+    return results;
   }
 }
 

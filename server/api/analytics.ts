@@ -162,6 +162,17 @@ router.get("/countries", requireAdmin, async (req, res) => {
   }
 });
 
+router.get("/daily", requireAdmin, async (req, res) => {
+  try {
+    const { days } = req.query;
+    const numDays = parseInt(days as string) || 30;
+    const dailyViews = await storage.getDailyPageViews(numDays);
+    res.json(dailyViews);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/export", requireAdmin, async (req, res) => {
   try {
     const { startDate, endDate, format } = req.query;

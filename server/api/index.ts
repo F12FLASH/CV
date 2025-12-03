@@ -35,6 +35,9 @@ import analyticsRouter from "./analytics";
 import sitemapRouter from "./sitemap";
 import commentsExtendedRouter from "./comments-extended";
 import translationsRouter from "./translations";
+import scheduledTasksRouter from "./scheduled-tasks";
+import webhooksRouter from "./webhooks";
+import cacheRouter from "./cache";
 
 export function registerApiRoutes(app: Express) {
   app.use("/api/auth", authRouter);
@@ -73,6 +76,9 @@ export function registerApiRoutes(app: Express) {
   app.use("/api/analytics", analyticsRouter);
   app.use("/api/comments-extended", commentsExtendedRouter);
   app.use("/api/translations", translationsRouter);
+  app.use("/api/scheduled-tasks", scheduledTasksRouter);
+  app.use("/api/webhooks", webhooksRouter);
+  app.use("/api/cache", cacheRouter);
   
   app.use("/", sitemapRouter);
 }
