@@ -22,6 +22,7 @@ import Projects from "@/pages/home/Projects";
 import FAQs from "@/pages/home/FAQs";
 import NotFound from "@/pages/home/not-found";
 import ForgotPassword from "@/pages/admin/auth/ForgotPassword";
+import ResetPassword from "@/pages/admin/auth/ResetPassword";
 
 // Admin Login - loaded directly for fast access
 import AdminLogin from "@/pages/admin/auth/Login";
@@ -110,9 +111,9 @@ function Router() {
   const { settings } = useSiteSettings();
   const { isAuthenticated } = useAuth();
   const [location] = useLocation();
-  
+
   const isAdminPath = location.startsWith('/admin');
-  
+
   if (settings?.maintenanceMode && !isAuthenticated && !isAdminPath) {
     return <Maintenance />;
   }
@@ -129,7 +130,8 @@ function Router() {
       {/* Admin Login - not lazy loaded for fast access */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/forgot-password" component={ForgotPassword} />
-      
+      <Route path="/reset-password" component={ResetPassword} />
+
       {/* Admin Routes - wrapped in Suspense for lazy loading */}
       <Route path="/admin">
         {() => (
