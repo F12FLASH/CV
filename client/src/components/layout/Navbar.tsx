@@ -50,7 +50,6 @@ export function Navbar() {
   ];
 
   const extraLinks = [
-    { name: t("nav.pages") || "Pages", href: "/pages" },
     { name: t("nav.faqs") || "FAQs", href: "/faqs" },
   ];
 

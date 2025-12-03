@@ -75,6 +75,8 @@ const defaultLanguages: LanguageData[] = [
       "admin.media": "Media",
       "admin.users": "Users",
       "admin.logout": "Logout",
+      "nav.pages": "Pages",
+      "nav.faqs": "FAQs",
     },
   },
   {
@@ -126,6 +128,8 @@ const defaultLanguages: LanguageData[] = [
       "admin.media": "Media",
       "admin.users": "Người dùng",
       "admin.logout": "Đăng xuất",
+      "nav.pages": "Trang",
+      "nav.faqs": "Câu hỏi thường gặp",
     },
   },
 ];

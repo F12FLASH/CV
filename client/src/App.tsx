@@ -19,10 +19,9 @@ import Maintenance from "@/pages/home/Maintenance";
 import BlogPost from "@/pages/home/BlogPost";
 import Blog from "@/pages/home/Blog";
 import Projects from "@/pages/home/Projects";
-import Pages from "@/pages/home/Pages";
-import PageDetail from "@/pages/home/PageDetail";
 import FAQs from "@/pages/home/FAQs";
 import NotFound from "@/pages/home/not-found";
+import ForgotPassword from "@/pages/admin/auth/ForgotPassword";
 
 // Admin Login - loaded directly for fast access
 import AdminLogin from "@/pages/admin/auth/Login";
@@ -125,12 +124,11 @@ function Router() {
       <Route path="/blog" component={Blog} />
       <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/projects" component={Projects} />
-      <Route path="/pages" component={Pages} />
-      <Route path="/page/:slug" component={PageDetail} />
       <Route path="/faqs" component={FAQs} />
 
       {/* Admin Login - not lazy loaded for fast access */}
       <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/forgot-password" component={ForgotPassword} />
       
       {/* Admin Routes - wrapped in Suspense for lazy loading */}
       <Route path="/admin">

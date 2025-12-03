@@ -292,7 +292,7 @@ export default function AdminLogin() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <Label className="text-white/80">Password</Label>
-                  <a href="#" className="text-xs text-primary hover:text-primary/80" tabIndex={3}>Forgot password?</a>
+                  <a href="/admin/forgot-password" className="text-xs text-primary hover:text-primary/80" tabIndex={3} data-testid="link-forgot-password">Forgot password?</a>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
