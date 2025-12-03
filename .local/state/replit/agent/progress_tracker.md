@@ -494,3 +494,14 @@
     - Updated MockContext Project interface to include shortDescription
     - Removed `as any` type cast in Projects.tsx frontend component
     - All type issues resolved, shortDescription properly typed
+
+## Email SMTP Fix (Dec 3, 2025 - 10:38 AM)
+[x] 208. **FIX** - Created missing /api/email/test endpoint for SMTP test emails
+    - Vấn đề: Frontend gọi POST /api/email/test nhưng endpoint không tồn tại trên server
+    - Giải pháp: Tạo file server/api/email.ts với các endpoints:
+      * POST /api/email/test - Gửi email test đến địa chỉ bất kỳ
+      * GET /api/email/status - Kiểm tra trạng thái SMTP configuration
+      * GET /api/email/templates - Lấy danh sách email templates
+      * PUT /api/email/templates/:name - Cập nhật email template
+    - Đăng ký router mới trong server/api/index.ts (app.use("/api/email", emailRouter))
+    - Kết quả: Nút "Send Test Email" trong admin/settings/Email tab hoạt động bình thường

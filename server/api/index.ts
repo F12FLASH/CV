@@ -29,6 +29,7 @@ import searchRouter from "./search";
 import passwordResetRouter from "./password-reset";
 import subscribersRouter from "./subscribers";
 import emailCampaignsRouter from "./email-campaigns";
+import emailRouter from "./email";
 import contentManagementRouter from "./content-management";
 import analyticsRouter from "./analytics";
 import sitemapRouter from "./sitemap";
@@ -67,6 +68,7 @@ export function registerApiRoutes(app: Express) {
   app.use("/api/password-reset", passwordResetRouter);
   app.use("/api/subscribers", subscribersRouter);
   app.use("/api/email-campaigns", emailCampaignsRouter);
+  app.use("/api/email", emailRouter);
   app.use("/api/content", contentManagementRouter);
   app.use("/api/analytics", analyticsRouter);
   app.use("/api/comments-extended", commentsExtendedRouter);
