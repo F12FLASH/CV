@@ -44,8 +44,14 @@ router.post("/forgot-password", async (req, res) => {
     }
 
     const user = await storage.getUserByEmail(email);
+    
+    // Always return the same message for security (prevent email enumeration)
+    const successMessage = "If an account exists with this email, a password reset link has been sent.";
+    
     if (!user) {
-      return res.json({ message: "If an account exists with this email, a password reset link has been sent." });
+      // User doesn't exist - don't send email, but return success message
+      console.log(`Password reset requested for non-existent email: ${email}`);
+      return res.json({ message: successMessage });
     }
 
     const token = crypto.randomBytes(32).toString('hex');
@@ -60,7 +66,7 @@ router.post("/forgot-password", async (req, res) => {
     const transporter = await getSmtpTransporter();
     if (!transporter) {
       console.log('SMTP not configured, skipping password reset email');
-      return res.json({ message: "If an account exists with this email, a password reset link has been sent." });
+      return res.json({ message: successMessage });
     }
 
     const siteTitle = await storage.getSetting("siteTitle");
@@ -107,7 +113,7 @@ router.post("/forgot-password", async (req, res) => {
       type: 'info'
     });
 
-    res.json({ message: "If an account exists with this email, a password reset link has been sent." });
+    res.json({ message: successMessage });
   } catch (error: any) {
     console.error('Forgot password error:', error);
     res.status(500).json({ message: error.message });
