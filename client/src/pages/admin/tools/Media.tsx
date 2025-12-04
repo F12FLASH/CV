@@ -19,6 +19,7 @@ import {
   Folder,
   RefreshCw
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -67,6 +68,8 @@ export default function AdminMedia() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
+  const [editingAlt, setEditingAlt] = useState<MediaItem | null>(null);
+  const [altText, setAltText] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,6 +95,27 @@ export default function AdminMedia() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/media'] });
       toast({ title: "Success", description: "File deleted successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const updateMediaMutation = useMutation({
+    mutationFn: async ({ id, alt }: { id: number; alt: string }) => {
+      const res = await fetch(`/api/media/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ alt }),
+      });
+      if (!res.ok) throw new Error('Failed to update media');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/media'] });
+      toast({ title: "Success", description: "Alt text updated" });
+      setEditingAlt(null);
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -179,6 +203,17 @@ export default function AdminMedia() {
   const copyToClipboard = (url: string) => {
     navigator.clipboard.writeText(url);
     toast({ title: "Copied", description: "URL copied to clipboard" });
+  };
+
+  const openEditAlt = (item: MediaItem) => {
+    setEditingAlt(item);
+    setAltText(item.alt || "");
+  };
+
+  const saveAltText = () => {
+    if (editingAlt) {
+      updateMediaMutation.mutate({ id: editingAlt.id, alt: altText });
+    }
   };
 
   const filteredMedia = mediaItems.filter(item => {
@@ -391,6 +426,15 @@ export default function AdminMedia() {
                       size="icon" 
                       variant="secondary" 
                       className="h-8 w-8 rounded-full"
+                      onClick={() => openEditAlt(item)}
+                      title="Edit Alt Text"
+                    >
+                      <FileText size={14} />
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      variant="secondary" 
+                      className="h-8 w-8 rounded-full"
                       onClick={() => copyToClipboard(item.url)}
                       title="Copy URL"
                     >
@@ -525,6 +569,37 @@ export default function AdminMedia() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
                 <X className="w-4 h-4 mr-2" /> Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!editingAlt} onOpenChange={() => setEditingAlt(null)}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Edit Alt Text</DialogTitle>
+              <DialogDescription>
+                Update the alternative text for this image
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="alt-text">Alt Text</Label>
+                <Input
+                  id="alt-text"
+                  value={altText}
+                  onChange={(e) => setAltText(e.target.value)}
+                  placeholder="Describe this image..."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingAlt(null)}>
+                Cancel
+              </Button>
+              <Button onClick={saveAltText} disabled={updateMediaMutation.isPending}>
+                {updateMediaMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Save
               </Button>
             </DialogFooter>
           </DialogContent>

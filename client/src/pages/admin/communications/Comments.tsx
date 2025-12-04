@@ -17,7 +17,8 @@ import {
   Eye,
   HelpCircle,
   Save,
-  X
+  X,
+  Check
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -81,6 +82,26 @@ export default function AdminComments() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
       toast({ title: "Comment marked as read" });
+    }
+  });
+
+  const approveCommentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("PUT", `/api/comments/${id}/approve`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
+      toast({ title: "Comment approved" });
+    }
+  });
+
+  const rejectCommentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/comments/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
+      toast({ title: "Comment rejected" });
     }
   });
 
@@ -315,6 +336,32 @@ export default function AdminComments() {
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
+                          )}
+                          {comment.status === 'Pending' && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-green-500"
+                                onClick={() => approveCommentMutation.mutate(comment.id)}
+                                disabled={approveCommentMutation.isPending}
+                                title="Approve"
+                                data-testid={`button-approve-comment-${comment.id}`}
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-red-500"
+                                onClick={() => rejectCommentMutation.mutate(comment.id)}
+                                disabled={rejectCommentMutation.isPending}
+                                title="Reject"
+                                data-testid={`button-reject-comment-${comment.id}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </>
                           )}
                           <Button 
                             variant="ghost" 

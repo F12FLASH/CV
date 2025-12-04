@@ -253,6 +253,19 @@ router.get("/media/:id", requireAuth, async (req, res) => {
   }
 });
 
+router.patch("/media/:id", requireAuth, async (req, res) => {
+  try {
+    const { alt } = req.body;
+    const mediaItem = await storage.updateMedia(parseInt(req.params.id), { alt });
+    if (!mediaItem) {
+      return res.status(404).json({ message: "Media not found" });
+    }
+    res.json(mediaItem);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.delete("/media/:id", requireAuth, async (req, res) => {
   try {
     const mediaItem = await storage.getMedia(parseInt(req.params.id));

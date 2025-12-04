@@ -67,18 +67,22 @@ export default function AdminAnalytics() {
     },
   });
 
-  // Generate traffic data based on content
-  const generateTrafficData = () => {
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    return days.map((day, i) => ({
-      date: day,
-      posts: Math.floor(Math.random() * 100 + 50),
-      projects: Math.floor(Math.random() * 80 + 40),
-      views: Math.floor(Math.random() * 200 + 100),
-    }));
-  };
+  // Fetch real analytics data
+  const { data: analyticsData } = useQuery({
+    queryKey: ['/api/analytics/daily', { days: 7 }],
+    queryFn: async () => {
+      const res = await fetch('/api/analytics/daily?days=7', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch analytics');
+      return res.json();
+    },
+  });
 
-  const trafficData = generateTrafficData();
+  const trafficData = analyticsData?.map((day: any) => ({
+    date: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
+    posts: day.postViews || 0,
+    projects: day.projectViews || 0,
+    views: day.totalViews || 0,
+  })) || [];
 
   // Top content by views
   const topContent = [
