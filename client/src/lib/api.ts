@@ -5,23 +5,17 @@ async function handleResponse<T>(response: Response): Promise<T> {
     const error = await response.json().catch(() => ({ message: 'An error occurred' }));
     throw new Error(error.message || 'Request failed');
   }
-  return response.json();
-}
-
-async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options?.headers || {}),
-    },
-    credentials: "include",
-  });
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Request failed");
+  
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return {} as T;
   }
-  return res.json();
+  
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+  
+  return {} as T;
 }
 
 
