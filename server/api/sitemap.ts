@@ -3,11 +3,16 @@ import { storage } from "../storage";
 
 const router = Router();
 
+function getBaseUrl(req: Request): string {
+  if (process.env.SITE_URL) return process.env.SITE_URL;
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:5000';
+  return `${protocol}://${host}`;
+}
+
 router.get("/sitemap.xml", async (req: Request, res: Response) => {
   try {
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'http://localhost:5000';
+    const baseUrl = getBaseUrl(req);
 
     const posts = await storage.getPublishedPosts();
     const projects = await storage.getPublishedProjects();
@@ -84,9 +89,7 @@ router.get("/sitemap.xml", async (req: Request, res: Response) => {
 
 router.get("/rss.xml", async (req: Request, res: Response) => {
   try {
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'http://localhost:5000';
+    const baseUrl = getBaseUrl(req);
 
     const siteTitle = await storage.getSetting("siteTitle");
     const siteDescription = await storage.getSetting("siteDescription");
@@ -131,9 +134,7 @@ router.get("/rss.xml", async (req: Request, res: Response) => {
 
 router.get("/robots.txt", async (req: Request, res: Response) => {
   try {
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'http://localhost:5000';
+    const baseUrl = getBaseUrl(req);
 
     const robots = `User-agent: *
 Allow: /

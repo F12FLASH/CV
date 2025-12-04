@@ -6,11 +6,11 @@ import { registerApiRoutes } from "./api";
 
 async function checkIpBlocking(req: Request, res: Response, next: NextFunction) {
   const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-  
+
   try {
     const ipRules = await storage.getAllIpRules();
     const blacklisted = ipRules.find(rule => rule.type === 'blacklist' && rule.ipAddress === clientIp);
-    
+
     if (blacklisted) {
       await storage.createSecurityLog({
         action: `Blocked request from blacklisted IP`,
@@ -46,7 +46,7 @@ async function seedInitialData() {
       { name: "UI/UX Design", slug: "ui-ux-design", description: "Design projects", type: "project" as const },
       { name: "E-commerce", slug: "e-commerce", description: "Online store projects", type: "project" as const },
     ];
-    
+
     const postCategories = [
       { name: "Technology", slug: "technology", description: "Tech articles", type: "post" as const },
       { name: "Tutorial", slug: "tutorial", description: "How-to guides", type: "post" as const },

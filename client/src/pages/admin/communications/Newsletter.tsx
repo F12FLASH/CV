@@ -98,6 +98,24 @@ export default function AdminNewsletter() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5" /> Subscribers
+                </CardTitle>
+                <CardDescription>Recent newsletter subscribers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Subscriber list functionality will be available in the next update.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Subscriptions are currently logged in Activity Log.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
                   <Mail className="w-5 h-5" /> Newsletter Popup Settings
                 </CardTitle>
                 <CardDescription>Configure the popup that appears on the homepage</CardDescription>

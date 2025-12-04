@@ -1,10 +1,17 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import { storage } from "../storage";
 import { hashPassword } from "../utils/password";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 
 const router = Router();
+
+function getBaseUrl(req: Request): string {
+  if (process.env.SITE_URL) return process.env.SITE_URL;
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:5000';
+  return `${protocol}://${host}`;
+}
 
 async function getSmtpTransporter() {
   const smtpHost = await storage.getSetting("smtpHost");
@@ -74,9 +81,7 @@ router.post("/forgot-password", async (req, res) => {
     const emailFromAddress = await storage.getSetting("emailFromAddress");
     const smtpUser = await storage.getSetting("smtpUser");
 
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'http://localhost:5000';
+    const baseUrl = getBaseUrl(req);
     const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
     const htmlBody = `

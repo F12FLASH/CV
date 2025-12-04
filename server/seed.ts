@@ -3,9 +3,12 @@ import { db } from "./db";
 import { 
   users, projects, posts, skills, services, testimonials, 
   siteSettings, comments, reviews, categories, messages, 
-  activityLogs, notifications, media 
+  activityLogs, notifications, media, faqs, pages, subscribers,
+  emailTemplates, emailCampaigns, homepageSections, securitySettings,
+  scheduledTasks, webhooks, translations, contentTemplates, mediaFolders
 } from "@shared/schema";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 const SALT_ROUNDS = 12;
 
@@ -25,6 +28,7 @@ async function seed() {
     await db.delete(reviews);
     await db.delete(messages);
     await db.delete(media);
+    await db.delete(mediaFolders);
     await db.delete(posts);
     await db.delete(projects);
     await db.delete(testimonials);
@@ -32,6 +36,17 @@ async function seed() {
     await db.delete(skills);
     await db.delete(categories);
     await db.delete(siteSettings);
+    await db.delete(securitySettings);
+    await db.delete(faqs);
+    await db.delete(pages);
+    await db.delete(subscribers);
+    await db.delete(emailCampaigns);
+    await db.delete(emailTemplates);
+    await db.delete(homepageSections);
+    await db.delete(scheduledTasks);
+    await db.delete(webhooks);
+    await db.delete(translations);
+    await db.delete(contentTemplates);
     await db.delete(users);
     console.log("All existing data deleted successfully!");
 
@@ -1090,6 +1105,534 @@ Strategies for advancing your development career.
       }
     ]);
     console.log("Media seeded");
+
+    // ==================== FAQs ====================
+    await db.insert(faqs).values([
+      {
+        question: "What technologies do you specialize in?",
+        answer: "I specialize in full-stack web development with React, Next.js, Node.js, and TypeScript. I also have experience with Python, PostgreSQL, MongoDB, Docker, and cloud platforms like AWS and Vercel.",
+        visible: true,
+        order: 1
+      },
+      {
+        question: "Do you offer ongoing maintenance and support?",
+        answer: "Yes! I provide ongoing maintenance and support packages for all projects. This includes bug fixes, security updates, performance optimization, and feature enhancements based on your needs.",
+        visible: true,
+        order: 2
+      },
+      {
+        question: "What is your typical project timeline?",
+        answer: "Project timelines vary based on complexity. A simple website takes 2-4 weeks, a web application 4-8 weeks, and complex platforms 8-16 weeks. I'll provide a detailed timeline during our initial consultation.",
+        visible: true,
+        order: 3
+      },
+      {
+        question: "How do you handle project communication?",
+        answer: "I believe in transparent communication. You'll receive regular updates through your preferred channel (Slack, email, or weekly calls). I also provide access to project management tools for real-time progress tracking.",
+        visible: true,
+        order: 4
+      },
+      {
+        question: "Do you work with international clients?",
+        answer: "Absolutely! I work with clients worldwide. I'm flexible with time zones and use async communication tools to ensure smooth collaboration regardless of your location.",
+        visible: true,
+        order: 5
+      },
+      {
+        question: "What is your payment structure?",
+        answer: "I typically work with a 50% upfront deposit and 50% upon completion for smaller projects. For larger projects, we can arrange milestone-based payments. I accept bank transfers, PayPal, and cryptocurrency.",
+        visible: true,
+        order: 6
+      }
+    ]);
+    console.log("FAQs seeded");
+
+    // ==================== PAGES ====================
+    await db.insert(pages).values([
+      {
+        title: "About Me",
+        slug: "about",
+        content: `# About Loi Developer
+
+I'm a passionate full-stack developer with over 8 years of experience building modern web applications. Based in Ho Chi Minh City, Vietnam, I work with clients worldwide to bring their digital ideas to life.
+
+## My Journey
+
+My journey in tech started with curiosity and a love for problem-solving. Today, I specialize in creating performant, scalable, and user-friendly applications using cutting-edge technologies.
+
+## What I Do
+
+- **Web Development**: Building responsive, accessible websites and web applications
+- **Mobile Development**: Creating cross-platform mobile apps with React Native
+- **API Development**: Designing and implementing RESTful and GraphQL APIs
+- **DevOps**: Setting up CI/CD pipelines and cloud infrastructure
+
+## Values
+
+I believe in writing clean, maintainable code and delivering exceptional user experiences. Every project is an opportunity to learn and grow.`,
+        excerpt: "Learn more about my background, experience, and what drives my passion for development.",
+        status: "Published",
+        metaTitle: "About Loi Developer - Full-Stack Web Developer",
+        metaDescription: "Learn about Loi Developer, a full-stack web developer specializing in React, Node.js, and modern web technologies.",
+        publishedAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
+      },
+      {
+        title: "Privacy Policy",
+        slug: "privacy-policy",
+        content: `# Privacy Policy
+
+Last updated: ${new Date().toLocaleDateString()}
+
+## Information We Collect
+
+We collect information you provide directly, such as when you contact us or subscribe to our newsletter.
+
+## How We Use Your Information
+
+- To respond to your inquiries
+- To send you updates and newsletters (with your consent)
+- To improve our services
+
+## Data Security
+
+We implement appropriate security measures to protect your personal information.
+
+## Your Rights
+
+You have the right to access, correct, or delete your personal data at any time.
+
+## Contact Us
+
+If you have questions about this policy, please contact us at privacy@loideveloper.com.`,
+        excerpt: "Our privacy policy explains how we collect, use, and protect your personal information.",
+        status: "Published",
+        metaTitle: "Privacy Policy - Loi Developer",
+        metaDescription: "Read our privacy policy to understand how we collect, use, and protect your personal information.",
+        publishedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      },
+      {
+        title: "Terms of Service",
+        slug: "terms-of-service",
+        content: `# Terms of Service
+
+Last updated: ${new Date().toLocaleDateString()}
+
+## Agreement to Terms
+
+By accessing our website, you agree to these terms of service.
+
+## Services
+
+We provide web development and related consulting services as described on our website.
+
+## Intellectual Property
+
+All content on this website is owned by Loi Developer unless otherwise stated.
+
+## Limitation of Liability
+
+We are not liable for any indirect or consequential damages arising from the use of our services.
+
+## Changes to Terms
+
+We may update these terms at any time. Continued use of our services constitutes acceptance of updated terms.
+
+## Contact
+
+For questions about these terms, contact us at legal@loideveloper.com.`,
+        excerpt: "Review our terms of service that govern your use of our website and services.",
+        status: "Published",
+        metaTitle: "Terms of Service - Loi Developer",
+        metaDescription: "Review the terms and conditions that govern your use of Loi Developer website and services.",
+        publishedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      }
+    ]);
+    console.log("Pages seeded");
+
+    // ==================== SUBSCRIBERS ====================
+    await db.insert(subscribers).values([
+      {
+        email: "john.developer@gmail.com",
+        name: "John Developer",
+        status: "active",
+        source: "website",
+        tags: ["developer", "newsletter"],
+        unsubscribeToken: crypto.randomBytes(32).toString('hex'),
+        confirmedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      },
+      {
+        email: "sarah.tech@yahoo.com",
+        name: "Sarah Tech",
+        status: "active",
+        source: "website",
+        tags: ["newsletter"],
+        unsubscribeToken: crypto.randomBytes(32).toString('hex'),
+        confirmedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)
+      },
+      {
+        email: "mike.startup@startup.io",
+        name: "Mike Startup",
+        status: "active",
+        source: "blog",
+        tags: ["startup", "newsletter"],
+        unsubscribeToken: crypto.randomBytes(32).toString('hex'),
+        confirmedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
+      },
+      {
+        email: "emma.designer@design.co",
+        name: "Emma Designer",
+        status: "active",
+        source: "website",
+        tags: ["design", "newsletter"],
+        unsubscribeToken: crypto.randomBytes(32).toString('hex'),
+        confirmedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+      },
+      {
+        email: "alex.coder@code.dev",
+        name: "Alex Coder",
+        status: "unsubscribed",
+        source: "website",
+        tags: ["developer"],
+        unsubscribeToken: crypto.randomBytes(32).toString('hex'),
+        confirmedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000),
+        unsubscribedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+      }
+    ]);
+    console.log("Subscribers seeded");
+
+    // ==================== EMAIL TEMPLATES ====================
+    await db.insert(emailTemplates).values([
+      {
+        name: "Welcome Email",
+        subject: "Welcome to {{site_name}}!",
+        htmlContent: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; color: white; text-align: center;">
+            <h1>Welcome, {{name}}!</h1>
+          </div>
+          <div style="padding: 30px; background: #f9fafb;">
+            <p>Thank you for subscribing to our newsletter!</p>
+            <p>You'll receive updates on:</p>
+            <ul>
+              <li>New blog posts and tutorials</li>
+              <li>Project case studies</li>
+              <li>Industry insights and tips</li>
+            </ul>
+            <p>Best regards,<br>Loi Developer</p>
+          </div>
+        </div>`,
+        textContent: "Welcome {{name}}! Thank you for subscribing to our newsletter.",
+        type: "newsletter",
+        variables: ["name", "site_name", "unsubscribe_url"],
+        active: true
+      },
+      {
+        name: "New Post Notification",
+        subject: "New Article: {{post_title}}",
+        htmlContent: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1a1a2e; padding: 20px; color: white; text-align: center;">
+            <h2>New Article Published</h2>
+          </div>
+          <div style="padding: 30px;">
+            <h3>{{post_title}}</h3>
+            <p>{{post_excerpt}}</p>
+            <a href="{{post_url}}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Read More</a>
+          </div>
+        </div>`,
+        textContent: "New Article: {{post_title}}\n\n{{post_excerpt}}\n\nRead more: {{post_url}}",
+        type: "newsletter",
+        variables: ["post_title", "post_excerpt", "post_url", "unsubscribe_url"],
+        active: true
+      },
+      {
+        name: "Contact Form Response",
+        subject: "Thank you for reaching out!",
+        htmlContent: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="padding: 30px;">
+            <p>Hi {{name}},</p>
+            <p>Thank you for contacting me. I've received your message and will get back to you within 24-48 hours.</p>
+            <p>Best regards,<br>Loi Developer</p>
+          </div>
+        </div>`,
+        textContent: "Hi {{name}}, Thank you for contacting me. I've received your message and will get back to you within 24-48 hours.",
+        type: "transactional",
+        variables: ["name"],
+        active: true
+      }
+    ]);
+    console.log("Email templates seeded");
+
+    // ==================== EMAIL CAMPAIGNS ====================
+    await db.insert(emailCampaigns).values([
+      {
+        name: "Monthly Newsletter - December 2024",
+        subject: "December Updates: New Features & Tutorials",
+        content: `<div style="font-family: Arial, sans-serif;">
+          <h2>Hello {{name}}!</h2>
+          <p>Here's what's new this month:</p>
+          <ul>
+            <li>New React 19 tutorial series</li>
+            <li>Portfolio redesign case study</li>
+            <li>Upcoming webinar on TypeScript best practices</li>
+          </ul>
+          <p>Stay tuned for more updates!</p>
+        </div>`,
+        status: "sent",
+        sentAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        recipientCount: 150,
+        openCount: 68,
+        clickCount: 23,
+        tags: ["monthly", "newsletter"]
+      },
+      {
+        name: "Year in Review 2024",
+        subject: "A Year of Growth: 2024 Highlights",
+        content: `<div style="font-family: Arial, sans-serif;">
+          <h2>2024 Year in Review</h2>
+          <p>What an incredible year it has been!</p>
+          <p>Key achievements:</p>
+          <ul>
+            <li>20+ projects completed</li>
+            <li>50+ blog posts published</li>
+            <li>5000+ newsletter subscribers</li>
+          </ul>
+          <p>Thank you for being part of this journey!</p>
+        </div>`,
+        status: "draft",
+        recipientCount: 0,
+        tags: ["annual", "newsletter"]
+      }
+    ]);
+    console.log("Email campaigns seeded");
+
+    // ==================== HOMEPAGE SECTIONS ====================
+    await db.insert(homepageSections).values([
+      { name: "hero", visible: true, order: 1 },
+      { name: "about", visible: true, order: 2 },
+      { name: "skills", visible: true, order: 3 },
+      { name: "services", visible: true, order: 4 },
+      { name: "projects", visible: true, order: 5 },
+      { name: "blog", visible: true, order: 6 },
+      { name: "testimonials", visible: true, order: 7 },
+      { name: "contact", visible: true, order: 8 },
+      { name: "newsletter", visible: true, order: 9 }
+    ]);
+    console.log("Homepage sections seeded");
+
+    // ==================== SECURITY SETTINGS ====================
+    await db.insert(securitySettings).values([
+      { key: "maxLoginAttempts", value: 5 },
+      { key: "lockoutDuration", value: 30 },
+      { key: "passwordMinLength", value: 8 },
+      { key: "requireSpecialChar", value: true },
+      { key: "requireUppercase", value: true },
+      { key: "requireNumber", value: true },
+      { key: "sessionTimeout", value: 60 },
+      { key: "twoFactorEnabled", value: false },
+      { key: "ipWhitelistEnabled", value: false },
+      { key: "captchaEnabled", value: false },
+      { key: "rateLimitEnabled", value: true },
+      { key: "rateLimitRequests", value: 100 },
+      { key: "rateLimitWindow", value: 60 }
+    ]);
+    console.log("Security settings seeded");
+
+    // ==================== SCHEDULED TASKS ====================
+    await db.insert(scheduledTasks).values([
+      {
+        name: "Daily Database Backup",
+        description: "Automatically backup the database every day at midnight",
+        schedule: "0 0 * * *",
+        type: "backup",
+        command: "npm run db:backup",
+        status: "active",
+        createdBy: 1
+      },
+      {
+        name: "Weekly Newsletter",
+        description: "Send weekly digest to all subscribers",
+        schedule: "0 9 * * 1",
+        type: "email",
+        command: "npm run newsletter:send",
+        status: "paused",
+        createdBy: 1
+      },
+      {
+        name: "Cache Cleanup",
+        description: "Clear expired cache entries",
+        schedule: "0 */6 * * *",
+        type: "maintenance",
+        command: "npm run cache:clear",
+        status: "active",
+        createdBy: 1
+      },
+      {
+        name: "Analytics Report",
+        description: "Generate and email weekly analytics report",
+        schedule: "0 8 * * 1",
+        type: "custom",
+        command: "npm run analytics:report",
+        status: "active",
+        createdBy: 1
+      }
+    ]);
+    console.log("Scheduled tasks seeded");
+
+    // ==================== WEBHOOKS ====================
+    await db.insert(webhooks).values([
+      {
+        name: "Slack Notifications",
+        url: "https://hooks.slack.com/services/example",
+        events: ["new_message", "new_comment", "new_project"],
+        secret: crypto.randomBytes(32).toString('hex'),
+        status: "active",
+        successCount: 156,
+        failureCount: 2,
+        createdBy: 1
+      },
+      {
+        name: "Discord Bot",
+        url: "https://discord.com/api/webhooks/example",
+        events: ["new_post", "new_review"],
+        secret: crypto.randomBytes(32).toString('hex'),
+        status: "inactive",
+        successCount: 45,
+        failureCount: 0,
+        createdBy: 1
+      },
+      {
+        name: "Analytics Tracker",
+        url: "https://analytics.example.com/webhook",
+        events: ["page_view", "form_submission"],
+        secret: crypto.randomBytes(32).toString('hex'),
+        status: "active",
+        successCount: 1250,
+        failureCount: 5,
+        createdBy: 1
+      }
+    ]);
+    console.log("Webhooks seeded");
+
+    // ==================== TRANSLATIONS ====================
+    await db.insert(translations).values([
+      // Vietnamese translations
+      { key: "nav.home", locale: "vi", value: "Trang chủ", namespace: "common" },
+      { key: "nav.about", locale: "vi", value: "Giới thiệu", namespace: "common" },
+      { key: "nav.projects", locale: "vi", value: "Dự án", namespace: "common" },
+      { key: "nav.blog", locale: "vi", value: "Blog", namespace: "common" },
+      { key: "nav.contact", locale: "vi", value: "Liên hệ", namespace: "common" },
+      { key: "hero.title", locale: "vi", value: "Lập trình viên Full-stack", namespace: "home" },
+      { key: "hero.subtitle", locale: "vi", value: "Xây dựng ứng dụng web hiện đại", namespace: "home" },
+      { key: "contact.form.name", locale: "vi", value: "Họ và tên", namespace: "contact" },
+      { key: "contact.form.email", locale: "vi", value: "Email", namespace: "contact" },
+      { key: "contact.form.message", locale: "vi", value: "Tin nhắn", namespace: "contact" },
+      { key: "contact.form.submit", locale: "vi", value: "Gửi tin nhắn", namespace: "contact" },
+      
+      // English translations (default)
+      { key: "nav.home", locale: "en", value: "Home", namespace: "common" },
+      { key: "nav.about", locale: "en", value: "About", namespace: "common" },
+      { key: "nav.projects", locale: "en", value: "Projects", namespace: "common" },
+      { key: "nav.blog", locale: "en", value: "Blog", namespace: "common" },
+      { key: "nav.contact", locale: "en", value: "Contact", namespace: "common" },
+      { key: "hero.title", locale: "en", value: "Full-stack Developer", namespace: "home" },
+      { key: "hero.subtitle", locale: "en", value: "Building modern web applications", namespace: "home" },
+      { key: "contact.form.name", locale: "en", value: "Full Name", namespace: "contact" },
+      { key: "contact.form.email", locale: "en", value: "Email", namespace: "contact" },
+      { key: "contact.form.message", locale: "en", value: "Message", namespace: "contact" },
+      { key: "contact.form.submit", locale: "en", value: "Send Message", namespace: "contact" }
+    ]);
+    console.log("Translations seeded");
+
+    // ==================== CONTENT TEMPLATES ====================
+    await db.insert(contentTemplates).values([
+      {
+        name: "Blog Post Template",
+        type: "post",
+        content: `# {{title}}
+
+## Introduction
+
+Write your introduction here...
+
+## Main Content
+
+### Section 1
+
+Content for section 1...
+
+### Section 2
+
+Content for section 2...
+
+## Conclusion
+
+Wrap up your post here...`,
+        metadata: { category: "general", author: "Loi Developer" },
+        isDefault: true
+      },
+      {
+        name: "Tutorial Template",
+        type: "post",
+        content: `# {{title}}: A Step-by-Step Guide
+
+## Prerequisites
+
+- Requirement 1
+- Requirement 2
+
+## Step 1: Getting Started
+
+Instructions...
+
+## Step 2: Implementation
+
+Code and explanation...
+
+## Step 3: Testing
+
+How to test...
+
+## Conclusion
+
+Summary and next steps...`,
+        metadata: { category: "tutorial", author: "Loi Developer" },
+        isDefault: false
+      },
+      {
+        name: "Landing Page Template",
+        type: "page",
+        content: `# {{title}}
+
+## Hero Section
+
+Main headline and call-to-action...
+
+## Features
+
+### Feature 1
+Description...
+
+### Feature 2
+Description...
+
+## Call to Action
+
+Final CTA section...`,
+        metadata: { layout: "landing" },
+        isDefault: false
+      }
+    ]);
+    console.log("Content templates seeded");
+
+    // ==================== MEDIA FOLDERS ====================
+    await db.insert(mediaFolders).values([
+      { name: "Images", parentId: null, path: "/images" },
+      { name: "Documents", parentId: null, path: "/documents" },
+      { name: "Videos", parentId: null, path: "/videos" },
+      { name: "Projects", parentId: null, path: "/images/projects" },
+      { name: "Blog", parentId: null, path: "/images/blog" },
+      { name: "Avatars", parentId: null, path: "/images/avatars" }
+    ]);
+    console.log("Media folders seeded");
 
     console.log("Database seeding completed successfully!");
     console.log("\n=== LOGIN CREDENTIALS ===");

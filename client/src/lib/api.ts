@@ -5,23 +5,17 @@ async function handleResponse<T>(response: Response): Promise<T> {
     const error = await response.json().catch(() => ({ message: 'An error occurred' }));
     throw new Error(error.message || 'Request failed');
   }
-  return response.json();
-}
 
-async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options?.headers || {}),
-    },
-    credentials: "include",
-  });
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Request failed");
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return {} as T;
   }
-  return res.json();
+
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  return {} as T;
 }
 
 
@@ -39,14 +33,18 @@ export const api = {
   },
 
   // Auth
-  login: async (username: string, password: string) => {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ username, password }),
+  login: async (credentials: { username: string; password: string }) => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(credentials),
     });
-    return handleResponse<{ user: any }>(res);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Login failed");
+    }
+    return res.json();
   },
 
   logout: async () => {
@@ -166,34 +164,6 @@ export const api = {
 
   deletePost: async (id: number) => {
     const res = await fetch(`${API_BASE}/posts/${id}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    return handleResponse<any>(res);
-  },
-
-  getUsers: async () => {
-    const res = await fetch(`${API_BASE}/users`, { credentials: 'include' });
-    return handleResponse<any[]>(res);
-  },
-
-  getUser: async (id: number) => {
-    const res = await fetch(`${API_BASE}/users/${id}`, { credentials: 'include' });
-    return handleResponse<any>(res);
-  },
-
-  updateUser: async (id: number, data: any) => {
-    const res = await fetch(`${API_BASE}/users/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    });
-    return handleResponse<any>(res);
-  },
-
-  deleteUser: async (id: number) => {
-    const res = await fetch(`${API_BASE}/users/${id}`, {
       method: 'DELETE',
       credentials: 'include'
     });
@@ -468,47 +438,8 @@ export const api = {
     return handleResponse<{ message: string; template: { subject: string; body: string } }>(res);
   },
 
-  // ==================== STORAGE API ====================
-  
-  async getStorageStats() {
-    const res = await fetch(`${API_BASE}/storage/stats`, { credentials: 'include' });
-    return handleResponse<{
-      total: { size: number; sizeFormatted: string; files: number; maxStorage: number; maxStorageFormatted: string; usagePercent: string };
-      folders: {
-        images: { size: number; sizeFormatted: string; files: number };
-        documents: { size: number; sizeFormatted: string; files: number };
-        media: { size: number; sizeFormatted: string; files: number };
-      };
-    }>(res);
-  },
-
-  async getStorageFiles(folder?: string) {
-    const url = folder ? `${API_BASE}/storage/files?folder=${folder}` : `${API_BASE}/storage/files`;
-    const res = await fetch(url, { credentials: 'include' });
-    return handleResponse<Array<{ name: string; path: string; size: number; sizeFormatted: string; type: string; folder: string; modified: string }>>(res);
-  },
-
-  async deleteStorageFile(folder: string, filename: string) {
-    const res = await fetch(`${API_BASE}/storage/files/${folder}/${filename}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    return handleResponse<{ message: string; success: boolean }>(res);
-  },
-
-  async uploadFile(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch(`${API_BASE}/storage/upload`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
-    return handleResponse<any>(res);
-  },
-
   // ==================== LOGGING API ====================
-  
+
   async getLogs(level?: string, limit?: number, source?: string) {
     const params = new URLSearchParams();
     if (level) params.append("level", level);
@@ -565,7 +496,7 @@ export const api = {
   },
 
   // ==================== DATABASE API ====================
-  
+
   async getDatabaseStatus() {
     const res = await fetch(`${API_BASE}/database/status`, { credentials: 'include' });
     return handleResponse<{
@@ -632,7 +563,7 @@ export const api = {
   },
 
   // ==================== MEDIA API ====================
-  
+
   createMedia: async (data: { filename: string; originalName: string; mimeType: string; size: number; url: string; alt?: string }) => {
     const res = await fetch(`${API_BASE}/media`, {
       method: 'POST',
@@ -660,7 +591,7 @@ export const api = {
   },
 
   // ==================== CATEGORIES API ====================
-  
+
   getCategories: async (type?: string) => {
     const url = type ? `${API_BASE}/categories?type=${type}` : `${API_BASE}/categories`;
     const res = await fetch(url, { credentials: 'include' });
@@ -701,7 +632,7 @@ export const api = {
   },
 
   // ==================== PERFORMANCE API ====================
-  
+
   async clearCache() {
     const res = await fetch(`${API_BASE}/performance/clear-cache`, {
       method: 'POST',
@@ -711,7 +642,7 @@ export const api = {
   },
 
   // ==================== SYSTEM API ====================
-  
+
   async getSystemStats() {
     const res = await fetch(`${API_BASE}/system/stats`, { credentials: 'include' });
     return handleResponse<{
