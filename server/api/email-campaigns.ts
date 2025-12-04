@@ -1,10 +1,17 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import { storage } from "../storage";
 import { requireAdmin } from "../middleware/auth";
 import { insertEmailCampaignSchema, insertEmailTemplateSchema } from "@shared/schema";
 import nodemailer from "nodemailer";
 
 const router = Router();
+
+function getBaseUrl(req: Request): string {
+  if (process.env.SITE_URL) return process.env.SITE_URL;
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:5000';
+  return `${protocol}://${host}`;
+}
 
 async function getSmtpTransporter() {
   const smtpHost = await storage.getSetting("smtpHost");
@@ -183,9 +190,7 @@ router.post("/campaigns/:id/send", requireAdmin, async (req, res) => {
     let sent = 0;
     for (const subscriber of subscribers) {
       try {
-        const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-          ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-          : 'http://localhost:5000';
+        const baseUrl = getBaseUrl(req);
         const unsubscribeUrl = `${baseUrl}/api/subscribers/unsubscribe/${subscriber.unsubscribeToken}`;
 
         let htmlContent = campaign.content;
