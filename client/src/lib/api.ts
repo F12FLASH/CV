@@ -5,16 +5,16 @@ async function handleResponse<T>(response: Response): Promise<T> {
     const error = await response.json().catch(() => ({ message: 'An error occurred' }));
     throw new Error(error.message || 'Request failed');
   }
-  
+
   if (response.status === 204 || response.headers.get('content-length') === '0') {
     return {} as T;
   }
-  
+
   const contentType = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
     return response.json();
   }
-  
+
   return {} as T;
 }
 
@@ -33,14 +33,18 @@ export const api = {
   },
 
   // Auth
-  login: async (username: string, password: string) => {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ username, password }),
+  login: async (credentials: { username: string; password: string }) => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(credentials),
     });
-    return handleResponse<{ user: any }>(res);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Login failed");
+    }
+    return res.json();
   },
 
   logout: async () => {
@@ -463,7 +467,7 @@ export const api = {
   },
 
   // ==================== STORAGE API ====================
-  
+
   async getStorageStats() {
     const res = await fetch(`${API_BASE}/storage/stats`, { credentials: 'include' });
     return handleResponse<{
@@ -502,7 +506,7 @@ export const api = {
   },
 
   // ==================== LOGGING API ====================
-  
+
   async getLogs(level?: string, limit?: number, source?: string) {
     const params = new URLSearchParams();
     if (level) params.append("level", level);
@@ -559,7 +563,7 @@ export const api = {
   },
 
   // ==================== DATABASE API ====================
-  
+
   async getDatabaseStatus() {
     const res = await fetch(`${API_BASE}/database/status`, { credentials: 'include' });
     return handleResponse<{
@@ -626,7 +630,7 @@ export const api = {
   },
 
   // ==================== MEDIA API ====================
-  
+
   createMedia: async (data: { filename: string; originalName: string; mimeType: string; size: number; url: string; alt?: string }) => {
     const res = await fetch(`${API_BASE}/media`, {
       method: 'POST',
@@ -654,7 +658,7 @@ export const api = {
   },
 
   // ==================== CATEGORIES API ====================
-  
+
   getCategories: async (type?: string) => {
     const url = type ? `${API_BASE}/categories?type=${type}` : `${API_BASE}/categories`;
     const res = await fetch(url, { credentials: 'include' });
@@ -695,7 +699,7 @@ export const api = {
   },
 
   // ==================== PERFORMANCE API ====================
-  
+
   async clearCache() {
     const res = await fetch(`${API_BASE}/performance/clear-cache`, {
       method: 'POST',
@@ -705,7 +709,7 @@ export const api = {
   },
 
   // ==================== SYSTEM API ====================
-  
+
   async getSystemStats() {
     const res = await fetch(`${API_BASE}/system/stats`, { credentials: 'include' });
     return handleResponse<{
