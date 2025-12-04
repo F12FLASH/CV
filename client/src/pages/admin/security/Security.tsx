@@ -11,11 +11,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
-import { 
+import {
   Shield, Key, Lock, Smartphone, Globe, AlertTriangle, Trash2,
   ShieldAlert, RefreshCw, Eye, EyeOff, Clock, Users,
   Monitor, LogOut, Ban, CheckCircle, XCircle,
-  Server, AlertCircle, Plus, Loader2, FileText, BarChart3, 
+  Server, AlertCircle, Plus, Loader2, FileText, BarChart3,
   Zap, Activity, Layers, QrCode, Copy, Check
 } from "lucide-react";
 import {
@@ -169,7 +169,7 @@ export default function AdminSecurityEnhanced() {
   const [showGoogleSecret, setShowGoogleSecret] = useState(false);
   const [showCloudflareSecret, setShowCloudflareSecret] = useState(false);
   const [showLoginHistory, setShowLoginHistory] = useState(false);
-  
+
   // 2FA Modal
   const [show2FASetup, setShow2FASetup] = useState(false);
   const [show2FAVerify, setShow2FAVerify] = useState(false);
@@ -179,7 +179,7 @@ export default function AdminSecurityEnhanced() {
   const [verifyCode, setVerifyCode] = useState("");
   const [disableCode, setDisableCode] = useState("");
   const [secretCopied, setSecretCopied] = useState(false);
-  
+
 
   const { data: settings = {}, isLoading: settingsLoading, refetch: refetchSettings } = useQuery<SecuritySettings>({
     queryKey: ['/api/security/settings'],
@@ -584,7 +584,7 @@ export default function AdminSecurityEnhanced() {
                       <div className="text-sm text-muted-foreground">Secure with authenticator app</div>
                     </div>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={user?.twoFactorEnabled || settings.twoFactorEnabled || false}
                     onCheckedChange={handle2FAToggle}
                     disabled={generate2FAMutation.isPending}
@@ -599,7 +599,7 @@ export default function AdminSecurityEnhanced() {
                       <div className="text-sm text-muted-foreground">Force reset every 90 days</div>
                     </div>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.passwordExpiration ?? true}
                     onCheckedChange={(v) => updateLocalSetting('passwordExpiration', v)}
                     data-testid="switch-password-expiration"
@@ -632,9 +632,9 @@ export default function AdminSecurityEnhanced() {
                       </div>
                       <div className="flex items-center gap-2">
                         {device.trusted && <Badge variant="secondary">Trusted</Badge>}
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="text-destructive"
                           onClick={() => deleteDeviceMutation.mutate(device.id)}
                           data-testid={`button-remove-device-${device.id}`}
@@ -657,22 +657,22 @@ export default function AdminSecurityEnhanced() {
                 <CardDescription>View recent login activity and security events</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
+                <Button
+                  variant="outline"
+                  className="w-full"
                   onClick={() => setShowLoginHistory(!showLoginHistory)}
                   data-testid="button-view-login-history"
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   {showLoginHistory ? 'Hide' : 'View'} Login History
                 </Button>
-                
+
                 {showLoginHistory && (
                   <div className="mt-4 space-y-2 max-h-96 overflow-y-auto border rounded-lg p-3">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm font-medium">Recent Login Activity</p>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => refetchLoginHistory()}
                         disabled={isRefetchingLoginHistory}
@@ -728,9 +728,9 @@ export default function AdminSecurityEnhanced() {
                   <div className="space-y-4">
                     <div className={`p-4 border rounded-lg space-y-3 ${localSettings.captchaType === 'disabled' ? 'border-primary/50 bg-primary/5' : ''}`}>
                       <label className="flex items-center gap-3 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="captcha" 
+                        <input
+                          type="radio"
+                          name="captcha"
                           value="disabled"
                           checked={localSettings.captchaType === 'disabled'}
                           onChange={() => updateLocalSetting('captchaType', 'disabled')}
@@ -749,9 +749,9 @@ export default function AdminSecurityEnhanced() {
 
                     <div className={`p-4 border rounded-lg space-y-3 ${localSettings.captchaType === 'local' ? 'border-primary/50 bg-primary/5' : ''}`}>
                       <label className="flex items-center gap-3 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="captcha" 
+                        <input
+                          type="radio"
+                          name="captcha"
                           value="local"
                           checked={localSettings.captchaType === 'local' || !localSettings.captchaType}
                           onChange={() => updateLocalSetting('captchaType', 'local')}
@@ -771,7 +771,7 @@ export default function AdminSecurityEnhanced() {
                         <div className="ml-7 space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-xs">Honeypot Fields</span>
-                            <Switch 
+                            <Switch
                               checked={localSettings.captchaSettings?.honeypotEnabled ?? true}
                               onCheckedChange={(v) => updateNestedSetting('captchaSettings', 'honeypotEnabled', v)}
                               data-testid="switch-honeypot"
@@ -779,7 +779,7 @@ export default function AdminSecurityEnhanced() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-xs">Time-based Validation</span>
-                            <Switch 
+                            <Switch
                               checked={localSettings.captchaSettings?.timeValidation ?? true}
                               onCheckedChange={(v) => updateNestedSetting('captchaSettings', 'timeValidation', v)}
                               data-testid="switch-time-validation"
@@ -787,7 +787,7 @@ export default function AdminSecurityEnhanced() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-xs">IP Rate Limiting</span>
-                            <Switch 
+                            <Switch
                               checked={localSettings.captchaSettings?.ipRateLimit ?? true}
                               onCheckedChange={(v) => updateNestedSetting('captchaSettings', 'ipRateLimit', v)}
                               data-testid="switch-ip-rate-limit"
@@ -799,9 +799,9 @@ export default function AdminSecurityEnhanced() {
 
                     <div className={`p-4 border rounded-lg space-y-3 ${localSettings.captchaType === 'google' ? 'border-primary/50 bg-primary/5' : ''}`}>
                       <label className="flex items-center gap-3 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="captcha" 
+                        <input
+                          type="radio"
+                          name="captcha"
                           value="google"
                           checked={localSettings.captchaType === 'google'}
                           onChange={() => updateLocalSetting('captchaType', 'google')}
@@ -820,8 +820,8 @@ export default function AdminSecurityEnhanced() {
                         <div className="ml-7 space-y-3 pt-2">
                           <div className="space-y-1">
                             <Label className="text-xs">Site Key</Label>
-                            <Input 
-                              placeholder="Enter Google reCAPTCHA site key" 
+                            <Input
+                              placeholder="Enter Google reCAPTCHA site key"
                               className="text-sm"
                               value={localSettings.captchaSettings?.googleSiteKey || ''}
                               onChange={(e) => updateNestedSetting('captchaSettings', 'googleSiteKey', e.target.value)}
@@ -837,17 +837,17 @@ export default function AdminSecurityEnhanced() {
                           <div className="space-y-1">
                             <Label className="text-xs">Secret Key</Label>
                             <div className="relative">
-                              <Input 
-                                type={showGoogleSecret ? "text" : "password"} 
-                                placeholder="Enter secret key" 
+                              <Input
+                                type={showGoogleSecret ? "text" : "password"}
+                                placeholder="Enter secret key"
                                 className="text-sm pr-10"
                                 value={localSettings.captchaSettings?.googleSecretKey || ''}
                                 onChange={(e) => updateNestedSetting('captchaSettings', 'googleSecretKey', e.target.value)}
                                 data-testid="input-google-secret-key"
                               />
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="absolute right-0 top-0 h-full"
                                 onClick={() => setShowGoogleSecret(!showGoogleSecret)}
                               >
@@ -857,13 +857,13 @@ export default function AdminSecurityEnhanced() {
                           </div>
                           <div className="space-y-1">
                             <Label className="text-xs">Minimum Score (0.0 - 1.0)</Label>
-                            <Input 
-                              type="number" 
+                            <Input
+                              type="number"
                               value={localSettings.captchaSettings?.googleMinScore ?? 0.5}
                               onChange={(e) => updateNestedSetting('captchaSettings', 'googleMinScore', parseFloat(e.target.value))}
-                              step="0.1" 
-                              min="0" 
-                              max="1" 
+                              step="0.1"
+                              min="0"
+                              max="1"
                               className="text-sm"
                               data-testid="input-google-min-score"
                             />
@@ -874,9 +874,9 @@ export default function AdminSecurityEnhanced() {
 
                     <div className={`p-4 border rounded-lg space-y-3 ${localSettings.captchaType === 'cloudflare' ? 'border-primary/50 bg-primary/5' : ''}`}>
                       <label className="flex items-center gap-3 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="captcha" 
+                        <input
+                          type="radio"
+                          name="captcha"
                           value="cloudflare"
                           checked={localSettings.captchaType === 'cloudflare'}
                           onChange={() => updateLocalSetting('captchaType', 'cloudflare')}
@@ -895,8 +895,8 @@ export default function AdminSecurityEnhanced() {
                         <div className="ml-7 space-y-3 pt-2">
                           <div className="space-y-1">
                             <Label className="text-xs">Site Key</Label>
-                            <Input 
-                              placeholder="Enter Cloudflare site key" 
+                            <Input
+                              placeholder="Enter Cloudflare site key"
                               className="text-sm"
                               value={localSettings.captchaSettings?.cloudflareSiteKey || ''}
                               onChange={(e) => updateNestedSetting('captchaSettings', 'cloudflareSiteKey', e.target.value)}
@@ -912,17 +912,17 @@ export default function AdminSecurityEnhanced() {
                           <div className="space-y-1">
                             <Label className="text-xs">Secret Key</Label>
                             <div className="relative">
-                              <Input 
-                                type={showCloudflareSecret ? "text" : "password"} 
-                                placeholder="Enter secret key" 
+                              <Input
+                                type={showCloudflareSecret ? "text" : "password"}
+                                placeholder="Enter secret key"
                                 className="text-sm pr-10"
                                 value={localSettings.captchaSettings?.cloudflareSecretKey || ''}
                                 onChange={(e) => updateNestedSetting('captchaSettings', 'cloudflareSecretKey', e.target.value)}
                                 data-testid="input-cloudflare-secret-key"
                               />
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="absolute right-0 top-0 h-full"
                                 onClick={() => setShowCloudflareSecret(!showCloudflareSecret)}
                               >
@@ -931,7 +931,7 @@ export default function AdminSecurityEnhanced() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Switch 
+                            <Switch
                               checked={localSettings.captchaSettings?.cloudflareManagedMode || false}
                               onCheckedChange={(v) => updateNestedSetting('captchaSettings', 'cloudflareManagedMode', v)}
                               data-testid="switch-cloudflare-managed"
@@ -965,7 +965,7 @@ export default function AdminSecurityEnhanced() {
                         <p className="font-medium text-sm">Login Form</p>
                         <p className="text-xs text-muted-foreground">Admin login page</p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={localSettings.protectionCoverage?.loginForm ?? true}
                         onCheckedChange={(v) => updateNestedSetting('protectionCoverage', 'loginForm', v)}
                         data-testid="switch-protect-login"
@@ -976,7 +976,7 @@ export default function AdminSecurityEnhanced() {
                         <p className="font-medium text-sm">Contact Form</p>
                         <p className="text-xs text-muted-foreground">Public contact form</p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={localSettings.protectionCoverage?.contactForm ?? true}
                         onCheckedChange={(v) => updateNestedSetting('protectionCoverage', 'contactForm', v)}
                         data-testid="switch-protect-contact"
@@ -987,7 +987,7 @@ export default function AdminSecurityEnhanced() {
                         <p className="font-medium text-sm">Newsletter Signup</p>
                         <p className="text-xs text-muted-foreground">Email subscription form</p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={localSettings.protectionCoverage?.newsletterForm ?? true}
                         onCheckedChange={(v) => updateNestedSetting('protectionCoverage', 'newsletterForm', v)}
                         data-testid="switch-protect-newsletter"
@@ -998,7 +998,7 @@ export default function AdminSecurityEnhanced() {
                         <p className="font-medium text-sm">Comment Forms</p>
                         <p className="text-xs text-muted-foreground">Blog post comments</p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={localSettings.protectionCoverage?.commentForms ?? true}
                         onCheckedChange={(v) => updateNestedSetting('protectionCoverage', 'commentForms', v)}
                         data-testid="switch-protect-comments"
@@ -1009,7 +1009,7 @@ export default function AdminSecurityEnhanced() {
                         <p className="font-medium text-sm">Registration Form</p>
                         <p className="text-xs text-muted-foreground">User registration (if enabled)</p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={localSettings.protectionCoverage?.registrationForm || false}
                         onCheckedChange={(v) => updateNestedSetting('protectionCoverage', 'registrationForm', v)}
                         data-testid="switch-protect-registration"
@@ -1043,15 +1043,15 @@ export default function AdminSecurityEnhanced() {
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-xs text-muted-foreground">Protection Rate</span>
                         <span className="text-sm font-medium">
-                          {stats && stats.totalBlocked + stats.totalAllowed > 0 
-                            ? ((stats.totalAllowed / (stats.totalBlocked + stats.totalAllowed)) * 100).toFixed(1) 
+                          {stats && stats.totalBlocked + stats.totalAllowed > 0
+                            ? ((stats.totalAllowed / (stats.totalBlocked + stats.totalAllowed)) * 100).toFixed(1)
                             : 100}%
                         </span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-green-500 rounded-full" 
-                          style={{ width: `${stats && stats.totalBlocked + stats.totalAllowed > 0 ? (stats.totalAllowed / (stats.totalBlocked + stats.totalAllowed)) * 100 : 100}%` }} 
+                        <div
+                          className="h-full bg-green-500 rounded-full"
+                          style={{ width: `${stats && stats.totalBlocked + stats.totalAllowed > 0 ? (stats.totalAllowed / (stats.totalBlocked + stats.totalAllowed)) * 100 : 100}%` }}
                         />
                       </div>
                     </div>
@@ -1080,9 +1080,9 @@ export default function AdminSecurityEnhanced() {
                       whitelistIps.map((rule) => (
                         <div key={rule.id} className="flex items-center justify-between p-2 border rounded bg-green-500/5 border-green-500/20">
                           <span className="text-sm">{rule.ipAddress}</span>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="text-destructive"
                             onClick={() => deleteIpRuleMutation.mutate(rule.id)}
                             data-testid={`button-remove-whitelist-${rule.id}`}
@@ -1095,14 +1095,14 @@ export default function AdminSecurityEnhanced() {
                   </div>
                   <div className="space-y-2">
                     <div className="flex gap-2">
-                      <Input 
-                        placeholder="Add IP address (e.g., 192.168.1.1)" 
+                      <Input
+                        placeholder="Add IP address (e.g., 192.168.1.1)"
                         value={newWhitelistIp}
                         onChange={(e) => setNewWhitelistIp(e.target.value)}
                         data-testid="input-whitelist-ip"
                         className={newWhitelistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(newWhitelistIp) ? 'border-red-500' : ''}
                       />
-                      <Button 
+                      <Button
                         onClick={() => {
                           // More comprehensive IP validation
                           const validateIP = (ip: string) => {
@@ -1110,7 +1110,7 @@ export default function AdminSecurityEnhanced() {
                             const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/;
                             // IPv6 with optional CIDR
                             const ipv6Regex = /^(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/;
-                            
+
                             if (ipv4Regex.test(ip)) {
                               // Validate CIDR range if present
                               const parts = ip.split('/');
@@ -1120,7 +1120,7 @@ export default function AdminSecurityEnhanced() {
                               }
                               return true;
                             }
-                            
+
                             if (ipv6Regex.test(ip)) {
                               const parts = ip.split('/');
                               if (parts.length === 2) {
@@ -1129,10 +1129,10 @@ export default function AdminSecurityEnhanced() {
                               }
                               return true;
                             }
-                            
+
                             return false;
                           };
-                          
+
                           if (newWhitelistIp && validateIP(newWhitelistIp)) {
                             addIpRuleMutation.mutate({ ipAddress: newWhitelistIp, type: 'whitelist' });
                           } else {
@@ -1145,7 +1145,7 @@ export default function AdminSecurityEnhanced() {
                         <Plus className="w-4 h-4 mr-1" /> Add
                       </Button>
                     </div>
-                    {newWhitelistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/.test(newWhitelistIp) && 
+                    {newWhitelistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/.test(newWhitelistIp) &&
                      !/^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/.test(newWhitelistIp) && (
                       <p className="text-xs text-red-500">Please enter a valid IPv4/IPv6 address (CIDR notation supported)</p>
                     )}
@@ -1163,9 +1163,9 @@ export default function AdminSecurityEnhanced() {
                       blacklistIps.map((rule) => (
                         <div key={rule.id} className="flex items-center justify-between p-2 border rounded bg-red-500/5 border-red-500/20">
                           <span className="text-sm">{rule.ipAddress}</span>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="text-destructive"
                             onClick={() => deleteIpRuleMutation.mutate(rule.id)}
                             data-testid={`button-remove-blacklist-${rule.id}`}
@@ -1178,19 +1178,19 @@ export default function AdminSecurityEnhanced() {
                   </div>
                   <div className="space-y-2">
                     <div className="flex gap-2">
-                      <Input 
-                        placeholder="Add IP to block..." 
+                      <Input
+                        placeholder="Add IP to block..."
                         value={newBlacklistIp}
                         onChange={(e) => setNewBlacklistIp(e.target.value)}
                         data-testid="input-blacklist-ip"
                         className={newBlacklistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(newBlacklistIp) ? 'border-red-500' : ''}
                       />
-                      <Button 
+                      <Button
                         onClick={() => {
                           const validateIP = (ip: string) => {
                             const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/;
                             const ipv6Regex = /^(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/;
-                            
+
                             if (ipv4Regex.test(ip)) {
                               const parts = ip.split('/');
                               if (parts.length === 2) {
@@ -1199,7 +1199,7 @@ export default function AdminSecurityEnhanced() {
                               }
                               return true;
                             }
-                            
+
                             if (ipv6Regex.test(ip)) {
                               const parts = ip.split('/');
                               if (parts.length === 2) {
@@ -1208,10 +1208,10 @@ export default function AdminSecurityEnhanced() {
                               }
                               return true;
                             }
-                            
+
                             return false;
                           };
-                          
+
                           if (newBlacklistIp && validateIP(newBlacklistIp)) {
                             addIpRuleMutation.mutate({ ipAddress: newBlacklistIp, type: 'blacklist' });
                           } else {
@@ -1224,7 +1224,7 @@ export default function AdminSecurityEnhanced() {
                         <Ban className="w-4 h-4 mr-1" /> Block
                       </Button>
                     </div>
-                    {newBlacklistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/.test(newBlacklistIp) && 
+                    {newBlacklistIp && !/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\/(?:3[0-2]|[12]?[0-9]))?$/.test(newBlacklistIp) &&
                      !/^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}(?:\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9]))?$/.test(newBlacklistIp) && (
                       <p className="text-xs text-red-500">Please enter a valid IPv4/IPv6 address (CIDR notation supported)</p>
                     )}
@@ -1240,10 +1240,10 @@ export default function AdminSecurityEnhanced() {
               <CardContent className="space-y-4">
                 <div>
                   <label className="text-sm font-medium">Login Attempts Limit</label>
-                  <Input 
+                  <Input
                     value={localSettings.rateLimiting?.loginAttemptsLimit ?? 5}
                     onChange={(e) => updateNestedSetting('rateLimiting', 'loginAttemptsLimit', parseInt(e.target.value) || 5)}
-                    type="number" 
+                    type="number"
                     className="mt-1"
                     data-testid="input-login-attempts-limit"
                   />
@@ -1251,10 +1251,10 @@ export default function AdminSecurityEnhanced() {
                 </div>
                 <div>
                   <label className="text-sm font-medium">API Rate Limit</label>
-                  <Input 
+                  <Input
                     value={localSettings.rateLimiting?.apiRateLimit ?? 1000}
                     onChange={(e) => updateNestedSetting('rateLimiting', 'apiRateLimit', parseInt(e.target.value) || 1000)}
-                    type="number" 
+                    type="number"
                     className="mt-1"
                     data-testid="input-api-rate-limit"
                   />
@@ -1262,10 +1262,10 @@ export default function AdminSecurityEnhanced() {
                 </div>
                 <div>
                   <label className="text-sm font-medium">Lockout Duration (minutes)</label>
-                  <Input 
+                  <Input
                     value={localSettings.rateLimiting?.lockoutDuration ?? 15}
                     onChange={(e) => updateNestedSetting('rateLimiting', 'lockoutDuration', parseInt(e.target.value) || 15)}
-                    type="number" 
+                    type="number"
                     className="mt-1"
                     data-testid="input-lockout-duration"
                   />
@@ -1294,7 +1294,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">DDoS Protection</p>
                     <p className="text-xs text-muted-foreground">Automatically detect and mitigate attacks</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.ddosProtection?.enabled ?? true}
                     onCheckedChange={(v) => updateNestedSetting('ddosProtection', 'enabled', v)}
                     data-testid="switch-ddos-protection"
@@ -1304,10 +1304,10 @@ export default function AdminSecurityEnhanced() {
                   <>
                     <div>
                       <label className="text-sm font-medium">Request Threshold (per minute)</label>
-                      <Input 
+                      <Input
                         value={localSettings.ddosProtection?.threshold ?? 100}
                         onChange={(e) => updateNestedSetting('ddosProtection', 'threshold', parseInt(e.target.value) || 100)}
-                        type="number" 
+                        type="number"
                         className="mt-1"
                         data-testid="input-ddos-threshold"
                       />
@@ -1315,10 +1315,10 @@ export default function AdminSecurityEnhanced() {
                     </div>
                     <div>
                       <label className="text-sm font-medium">Block Duration (minutes)</label>
-                      <Input 
+                      <Input
                         value={localSettings.ddosProtection?.blockDuration ?? 30}
                         onChange={(e) => updateNestedSetting('ddosProtection', 'blockDuration', parseInt(e.target.value) || 30)}
-                        type="number" 
+                        type="number"
                         className="mt-1"
                         data-testid="input-ddos-block-duration"
                       />
@@ -1342,7 +1342,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">SQL Injection Protection</p>
                     <p className="text-xs text-muted-foreground">Scan requests for malicious SQL patterns</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.sqlInjectionProtection?.enabled ?? true}
                     onCheckedChange={(v) => updateNestedSetting('sqlInjectionProtection', 'enabled', v)}
                     data-testid="switch-sql-injection"
@@ -1355,7 +1355,7 @@ export default function AdminSecurityEnhanced() {
                         <p className="font-medium text-sm">Log Attempts</p>
                         <p className="text-xs text-muted-foreground">Record all detected injection attempts</p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={localSettings.sqlInjectionProtection?.logAttempts ?? true}
                         onCheckedChange={(v) => updateNestedSetting('sqlInjectionProtection', 'logAttempts', v)}
                         data-testid="switch-sql-log"
@@ -1366,7 +1366,7 @@ export default function AdminSecurityEnhanced() {
                         <p className="font-medium text-sm">Block Requests</p>
                         <p className="text-xs text-muted-foreground">Automatically block suspicious requests</p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={localSettings.sqlInjectionProtection?.blockRequests ?? true}
                         onCheckedChange={(v) => updateNestedSetting('sqlInjectionProtection', 'blockRequests', v)}
                         data-testid="switch-sql-block"
@@ -1390,7 +1390,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">XSS Protection</p>
                     <p className="text-xs text-muted-foreground">Detect and sanitize malicious scripts</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.xssProtection?.enabled ?? true}
                     onCheckedChange={(v) => updateNestedSetting('xssProtection', 'enabled', v)}
                     data-testid="switch-xss-protection"
@@ -1403,7 +1403,7 @@ export default function AdminSecurityEnhanced() {
                         <p className="font-medium text-sm">Sanitize Input</p>
                         <p className="text-xs text-muted-foreground">Automatically clean user input</p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={localSettings.xssProtection?.sanitizeInput ?? true}
                         onCheckedChange={(v) => updateNestedSetting('xssProtection', 'sanitizeInput', v)}
                         data-testid="switch-xss-sanitize"
@@ -1414,7 +1414,7 @@ export default function AdminSecurityEnhanced() {
                         <p className="font-medium text-sm">Block Requests</p>
                         <p className="text-xs text-muted-foreground">Block requests with malicious content</p>
                       </div>
-                      <Switch 
+                      <Switch
                         checked={localSettings.xssProtection?.blockRequests ?? true}
                         onCheckedChange={(v) => updateNestedSetting('xssProtection', 'blockRequests', v)}
                         data-testid="switch-xss-block"
@@ -1456,8 +1456,8 @@ export default function AdminSecurityEnhanced() {
                             </p>
                           </div>
                         </div>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => terminateSessionMutation.mutate(session.id)}
                           disabled={terminateSessionMutation.isPending}
@@ -1471,8 +1471,8 @@ export default function AdminSecurityEnhanced() {
                 )}
 
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="flex-1"
                     onClick={(e) => {
                       e.preventDefault();
@@ -1484,8 +1484,8 @@ export default function AdminSecurityEnhanced() {
                     {logoutAllDevicesMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     <LogOut className="w-4 h-4 mr-2" /> Logout All Devices
                   </Button>
-                  <Button 
-                    variant="destructive" 
+                  <Button
+                    variant="destructive"
                     className="flex-1"
                     onClick={(e) => {
                       e.preventDefault();
@@ -1511,7 +1511,7 @@ export default function AdminSecurityEnhanced() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Session Timeout (Idle)</Label>
-                    <select 
+                    <select
                       className="w-full p-2 rounded-md border border-input bg-background"
                       value={localSettings.sessionSettings?.idleTimeout || '30 minutes'}
                       onChange={(e) => updateNestedSetting('sessionSettings', 'idleTimeout', e.target.value)}
@@ -1526,7 +1526,7 @@ export default function AdminSecurityEnhanced() {
                   </div>
                   <div className="space-y-2">
                     <Label>Max Session Duration</Label>
-                    <select 
+                    <select
                       className="w-full p-2 rounded-md border border-input bg-background"
                       value={localSettings.sessionSettings?.maxDuration || '24 hours'}
                       onChange={(e) => updateNestedSetting('sessionSettings', 'maxDuration', e.target.value)}
@@ -1545,7 +1545,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">Force Logout Inactive Users</p>
                     <p className="text-xs text-muted-foreground">Auto-logout users after idle timeout</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.sessionSettings?.forceLogoutInactive ?? true}
                     onCheckedChange={(v) => updateNestedSetting('sessionSettings', 'forceLogoutInactive', v)}
                     data-testid="switch-force-logout-inactive"
@@ -1554,7 +1554,7 @@ export default function AdminSecurityEnhanced() {
 
                 <div className="space-y-2">
                   <Label>Concurrent Session Limit</Label>
-                  <select 
+                  <select
                     className="w-full p-2 rounded-md border border-input bg-background"
                     value={localSettings.sessionSettings?.concurrentSessionLimit || 'Unlimited'}
                     onChange={(e) => updateNestedSetting('sessionSettings', 'concurrentSessionLimit', e.target.value)}
@@ -1590,7 +1590,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">GDPR Enabled</p>
                     <p className="text-xs text-muted-foreground">Enable GDPR compliance features</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.compliance?.gdprEnabled ?? true}
                     onCheckedChange={(v) => updateNestedSetting('compliance', 'gdprEnabled', v)}
                     data-testid="switch-gdpr"
@@ -1598,10 +1598,10 @@ export default function AdminSecurityEnhanced() {
                 </div>
                 <div>
                   <label className="text-sm font-medium">Data Retention Period (days)</label>
-                  <Input 
+                  <Input
                     value={localSettings.compliance?.dataRetentionDays ?? 365}
                     onChange={(e) => updateNestedSetting('compliance', 'dataRetentionDays', parseInt(e.target.value) || 365)}
-                    type="number" 
+                    type="number"
                     className="mt-1"
                     data-testid="input-retention-days"
                   />
@@ -1609,7 +1609,7 @@ export default function AdminSecurityEnhanced() {
                 </div>
                 <div>
                   <label className="text-sm font-medium">Privacy Policy URL</label>
-                  <Input 
+                  <Input
                     value={localSettings.compliance?.privacyPolicyUrl || ''}
                     onChange={(e) => updateNestedSetting('compliance', 'privacyPolicyUrl', e.target.value)}
                     placeholder="https://example.com/privacy"
@@ -1622,7 +1622,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">Cookie Consent</p>
                     <p className="text-xs text-muted-foreground">Require explicit cookie consent from users</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.compliance?.cookieConsentEnabled ?? true}
                     onCheckedChange={(v) => updateNestedSetting('compliance', 'cookieConsentEnabled', v)}
                     data-testid="switch-cookie-consent"
@@ -1651,7 +1651,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">CSP Enabled</p>
                     <p className="text-xs text-muted-foreground">Apply content security policy headers</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.cspSettings?.enabled ?? true}
                     onCheckedChange={(v) => updateNestedSetting('cspSettings', 'enabled', v)}
                     data-testid="switch-csp-enabled"
@@ -1662,7 +1662,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">Strict Mode</p>
                     <p className="text-xs text-muted-foreground">Enforce strict CSP violations</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.cspSettings?.strictMode ?? false}
                     onCheckedChange={(v) => updateNestedSetting('cspSettings', 'strictMode', v)}
                     data-testid="switch-csp-strict"
@@ -1670,7 +1670,7 @@ export default function AdminSecurityEnhanced() {
                 </div>
                 <div>
                   <label className="text-sm font-medium">Report URI</label>
-                  <Input 
+                  <Input
                     value={localSettings.cspSettings?.reportUri || ''}
                     onChange={(e) => updateNestedSetting('cspSettings', 'reportUri', e.target.value)}
                     placeholder="https://example.com/csp-report"
@@ -1702,7 +1702,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">Vulnerability Scanning</p>
                     <p className="text-xs text-muted-foreground">Scan for known vulnerabilities</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.scannerSettings?.vulnerabilityScanEnabled ?? true}
                     onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'vulnerabilityScanEnabled', v)}
                     data-testid="switch-vuln-scan"
@@ -1713,7 +1713,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">SSL Certificate Scanning</p>
                     <p className="text-xs text-muted-foreground">Monitor SSL certificate validity</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.scannerSettings?.sslScanEnabled ?? true}
                     onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'sslScanEnabled', v)}
                     data-testid="switch-ssl-scan"
@@ -1724,7 +1724,7 @@ export default function AdminSecurityEnhanced() {
                     <p className="font-medium text-sm">Malware Scanning</p>
                     <p className="text-xs text-muted-foreground">Scan uploaded files for malware</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={localSettings.scannerSettings?.malwareScanEnabled ?? true}
                     onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'malwareScanEnabled', v)}
                     data-testid="switch-malware-scan"
@@ -1732,7 +1732,7 @@ export default function AdminSecurityEnhanced() {
                 </div>
                 <div>
                   <label className="text-sm font-medium">Scan Frequency</label>
-                  <select 
+                  <select
                     className="w-full p-2 rounded-md border border-input bg-background mt-1"
                     value={localSettings.scannerSettings?.scanFrequency || 'weekly'}
                     onChange={(e) => updateNestedSetting('scannerSettings', 'scanFrequency', e.target.value)}
@@ -1773,8 +1773,8 @@ export default function AdminSecurityEnhanced() {
               <Label className="text-sm font-medium">Or enter this code manually:</Label>
               <div className="flex gap-2">
                 <Input value={secret} readOnly className="font-mono text-sm" />
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="icon"
                   onClick={copySecret}
                 >
@@ -1784,7 +1784,7 @@ export default function AdminSecurityEnhanced() {
             </div>
           </div>
           <DialogFooter>
-            <Button 
+            <Button
               onClick={() => {
                 setShow2FASetup(false);
                 setShow2FAVerify(true);
@@ -1818,8 +1818,8 @@ export default function AdminSecurityEnhanced() {
             </InputOTP>
           </div>
           <DialogFooter className="gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShow2FAVerify(false);
                 setVerifyCode("");
@@ -1827,7 +1827,7 @@ export default function AdminSecurityEnhanced() {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={() => verify2FAMutation.mutate(verifyCode)}
               disabled={verifyCode.length !== 6 || verify2FAMutation.isPending}
             >
@@ -1860,8 +1860,8 @@ export default function AdminSecurityEnhanced() {
             </InputOTP>
           </div>
           <DialogFooter className="gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShow2FADisable(false);
                 setDisableCode("");
@@ -1869,7 +1869,7 @@ export default function AdminSecurityEnhanced() {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="destructive"
               onClick={() => disable2FAMutation.mutate(disableCode)}
               disabled={disableCode.length !== 6 || disable2FAMutation.isPending}

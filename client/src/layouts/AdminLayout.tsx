@@ -199,7 +199,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         const res = await fetch("/api/auth/me", {
           credentials: "include"
         });
-        
+
         if (res.ok) {
           setIsAuthenticated(true);
         } else {
@@ -216,7 +216,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         setIsChecking(false);
       }
     };
-    
+
     checkAuth();
   }, [setLocation]);
 
@@ -265,7 +265,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     // Main
     { section: "main", label: "Main" },
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-    
+
     // Content Management
     { section: "content", label: "Content" },
     { icon: FileText, label: "Pages", href: "/admin/pages", badge: "NEW" },
@@ -287,31 +287,31 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { icon: Folder, label: "Categories", href: "/admin/projects/categories" },
       ]
     },
-    
+
     // Site Elements
     { section: "elements", label: "Site Elements" },
     { icon: ShoppingBag, label: "Services", href: "/admin/services" },
     { icon: Code, label: "Skills", href: "/admin/skills" },
     { icon: Star, label: "Testimonials", href: "/admin/testimonials" },
-    
+
     // Community & Engagement
     { section: "engagement", label: "Engagement" },
     { icon: MessageSquare, label: "Comments", href: "/admin/comments" },
     { icon: Mail, label: "Newsletter", href: "/admin/newsletter" },
     { icon: Inbox, label: "Messages", href: "/admin/inbox" },
     { icon: BarChart, label: "Analytics", href: "/admin/analytics" },
-    
+
     // Media & Assets
     { section: "media", label: "Media & Assets" },
     { icon: ImageIcon, label: "Media Library", href: "/admin/media" },
-    
+
     // System & Tools
     { section: "system", label: "System & Tools" },
     { icon: Database, label: "System Info", href: "/admin/system" },
     { icon: Clock, label: "Activity Log", href: "/admin/activity" },
     { icon: Download, label: "Export/Import", href: "/admin/export-import" },
     { icon: Code2, label: "Code Editor", href: "/admin/editor" },
-    
+
     // Appearance & Settings
     { section: "settings", label: "Appearance & Settings" },
     { icon: Palette, label: "Theme", href: "/admin/theme" },
@@ -348,7 +348,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   </div>
                 );
               }
-              
+
               return (
                 <div key={item.id || item.href}>
                   {item.children ? (

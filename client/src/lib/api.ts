@@ -170,34 +170,6 @@ export const api = {
     return handleResponse<any>(res);
   },
 
-  getUsers: async () => {
-    const res = await fetch(`${API_BASE}/users`, { credentials: 'include' });
-    return handleResponse<any[]>(res);
-  },
-
-  getUser: async (id: number) => {
-    const res = await fetch(`${API_BASE}/users/${id}`, { credentials: 'include' });
-    return handleResponse<any>(res);
-  },
-
-  updateUser: async (id: number, data: any) => {
-    const res = await fetch(`${API_BASE}/users/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    });
-    return handleResponse<any>(res);
-  },
-
-  deleteUser: async (id: number) => {
-    const res = await fetch(`${API_BASE}/users/${id}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    return handleResponse<any>(res);
-  },
-
   getMessages: async (unread = false) => {
     const url = unread ? `${API_BASE}/messages?unread=true` : `${API_BASE}/messages`;
     const res = await fetch(url, { credentials: 'include' });
@@ -464,45 +436,6 @@ export const api = {
       body: JSON.stringify(data),
     });
     return handleResponse<{ message: string; template: { subject: string; body: string } }>(res);
-  },
-
-  // ==================== STORAGE API ====================
-
-  async getStorageStats() {
-    const res = await fetch(`${API_BASE}/storage/stats`, { credentials: 'include' });
-    return handleResponse<{
-      total: { size: number; sizeFormatted: string; files: number; maxStorage: number; maxStorageFormatted: string; usagePercent: string };
-      folders: {
-        images: { size: number; sizeFormatted: string; files: number };
-        documents: { size: number; sizeFormatted: string; files: number };
-        media: { size: number; sizeFormatted: string; files: number };
-      };
-    }>(res);
-  },
-
-  async getStorageFiles(folder?: string) {
-    const url = folder ? `${API_BASE}/storage/files?folder=${folder}` : `${API_BASE}/storage/files`;
-    const res = await fetch(url, { credentials: 'include' });
-    return handleResponse<Array<{ name: string; path: string; size: number; sizeFormatted: string; type: string; folder: string; modified: string }>>(res);
-  },
-
-  async deleteStorageFile(folder: string, filename: string) {
-    const res = await fetch(`${API_BASE}/storage/files/${folder}/${filename}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    return handleResponse<{ message: string; success: boolean }>(res);
-  },
-
-  async uploadFile(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch(`${API_BASE}/storage/upload`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
-    return handleResponse<any>(res);
   },
 
   // ==================== LOGGING API ====================

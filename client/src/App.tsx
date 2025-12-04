@@ -62,7 +62,6 @@ const AdminLanguageManager = lazy(() => import("@/pages/admin/settings/LanguageM
 
 // Admin Security
 const AdminSecurity = lazy(() => import("@/pages/admin/security/Security"));
-const AdminWebhooks = lazy(() => import("@/pages/admin/security/Webhooks"));
 
 // Admin System
 const AdminSystem = lazy(() => import("@/pages/admin/system/System"));
@@ -84,11 +83,6 @@ const AdminPages = lazy(() => import("@/pages/admin/pages/Pages"));
 const AdminPageBuilder = lazy(() => import("@/pages/admin/pages/PageBuilder"));
 const AdminFAQs = lazy(() => import("@/pages/admin/pages/FAQs"));
 const AdminEditor = lazy(() => import("@/pages/admin/pages/Editor"));
-
-// Admin Users
-const AdminProfile = lazy(() => import("@/pages/admin/users/Profile"));
-const AdminUsers = lazy(() => import("@/pages/admin/users/Users"));
-const AdminRoles = lazy(() => import("@/pages/admin/users/Roles"));
 
 // Loading fallback component
 function PageLoader() {
@@ -329,13 +323,6 @@ function Router() {
         {() => (
           <Suspense fallback={<PageLoader />}>
             <AdminLanguageManager />
-          </Suspense>
-        )}
-      </Route>
-      <Route path="/admin/webhooks">
-        {() => (
-          <Suspense fallback={<PageLoader />}>
-            <AdminWebhooks />
           </Suspense>
         )}
       </Route>
