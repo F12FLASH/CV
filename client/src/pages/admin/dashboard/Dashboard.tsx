@@ -58,12 +58,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 
-const trafficSourceData = [
-  { name: "Organic", value: 400, color: "hsl(var(--primary))" },
-  { name: "Social", value: 300, color: "hsl(var(--chart-2))" },
-  { name: "Direct", value: 300, color: "hsl(var(--chart-3))" },
-  { name: "Referral", value: 200, color: "hsl(var(--chart-4))" },
-];
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -141,42 +135,10 @@ export default function AdminDashboard() {
 
   const recentLogs = activityLogs.slice(0, 6);
 
-  const weeklyData = [
-    {
-      name: "Mon",
-      posts: Math.floor(Math.random() * 5),
-      projects: Math.floor(Math.random() * 3),
-    },
-    {
-      name: "Tue",
-      posts: Math.floor(Math.random() * 5),
-      projects: Math.floor(Math.random() * 3),
-    },
-    {
-      name: "Wed",
-      posts: Math.floor(Math.random() * 5),
-      projects: Math.floor(Math.random() * 3),
-    },
-    {
-      name: "Thu",
-      posts: Math.floor(Math.random() * 5),
-      projects: Math.floor(Math.random() * 3),
-    },
-    {
-      name: "Fri",
-      posts: Math.floor(Math.random() * 5),
-      projects: Math.floor(Math.random() * 3),
-    },
-    {
-      name: "Sat",
-      posts: Math.floor(Math.random() * 5),
-      projects: Math.floor(Math.random() * 3),
-    },
-    {
-      name: "Sun",
-      posts: Math.floor(Math.random() * 5),
-      projects: Math.floor(Math.random() * 3),
-    },
+  const statusDistribution = [
+    { name: "Published", value: publishedPosts + publishedProjects, color: "hsl(var(--primary))" },
+    { name: "Draft", value: posts.filter(p => p.status === "Draft").length + projects.filter(p => p.status === "Draft").length, color: "hsl(var(--chart-2))" },
+    { name: "Pending", value: posts.filter(p => p.status === "Pending" || p.status === "Review").length + projects.filter(p => p.status === "Pending" || p.status === "Review").length, color: "hsl(var(--chart-3))" },
   ];
 
   const contentDistribution = [
@@ -577,7 +539,7 @@ export default function AdminDashboard() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {msg.name}
+                            {msg.sender}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
                             {msg.email}
