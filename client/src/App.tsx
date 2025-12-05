@@ -63,6 +63,9 @@ const AdminLanguageManager = lazy(() => import("@/pages/admin/settings/LanguageM
 // Admin Security
 const AdminSecurity = lazy(() => import("@/pages/admin/security/Security"));
 
+// Admin Users
+const AdminProfile = lazy(() => import("@/pages/admin/users/Profile"));
+
 // Admin System
 const AdminSystem = lazy(() => import("@/pages/admin/system/System"));
 const AdminActivityLog = lazy(() => import("@/pages/admin/system/ActivityLog"));
