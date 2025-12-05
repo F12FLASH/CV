@@ -29,15 +29,15 @@ import AdminLogin from "@/pages/admin/auth/Login";
 
 // Admin Dashboard
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard/Dashboard"));
-const AdminAnalytics = lazy(() => import("@/pages/admin/dashboard/Analytics"));
+const AdminAnalytics = lazy(() => import("@/pages/admin/dashboard/adminanalytics"));
 
 // Admin Content - Posts (modular)
 const AdminPosts = lazy(() => import("@/pages/admin/content/adminposts"));
-const AdminPostCategories = lazy(() => import("@/pages/admin/content/posts/PostCategories"));
+const AdminPostCategories = lazy(() => import("@/pages/admin/content/adminposts/categories"));
 
 // Admin Content - Projects (modular)
 const AdminProjects = lazy(() => import("@/pages/admin/content/adminprojects"));
-const AdminProjectCategories = lazy(() => import("@/pages/admin/content/projects/ProjectCategories"));
+const AdminProjectCategories = lazy(() => import("@/pages/admin/content/adminprojects/categories"));
 
 // Admin Content - Services (modular)
 const AdminServices = lazy(() => import("@/pages/admin/content/adminservices"));
@@ -50,9 +50,9 @@ const AdminTestimonials = lazy(() => import("@/pages/admin/content/admintestimon
 
 // Admin Communications - Interactions (modular - replaces Comments)
 const AdminInteractions = lazy(() => import("@/pages/admin/communications/admininteractions"));
-const AdminInbox = lazy(() => import("@/pages/admin/communications/Inbox"));
+const AdminInbox = lazy(() => import("@/pages/admin/communications/admininbox"));
 const AdminNotifications = lazy(() => import("@/pages/admin/communications/Notifications"));
-const AdminNewsletter = lazy(() => import("@/pages/admin/communications/Newsletter"));
+const AdminNewsletter = lazy(() => import("@/pages/admin/communications/adminnewsletter"));
 const AdminEmailTemplates = lazy(() => import("@/pages/admin/communications/EmailTemplates"));
 
 // Admin Settings
