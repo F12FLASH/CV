@@ -19,6 +19,11 @@ import {
   userSessions, type UserSession, type InsertUserSession,
   ipRules, type IpRule, type InsertIpRule,
   securityLogs, type SecurityLog, type InsertSecurityLog,
+  firewallRules, type FirewallRule, type InsertFirewallRule,
+  geoBlocking, type GeoBlocking, type InsertGeoBlocking,
+  rateLimitRules, type RateLimitRule, type InsertRateLimitRule,
+  userAgentRules, type UserAgentRule, type InsertUserAgentRule,
+  blockedRequests, type BlockedRequest, type InsertBlockedRequest,
   homepageSections, type HomepageSection, type InsertHomepageSection,
   faqs, type FAQ, type InsertFAQ,
   webauthnCredentials, type WebAuthnCredential, type InsertWebAuthnCredential,
@@ -240,6 +245,48 @@ export interface IStorage {
     byEventType: { type: string; count: number }[];
   }>;
   getSecurityLogs(limit?: number, offset?: number, type?: string): Promise<SecurityLog[]>;
+
+  // Firewall Rules
+  getFirewallRule(id: number): Promise<FirewallRule | undefined>;
+  getAllFirewallRules(): Promise<FirewallRule[]>;
+  getEnabledFirewallRules(): Promise<FirewallRule[]>;
+  createFirewallRule(rule: InsertFirewallRule): Promise<FirewallRule>;
+  updateFirewallRule(id: number, rule: Partial<InsertFirewallRule>): Promise<FirewallRule | undefined>;
+  deleteFirewallRule(id: number): Promise<boolean>;
+  incrementFirewallRuleHit(id: number): Promise<void>;
+
+  // Geo Blocking
+  getGeoBlockingRule(id: number): Promise<GeoBlocking | undefined>;
+  getGeoBlockingByCountry(countryCode: string): Promise<GeoBlocking | undefined>;
+  getAllGeoBlockingRules(): Promise<GeoBlocking[]>;
+  createGeoBlockingRule(rule: InsertGeoBlocking): Promise<GeoBlocking>;
+  updateGeoBlockingRule(id: number, rule: Partial<InsertGeoBlocking>): Promise<GeoBlocking | undefined>;
+  deleteGeoBlockingRule(id: number): Promise<boolean>;
+
+  // Rate Limit Rules
+  getRateLimitRule(id: number): Promise<RateLimitRule | undefined>;
+  getAllRateLimitRules(): Promise<RateLimitRule[]>;
+  getEnabledRateLimitRules(): Promise<RateLimitRule[]>;
+  createRateLimitRule(rule: InsertRateLimitRule): Promise<RateLimitRule>;
+  updateRateLimitRule(id: number, rule: Partial<InsertRateLimitRule>): Promise<RateLimitRule | undefined>;
+  deleteRateLimitRule(id: number): Promise<boolean>;
+
+  // User Agent Rules
+  getUserAgentRule(id: number): Promise<UserAgentRule | undefined>;
+  getAllUserAgentRules(): Promise<UserAgentRule[]>;
+  getEnabledUserAgentRules(): Promise<UserAgentRule[]>;
+  createUserAgentRule(rule: InsertUserAgentRule): Promise<UserAgentRule>;
+  updateUserAgentRule(id: number, rule: Partial<InsertUserAgentRule>): Promise<UserAgentRule | undefined>;
+  deleteUserAgentRule(id: number): Promise<boolean>;
+
+  // Blocked Requests
+  getRecentBlockedRequests(limit?: number): Promise<BlockedRequest[]>;
+  createBlockedRequest(request: InsertBlockedRequest): Promise<BlockedRequest>;
+  getBlockedRequestStats(): Promise<{
+    total: number;
+    byReason: { reason: string; count: number }[];
+    byCountry: { country: string; count: number }[];
+  }>;
 
   // FAQs
   getFAQ(id: number): Promise<FAQ | undefined>;
@@ -1117,6 +1164,193 @@ export class DatabaseStorage implements IStorage {
     }
 
     return await query.orderBy(desc(securityLogs.createdAt)).limit(limit).offset(offset);
+  }
+
+  // Firewall Rules
+  async getFirewallRule(id: number): Promise<FirewallRule | undefined> {
+    const [rule] = await this.db.select().from(firewallRules).where(eq(firewallRules.id, id));
+    return rule || undefined;
+  }
+
+  async getAllFirewallRules(): Promise<FirewallRule[]> {
+    return await this.db.select().from(firewallRules).orderBy(asc(firewallRules.priority));
+  }
+
+  async getEnabledFirewallRules(): Promise<FirewallRule[]> {
+    return await this.db.select().from(firewallRules)
+      .where(eq(firewallRules.enabled, true))
+      .orderBy(asc(firewallRules.priority));
+  }
+
+  async createFirewallRule(rule: InsertFirewallRule): Promise<FirewallRule> {
+    const [created] = await this.db.insert(firewallRules).values(rule).returning();
+    return created;
+  }
+
+  async updateFirewallRule(id: number, rule: Partial<InsertFirewallRule>): Promise<FirewallRule | undefined> {
+    const [updated] = await this.db.update(firewallRules)
+      .set({ ...rule, updatedAt: new Date() })
+      .where(eq(firewallRules.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteFirewallRule(id: number): Promise<boolean> {
+    const result = await this.db.delete(firewallRules).where(eq(firewallRules.id, id));
+    return true;
+  }
+
+  async incrementFirewallRuleHit(id: number): Promise<void> {
+    await this.db.update(firewallRules)
+      .set({ 
+        hitCount: sql`${firewallRules.hitCount} + 1`,
+        lastHit: new Date()
+      })
+      .where(eq(firewallRules.id, id));
+  }
+
+  // Geo Blocking
+  async getGeoBlockingRule(id: number): Promise<GeoBlocking | undefined> {
+    const [rule] = await this.db.select().from(geoBlocking).where(eq(geoBlocking.id, id));
+    return rule || undefined;
+  }
+
+  async getGeoBlockingByCountry(countryCode: string): Promise<GeoBlocking | undefined> {
+    const [rule] = await this.db.select().from(geoBlocking).where(eq(geoBlocking.countryCode, countryCode));
+    return rule || undefined;
+  }
+
+  async getAllGeoBlockingRules(): Promise<GeoBlocking[]> {
+    return await this.db.select().from(geoBlocking).orderBy(asc(geoBlocking.countryName));
+  }
+
+  async createGeoBlockingRule(rule: InsertGeoBlocking): Promise<GeoBlocking> {
+    const [created] = await this.db.insert(geoBlocking).values(rule).returning();
+    return created;
+  }
+
+  async updateGeoBlockingRule(id: number, rule: Partial<InsertGeoBlocking>): Promise<GeoBlocking | undefined> {
+    const [updated] = await this.db.update(geoBlocking)
+      .set(rule)
+      .where(eq(geoBlocking.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteGeoBlockingRule(id: number): Promise<boolean> {
+    await this.db.delete(geoBlocking).where(eq(geoBlocking.id, id));
+    return true;
+  }
+
+  // Rate Limit Rules
+  async getRateLimitRule(id: number): Promise<RateLimitRule | undefined> {
+    const [rule] = await this.db.select().from(rateLimitRules).where(eq(rateLimitRules.id, id));
+    return rule || undefined;
+  }
+
+  async getAllRateLimitRules(): Promise<RateLimitRule[]> {
+    return await this.db.select().from(rateLimitRules).orderBy(asc(rateLimitRules.name));
+  }
+
+  async getEnabledRateLimitRules(): Promise<RateLimitRule[]> {
+    return await this.db.select().from(rateLimitRules)
+      .where(eq(rateLimitRules.enabled, true))
+      .orderBy(asc(rateLimitRules.name));
+  }
+
+  async createRateLimitRule(rule: InsertRateLimitRule): Promise<RateLimitRule> {
+    const [created] = await this.db.insert(rateLimitRules).values(rule).returning();
+    return created;
+  }
+
+  async updateRateLimitRule(id: number, rule: Partial<InsertRateLimitRule>): Promise<RateLimitRule | undefined> {
+    const [updated] = await this.db.update(rateLimitRules)
+      .set({ ...rule, updatedAt: new Date() })
+      .where(eq(rateLimitRules.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteRateLimitRule(id: number): Promise<boolean> {
+    await this.db.delete(rateLimitRules).where(eq(rateLimitRules.id, id));
+    return true;
+  }
+
+  // User Agent Rules
+  async getUserAgentRule(id: number): Promise<UserAgentRule | undefined> {
+    const [rule] = await this.db.select().from(userAgentRules).where(eq(userAgentRules.id, id));
+    return rule || undefined;
+  }
+
+  async getAllUserAgentRules(): Promise<UserAgentRule[]> {
+    return await this.db.select().from(userAgentRules).orderBy(asc(userAgentRules.name));
+  }
+
+  async getEnabledUserAgentRules(): Promise<UserAgentRule[]> {
+    return await this.db.select().from(userAgentRules)
+      .where(eq(userAgentRules.enabled, true))
+      .orderBy(asc(userAgentRules.name));
+  }
+
+  async createUserAgentRule(rule: InsertUserAgentRule): Promise<UserAgentRule> {
+    const [created] = await this.db.insert(userAgentRules).values(rule).returning();
+    return created;
+  }
+
+  async updateUserAgentRule(id: number, rule: Partial<InsertUserAgentRule>): Promise<UserAgentRule | undefined> {
+    const [updated] = await this.db.update(userAgentRules)
+      .set(rule)
+      .where(eq(userAgentRules.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteUserAgentRule(id: number): Promise<boolean> {
+    await this.db.delete(userAgentRules).where(eq(userAgentRules.id, id));
+    return true;
+  }
+
+  // Blocked Requests
+  async getRecentBlockedRequests(limit: number = 100): Promise<BlockedRequest[]> {
+    return await this.db.select().from(blockedRequests)
+      .orderBy(desc(blockedRequests.createdAt))
+      .limit(limit);
+  }
+
+  async createBlockedRequest(request: InsertBlockedRequest): Promise<BlockedRequest> {
+    const [created] = await this.db.insert(blockedRequests).values(request).returning();
+    return created;
+  }
+
+  async getBlockedRequestStats(): Promise<{
+    total: number;
+    byReason: { reason: string; count: number }[];
+    byCountry: { country: string; count: number }[];
+  }> {
+    const [totalCount] = await this.db.select({ count: sql<number>`count(*)` }).from(blockedRequests);
+    
+    const byReason = await this.db
+      .select({
+        reason: blockedRequests.reason,
+        count: sql<number>`count(*)`
+      })
+      .from(blockedRequests)
+      .groupBy(blockedRequests.reason);
+
+    const byCountry = await this.db
+      .select({
+        country: blockedRequests.countryCode,
+        count: sql<number>`count(*)`
+      })
+      .from(blockedRequests)
+      .where(sql`${blockedRequests.countryCode} IS NOT NULL`)
+      .groupBy(blockedRequests.countryCode);
+
+    return {
+      total: Number(totalCount.count) || 0,
+      byReason: byReason.map(r => ({ reason: r.reason, count: Number(r.count) })),
+      byCountry: byCountry.map(c => ({ country: c.country || 'Unknown', count: Number(c.count) })),
+    };
   }
 
   // Homepage Sections

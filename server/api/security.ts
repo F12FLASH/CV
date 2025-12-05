@@ -294,4 +294,302 @@ router.get("/stats", requireAdmin, async (req, res) => {
   }
 });
 
+// Firewall Rules CRUD
+router.get("/firewall-rules", requireAdmin, async (req, res) => {
+  try {
+    const rules = await storage.getAllFirewallRules();
+    res.json(rules);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/firewall-rules/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const rule = await storage.getFirewallRule(id);
+    if (!rule) {
+      return res.status(404).json({ message: "Firewall rule not found" });
+    }
+    res.json(rule);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post("/firewall-rules", requireAdmin, async (req, res) => {
+  try {
+    const { name, description, ruleType, condition, value, action, priority, enabled, expiresAt, metadata } = req.body;
+    const rule = await storage.createFirewallRule({
+      name,
+      description,
+      ruleType,
+      condition,
+      value,
+      action,
+      priority: priority || 100,
+      enabled: enabled !== false,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      metadata,
+      createdBy: req.session.userId
+    });
+    await storage.createActivityLog({
+      action: `Firewall rule created: ${name}`,
+      userId: req.session.userId,
+      userName: req.session.username,
+      type: "info"
+    });
+    res.json(rule);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.patch("/firewall-rules/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const rule = await storage.updateFirewallRule(id, req.body);
+    if (!rule) {
+      return res.status(404).json({ message: "Firewall rule not found" });
+    }
+    await storage.createActivityLog({
+      action: `Firewall rule updated: ${rule.name}`,
+      userId: req.session.userId,
+      userName: req.session.username,
+      type: "info"
+    });
+    res.json(rule);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/firewall-rules/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const rule = await storage.getFirewallRule(id);
+    await storage.deleteFirewallRule(id);
+    await storage.createActivityLog({
+      action: `Firewall rule deleted: ${rule?.name || id}`,
+      userId: req.session.userId,
+      userName: req.session.username,
+      type: "warning"
+    });
+    res.json({ message: "Firewall rule deleted" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Geo Blocking CRUD
+router.get("/geo-blocking", requireAdmin, async (req, res) => {
+  try {
+    const rules = await storage.getAllGeoBlockingRules();
+    res.json(rules);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post("/geo-blocking", requireAdmin, async (req, res) => {
+  try {
+    const { countryCode, countryName, action, enabled } = req.body;
+    const rule = await storage.createGeoBlockingRule({
+      countryCode,
+      countryName,
+      action: action || 'block',
+      enabled: enabled !== false,
+      createdBy: req.session.userId
+    });
+    await storage.createActivityLog({
+      action: `Geo blocking rule created: ${countryName} (${countryCode})`,
+      userId: req.session.userId,
+      userName: req.session.username,
+      type: "info"
+    });
+    res.json(rule);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.patch("/geo-blocking/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const rule = await storage.updateGeoBlockingRule(id, req.body);
+    if (!rule) {
+      return res.status(404).json({ message: "Geo blocking rule not found" });
+    }
+    res.json(rule);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/geo-blocking/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const rule = await storage.getGeoBlockingRule(id);
+    await storage.deleteGeoBlockingRule(id);
+    await storage.createActivityLog({
+      action: `Geo blocking rule removed: ${rule?.countryName || id}`,
+      userId: req.session.userId,
+      userName: req.session.username,
+      type: "info"
+    });
+    res.json({ message: "Geo blocking rule deleted" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Rate Limit Rules CRUD
+router.get("/rate-limit-rules", requireAdmin, async (req, res) => {
+  try {
+    const rules = await storage.getAllRateLimitRules();
+    res.json(rules);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post("/rate-limit-rules", requireAdmin, async (req, res) => {
+  try {
+    const { name, path, method, maxRequests, windowSeconds, blockDuration, enabled } = req.body;
+    const rule = await storage.createRateLimitRule({
+      name,
+      path,
+      method: method || '*',
+      maxRequests: maxRequests || 100,
+      windowSeconds: windowSeconds || 60,
+      blockDuration: blockDuration || 300,
+      enabled: enabled !== false,
+      createdBy: req.session.userId
+    });
+    await storage.createActivityLog({
+      action: `Rate limit rule created: ${name}`,
+      userId: req.session.userId,
+      userName: req.session.username,
+      type: "info"
+    });
+    res.json(rule);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.patch("/rate-limit-rules/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const rule = await storage.updateRateLimitRule(id, req.body);
+    if (!rule) {
+      return res.status(404).json({ message: "Rate limit rule not found" });
+    }
+    res.json(rule);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/rate-limit-rules/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const rule = await storage.getRateLimitRule(id);
+    await storage.deleteRateLimitRule(id);
+    await storage.createActivityLog({
+      action: `Rate limit rule deleted: ${rule?.name || id}`,
+      userId: req.session.userId,
+      userName: req.session.username,
+      type: "warning"
+    });
+    res.json({ message: "Rate limit rule deleted" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// User Agent Rules CRUD
+router.get("/user-agent-rules", requireAdmin, async (req, res) => {
+  try {
+    const rules = await storage.getAllUserAgentRules();
+    res.json(rules);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post("/user-agent-rules", requireAdmin, async (req, res) => {
+  try {
+    const { name, pattern, matchType, action, category, enabled } = req.body;
+    const rule = await storage.createUserAgentRule({
+      name,
+      pattern,
+      matchType: matchType || 'contains',
+      action: action || 'block',
+      category,
+      enabled: enabled !== false,
+      createdBy: req.session.userId
+    });
+    await storage.createActivityLog({
+      action: `User agent rule created: ${name}`,
+      userId: req.session.userId,
+      userName: req.session.username,
+      type: "info"
+    });
+    res.json(rule);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.patch("/user-agent-rules/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const rule = await storage.updateUserAgentRule(id, req.body);
+    if (!rule) {
+      return res.status(404).json({ message: "User agent rule not found" });
+    }
+    res.json(rule);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/user-agent-rules/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const rule = await storage.getUserAgentRule(id);
+    await storage.deleteUserAgentRule(id);
+    await storage.createActivityLog({
+      action: `User agent rule deleted: ${rule?.name || id}`,
+      userId: req.session.userId,
+      userName: req.session.username,
+      type: "warning"
+    });
+    res.json({ message: "User agent rule deleted" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Blocked Requests
+router.get("/blocked-requests", requireAdmin, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 100;
+    const requests = await storage.getRecentBlockedRequests(limit);
+    res.json(requests);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/blocked-requests/stats", requireAdmin, async (req, res) => {
+  try {
+    const stats = await storage.getBlockedRequestStats();
+    res.json(stats);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

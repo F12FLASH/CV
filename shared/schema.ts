@@ -479,6 +479,127 @@ export const insertSecurityLogSchema = createInsertSchema(securityLogs).omit({
 export type InsertSecurityLog = z.infer<typeof insertSecurityLogSchema>;
 export type SecurityLog = typeof securityLogs.$inferSelect;
 
+// Firewall Rules table - custom firewall rules engine
+export const firewallRules = pgTable("firewall_rules", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  ruleType: text("rule_type").notNull(), // 'ip', 'country', 'user_agent', 'path', 'header', 'rate_limit'
+  condition: text("condition").notNull(), // 'equals', 'contains', 'starts_with', 'ends_with', 'regex', 'in_list'
+  value: text("value").notNull(),
+  action: text("action").notNull(), // 'block', 'allow', 'challenge', 'log', 'rate_limit'
+  priority: integer("priority").notNull().default(100),
+  enabled: boolean("enabled").notNull().default(true),
+  hitCount: integer("hit_count").notNull().default(0),
+  lastHit: timestamp("last_hit"),
+  expiresAt: timestamp("expires_at"),
+  metadata: jsonb("metadata"),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertFirewallRuleSchema = createInsertSchema(firewallRules).omit({
+  id: true,
+  hitCount: true,
+  lastHit: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertFirewallRule = z.infer<typeof insertFirewallRuleSchema>;
+export type FirewallRule = typeof firewallRules.$inferSelect;
+
+// Geo Blocking table - country-based access control
+export const geoBlocking = pgTable("geo_blocking", {
+  id: serial("id").primaryKey(),
+  countryCode: text("country_code").notNull().unique(),
+  countryName: text("country_name").notNull(),
+  action: text("action").notNull().default("block"), // 'block', 'allow', 'challenge'
+  enabled: boolean("enabled").notNull().default(true),
+  hitCount: integer("hit_count").notNull().default(0),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertGeoBlockingSchema = createInsertSchema(geoBlocking).omit({
+  id: true,
+  hitCount: true,
+  createdAt: true,
+});
+export type InsertGeoBlocking = z.infer<typeof insertGeoBlockingSchema>;
+export type GeoBlocking = typeof geoBlocking.$inferSelect;
+
+// Rate Limit Rules table - endpoint-specific rate limits
+export const rateLimitRules = pgTable("rate_limit_rules", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  path: text("path").notNull(), // e.g., '/api/auth/*', '/api/contact'
+  method: text("method").default("*"), // 'GET', 'POST', '*'
+  maxRequests: integer("max_requests").notNull().default(100),
+  windowSeconds: integer("window_seconds").notNull().default(60),
+  blockDuration: integer("block_duration").notNull().default(300), // seconds to block after exceeding
+  enabled: boolean("enabled").notNull().default(true),
+  hitCount: integer("hit_count").notNull().default(0),
+  blockedCount: integer("blocked_count").notNull().default(0),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertRateLimitRuleSchema = createInsertSchema(rateLimitRules).omit({
+  id: true,
+  hitCount: true,
+  blockedCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertRateLimitRule = z.infer<typeof insertRateLimitRuleSchema>;
+export type RateLimitRule = typeof rateLimitRules.$inferSelect;
+
+// User Agent Rules table - block/allow specific user agents
+export const userAgentRules = pgTable("user_agent_rules", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  pattern: text("pattern").notNull(), // regex or substring to match
+  matchType: text("match_type").notNull().default("contains"), // 'contains', 'exact', 'regex'
+  action: text("action").notNull().default("block"), // 'block', 'allow', 'challenge', 'log'
+  category: text("category"), // 'bot', 'crawler', 'scanner', 'custom'
+  enabled: boolean("enabled").notNull().default(true),
+  hitCount: integer("hit_count").notNull().default(0),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserAgentRuleSchema = createInsertSchema(userAgentRules).omit({
+  id: true,
+  hitCount: true,
+  createdAt: true,
+});
+export type InsertUserAgentRule = z.infer<typeof insertUserAgentRuleSchema>;
+export type UserAgentRule = typeof userAgentRules.$inferSelect;
+
+// Blocked Requests Log - log all blocked requests for analysis
+export const blockedRequests = pgTable("blocked_requests", {
+  id: serial("id").primaryKey(),
+  ipAddress: text("ip_address"),
+  countryCode: text("country_code"),
+  userAgent: text("user_agent"),
+  path: text("path"),
+  method: text("method"),
+  reason: text("reason").notNull(), // 'ip_blocked', 'country_blocked', 'rate_limit', 'user_agent', 'firewall_rule'
+  ruleId: integer("rule_id"),
+  ruleName: text("rule_name"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBlockedRequestSchema = createInsertSchema(blockedRequests).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertBlockedRequest = z.infer<typeof insertBlockedRequestSchema>;
+export type BlockedRequest = typeof blockedRequests.$inferSelect;
+
 // Homepage Sections - manage visibility of sections on homepage
 export const homepageSections = pgTable("homepage_sections", {
   id: serial("id").primaryKey(),
