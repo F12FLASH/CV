@@ -73,9 +73,10 @@ export default function AdminMedia() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: mediaItems = [], isLoading, error } = useQuery<MediaItem[]>({
+  const { data: mediaItems = [], isLoading, error, refetch } = useQuery<MediaItem[]>({
     queryKey: ['/api/media'],
     retry: 3,
+    refetchOnWindowFocus: false,
   });
 
   const createMediaMutation = useMutation({
@@ -155,12 +156,14 @@ export default function AdminMedia() {
         });
         
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || 'Upload failed');
+          const errorData = await response.json().catch(() => ({ message: 'Upload failed' }));
+          throw new Error(errorData.message || 'Upload failed');
         }
         
+        await response.json(); // Consume the response
         toast({ title: "Success", description: "File uploaded successfully" });
-        queryClient.invalidateQueries({ queryKey: ['/api/media'] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/media'] });
+        await refetch();
       } else {
         // Multiple files upload
         const formData = new FormData();
@@ -175,22 +178,29 @@ export default function AdminMedia() {
         });
         
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || 'Upload failed');
+          const errorData = await response.json().catch(() => ({ message: 'Upload failed' }));
+          throw new Error(errorData.message || 'Upload failed');
         }
         
+        await response.json(); // Consume the response
         toast({ title: "Success", description: `${files.length} files uploaded successfully` });
-        queryClient.invalidateQueries({ queryKey: ['/api/media'] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/media'] });
+        await refetch();
+      }
+      
+      setUploadDialogOpen(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast({ title: "Error", description: error.message || 'Upload failed', variant: "destructive" });
-    }
-
-    setUploading(false);
-    setUploadDialogOpen(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      toast({ 
+        title: "Error", 
+        description: error?.message || 'Upload failed', 
+        variant: "destructive" 
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -216,21 +226,23 @@ export default function AdminMedia() {
     }
   };
 
-  const filteredMedia = mediaItems.filter(item => {
+  const filteredMedia = Array.isArray(mediaItems) ? mediaItems.filter(item => {
+    if (!item) return false;
+    
     const matchesSearch = searchQuery === "" || 
-      item.originalName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.filename.toLowerCase().includes(searchQuery.toLowerCase());
+      (item.originalName && item.originalName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.filename && item.filename.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesType = filterType === "all" ||
-      (filterType === "images" && item.mimeType.startsWith("image/")) ||
-      (filterType === "docs" && !item.mimeType.startsWith("image/"));
+      (filterType === "images" && item.mimeType && item.mimeType.startsWith("image/")) ||
+      (filterType === "docs" && item.mimeType && !item.mimeType.startsWith("image/"));
     
     return matchesSearch && matchesType;
-  });
+  }) : [];
 
-  const imageCount = mediaItems.filter(m => m.mimeType.startsWith("image/")).length;
-  const docCount = mediaItems.filter(m => !m.mimeType.startsWith("image/")).length;
-  const totalSize = mediaItems.reduce((sum, m) => sum + m.size, 0);
+  const imageCount = Array.isArray(mediaItems) ? mediaItems.filter(m => m && m.mimeType && m.mimeType.startsWith("image/")).length : 0;
+  const docCount = Array.isArray(mediaItems) ? mediaItems.filter(m => m && m.mimeType && !m.mimeType.startsWith("image/")).length : 0;
+  const totalSize = Array.isArray(mediaItems) ? mediaItems.reduce((sum, m) => sum + (m?.size || 0), 0) : 0;
   const maxStorage = 500 * 1024 * 1024;
   const storagePercent = Math.round((totalSize / maxStorage) * 100);
 
@@ -250,8 +262,13 @@ export default function AdminMedia() {
     return (
       <AdminLayout>
         <div className="flex flex-col items-center justify-center h-64">
-          <p className="text-destructive mb-4">Error loading media: {error instanceof Error ? error.message : 'Unknown error'}</p>
-          <Button onClick={() => window.location.reload()}>Reload Page</Button>
+          <p className="text-destructive mb-4">
+            Error loading media: {error instanceof Error ? error.message : 'Unknown error'}
+          </p>
+          <div className="flex gap-2">
+            <Button onClick={() => refetch()}>Retry</Button>
+            <Button variant="outline" onClick={() => window.location.reload()}>Reload Page</Button>
+          </div>
         </div>
       </AdminLayout>
     );
