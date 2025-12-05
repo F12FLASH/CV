@@ -68,7 +68,6 @@ const AdminProfile = lazy(() => import("@/pages/admin/users/Profile"));
 
 // Admin System
 const AdminSystem = lazy(() => import("@/pages/admin/system/System"));
-const AdminActivityLog = lazy(() => import("@/pages/admin/system/ActivityLog"));
 const AdminExportImport = lazy(() => import("@/pages/admin/system/ExportImport"));
 const AdminCache = lazy(() => import("@/pages/admin/system/Cache"));
 const AdminAPIDocs = lazy(() => import("@/pages/admin/system/APIDocs"));
@@ -244,13 +243,6 @@ function Router() {
       </Route>
       <Route path="/admin/files">
         {() => <Redirect to="/admin/media" />}
-      </Route>
-      <Route path="/admin/activity">
-        {() => (
-          <Suspense fallback={<PageLoader />}>
-            <AdminActivityLog />
-          </Suspense>
-        )}
       </Route>
       <Route path="/admin/export-import">
         {() => (

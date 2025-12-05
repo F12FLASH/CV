@@ -308,7 +308,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     // System & Tools
     { section: "system", label: "System & Tools" },
     { icon: Database, label: "System Info", href: "/admin/system" },
-    { icon: Clock, label: "Activity Log", href: "/admin/activity" },
     { icon: Download, label: "Export/Import", href: "/admin/export-import" },
     { icon: Code2, label: "Code Editor", href: "/admin/editor" },
 
