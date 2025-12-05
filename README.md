@@ -227,9 +227,18 @@
 - IP Blacklist
 - Auto-block sau nhiều lần đăng nhập thất bại
 
+##### Enhanced Firewall (Nâng cao)
+- **Custom Firewall Rules**: Tạo quy tắc tùy chỉnh dựa trên IP, URL path, HTTP header, query string, method
+- **Geographic Blocking**: Chặn traffic từ các quốc gia cụ thể với hỗ trợ CAPTCHA challenge
+- **Rate Limits Per Endpoint**: Cấu hình rate limiting cho từng endpoint API cụ thể
+- **User Agent Filtering**: Chặn bots, crawlers, scrapers dựa trên User-Agent patterns
+- **Blocked Requests Log**: Xem lịch sử các requests bị chặn với chi tiết IP, path, reason
+- **Firewall Statistics Dashboard**: Thống kê tổng quan về blocked requests và active rules
+
 ##### Rate Limiting
 - Giới hạn requests per minute
 - Bảo vệ API endpoints
+- Cấu hình linh hoạt theo endpoint
 
 ##### CAPTCHA Integration
 - Local CAPTCHA
