@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -16,7 +16,8 @@ import {
   ShieldAlert, RefreshCw, Eye, EyeOff, Clock, Users,
   Monitor, LogOut, Ban, CheckCircle, XCircle,
   Server, AlertCircle, Plus, Loader2, FileText, BarChart3,
-  Zap, Activity, Layers, QrCode, Copy, Check
+  Zap, Activity, Layers, QrCode, Copy, Check, ShieldCheck,
+  Fingerprint, Settings2, Radio, TrendingUp, Lock as LockIcon
 } from "lucide-react";
 import {
   Dialog,
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { EnhancedFirewall } from "@/components/admin/EnhancedFirewall";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SecuritySettings {
   twoFactorEnabled?: boolean;
@@ -171,7 +173,6 @@ export default function AdminSecurityEnhanced() {
   const [showCloudflareSecret, setShowCloudflareSecret] = useState(false);
   const [showLoginHistory, setShowLoginHistory] = useState(false);
 
-  // 2FA Modal
   const [show2FASetup, setShow2FASetup] = useState(false);
   const [show2FAVerify, setShow2FAVerify] = useState(false);
   const [show2FADisable, setShow2FADisable] = useState(false);
@@ -180,7 +181,6 @@ export default function AdminSecurityEnhanced() {
   const [verifyCode, setVerifyCode] = useState("");
   const [disableCode, setDisableCode] = useState("");
   const [secretCopied, setSecretCopied] = useState(false);
-
 
   const { data: settings = {}, isLoading: settingsLoading, refetch: refetchSettings } = useQuery<SecuritySettings>({
     queryKey: ['/api/security/settings'],
@@ -192,7 +192,7 @@ export default function AdminSecurityEnhanced() {
 
   const { data: sessions = [], refetch: refetchSessions } = useQuery<UserSession[]>({
     queryKey: ['/api/security/sessions'],
-    refetchInterval: 30000, // Auto refresh every 30 seconds
+    refetchInterval: 30000,
   });
 
   const { data: ipRules = [], refetch: refetchIpRules } = useQuery<IpRule[]>({
@@ -205,7 +205,7 @@ export default function AdminSecurityEnhanced() {
 
   const { data: loginHistory = [], refetch: refetchLoginHistory, isRefetching: isRefetchingLoginHistory } = useQuery<SecurityLog[]>({
     queryKey: ['/api/security/login-history'],
-    refetchInterval: showLoginHistory ? 30000 : false, // Auto refresh every 30s when viewing
+    refetchInterval: showLoginHistory ? 30000 : false,
   });
 
   const { data: user = null, refetch: refetchUser } = useQuery<any>({
@@ -296,7 +296,6 @@ export default function AdminSecurityEnhanced() {
     }
   });
 
-  // 2FA Mutations
   const generate2FAMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest('POST', '/api/auth/2fa/generate');
@@ -365,10 +364,6 @@ export default function AdminSecurityEnhanced() {
     }));
   };
 
-  const saveAllSettings = () => {
-    updateSettingsMutation.mutate(localSettings);
-  };
-
   const saveAuthSettings = () => {
     const authSettings = {
       passwordExpiration: localSettings.passwordExpiration
@@ -383,13 +378,6 @@ export default function AdminSecurityEnhanced() {
       protectionCoverage: localSettings.protectionCoverage
     };
     updateSettingsMutation.mutate(captchaSettings);
-  };
-
-  const saveFirewallSettings = () => {
-    const firewallSettings = {
-      rateLimiting: localSettings.rateLimiting
-    };
-    updateSettingsMutation.mutate(firewallSettings);
   };
 
   const saveThreatSettings = () => {
@@ -435,14 +423,7 @@ export default function AdminSecurityEnhanced() {
         toast({ title: "2FA is already enabled", variant: "default" });
         return;
       }
-      generate2FAMutation.mutate(undefined, {
-        onSuccess: () => {
-          // Modal sẽ tự động hiện
-        },
-        onError: () => {
-          toast({ title: "Failed to generate 2FA setup", variant: "destructive" });
-        }
-      });
+      generate2FAMutation.mutate(undefined);
     } else {
       if (!user?.twoFactorEnabled) {
         toast({ title: "2FA is not enabled", variant: "default" });
@@ -459,7 +440,6 @@ export default function AdminSecurityEnhanced() {
       setTimeout(() => setSecretCopied(false), 2000);
       toast({ title: "Secret copied to clipboard" });
     } catch (err) {
-      // Fallback cho trình duyệt cũ
       const textArea = document.createElement("textarea");
       textArea.value = secret;
       document.body.appendChild(textArea);
@@ -479,11 +459,37 @@ export default function AdminSecurityEnhanced() {
   const whitelistIps = ipRules.filter(r => r.type === 'whitelist');
   const blacklistIps = ipRules.filter(r => r.type === 'blacklist');
 
+  const securityScore = (() => {
+    let score = 60;
+    if (user?.twoFactorEnabled) score += 15;
+    if (localSettings.ddosProtection?.enabled) score += 5;
+    if (localSettings.sqlInjectionProtection?.enabled) score += 5;
+    if (localSettings.xssProtection?.enabled) score += 5;
+    if (localSettings.captchaType && localSettings.captchaType !== 'disabled') score += 5;
+    if (localSettings.compliance?.gdprEnabled) score += 5;
+    return Math.min(score, 100);
+  })();
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-500";
+    if (score >= 60) return "text-yellow-500";
+    return "text-red-500";
+  };
+
+  const getScoreBg = (score: number) => {
+    if (score >= 80) return "bg-green-500";
+    if (score >= 60) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
   if (settingsLoading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin" />
+          <div className="text-center">
+            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading security settings...</p>
+          </div>
         </div>
       </AdminLayout>
     );
@@ -492,569 +498,486 @@ export default function AdminSecurityEnhanced() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-heading font-bold" data-testid="text-security-title">Security Center</h1>
-          <p className="text-muted-foreground">Monitor and configure security settings</p>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-heading font-bold flex items-center gap-3" data-testid="text-security-title">
+              <Shield className="w-8 h-8 text-primary" />
+              Security Center
+            </h1>
+            <p className="text-muted-foreground mt-1">Monitor threats, manage access, and configure security policies</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => refetchSettings()} data-testid="button-refresh-security">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card className="border-green-500/50 bg-green-500/5">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Shield className="w-6 h-6 text-green-500" />
-                <div>
-                  <p className="text-xs text-muted-foreground">System Status</p>
-                  <p className="font-bold">Secure</p>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <Card className="lg:col-span-1 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="relative mb-4">
+                  <svg className="w-24 h-24 transform -rotate-90">
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="none" className="text-muted/20" />
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="none" 
+                      className={getScoreBg(securityScore)}
+                      strokeDasharray={`${(securityScore / 100) * 251.2} 251.2`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={`text-2xl font-bold ${getScoreColor(securityScore)}`}>{securityScore}</span>
+                  </div>
                 </div>
+                <h3 className="font-semibold text-lg">Security Score</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {securityScore >= 80 ? "Excellent protection" : securityScore >= 60 ? "Good, can improve" : "Needs attention"}
+                </p>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Lock className="w-6 h-6 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">SSL Certificate</p>
-                  <p className="font-bold text-sm">Valid (Dec 2025)</p>
+
+          <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="border-green-500/30 bg-green-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">System Status</p>
+                    <p className="text-xl font-bold text-green-500">Secure</p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-green-500/10">
+                    <ShieldCheck className="w-5 h-5 text-green-500" />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-6 h-6 text-yellow-500" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Blocked (24h)</p>
-                  <p className="font-bold">{stats?.totalBlocked || 0} attempts</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">SSL Certificate</p>
+                    <p className="text-xl font-bold">Valid</p>
+                    <p className="text-xs text-muted-foreground">Dec 2025</p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <LockIcon className="w-5 h-5 text-primary" />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Smartphone className="w-6 h-6 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Active Sessions</p>
-                  <p className="font-bold">{sessions.length} devices</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-yellow-500/30 bg-yellow-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Blocked (24h)</p>
+                    <p className="text-xl font-bold text-yellow-600">{stats?.totalBlocked || 0}</p>
+                    <p className="text-xs text-muted-foreground">attempts</p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-yellow-500/10">
+                    <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-blue-500/50 bg-blue-500/5">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Shield className="w-6 h-6 text-blue-500" />
-                <div>
-                  <p className="text-xs text-muted-foreground">IP Rules</p>
-                  <p className="font-bold text-sm">{ipRules.length} active</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Active Sessions</p>
+                    <p className="text-xl font-bold">{sessions.length}</p>
+                    <p className="text-xs text-muted-foreground">devices</p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-blue-500/10">
+                    <Smartphone className="w-5 h-5 text-blue-500" />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         <Tabs defaultValue="authentication" className="space-y-6">
-          <TabsList className="flex flex-wrap gap-1 h-auto p-1">
-            <TabsTrigger value="authentication" data-testid="tab-authentication">Authentication</TabsTrigger>
-            <TabsTrigger value="recaptcha" data-testid="tab-recaptcha">Recaptcha</TabsTrigger>
-            <TabsTrigger value="firewall" data-testid="tab-firewall">Firewall</TabsTrigger>
-            <TabsTrigger value="threat" data-testid="tab-threat">Threat Protection</TabsTrigger>
-            <TabsTrigger value="sessions" data-testid="tab-sessions">Sessions</TabsTrigger>
-            <TabsTrigger value="compliance" data-testid="tab-compliance">Compliance</TabsTrigger>
-            <TabsTrigger value="csp" data-testid="tab-csp">CSP</TabsTrigger>
-            <TabsTrigger value="scanner" data-testid="tab-scanner">Scanner</TabsTrigger>
-          </TabsList>
+          <div className="bg-card border rounded-lg p-1.5">
+            <TabsList className="flex flex-wrap gap-1 bg-transparent h-auto p-0">
+              <TabsTrigger value="authentication" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-authentication">
+                <Key className="w-4 h-4" /> Authentication
+              </TabsTrigger>
+              <TabsTrigger value="recaptcha" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-recaptcha">
+                <Radio className="w-4 h-4" /> Bot Protection
+              </TabsTrigger>
+              <TabsTrigger value="firewall" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-firewall">
+                <Shield className="w-4 h-4" /> Firewall
+              </TabsTrigger>
+              <TabsTrigger value="threat" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-threat">
+                <ShieldAlert className="w-4 h-4" /> Threats
+              </TabsTrigger>
+              <TabsTrigger value="sessions" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-sessions">
+                <Users className="w-4 h-4" /> Sessions
+              </TabsTrigger>
+              <TabsTrigger value="compliance" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-compliance">
+                <FileText className="w-4 h-4" /> Compliance
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-advanced">
+                <Settings2 className="w-4 h-4" /> Advanced
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          {/* AUTHENTICATION TAB */}
-          <TabsContent value="authentication" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Key className="w-5 h-5" />
-                  Authentication Methods
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Smartphone className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">Two-Factor Authentication (2FA)</div>
-                      <div className="text-sm text-muted-foreground">Secure with authenticator app</div>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={user?.twoFactorEnabled || settings.twoFactorEnabled || false}
-                    onCheckedChange={handle2FAToggle}
-                    disabled={generate2FAMutation.isPending}
-                    data-testid="switch-2fa"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Lock className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">Password Expiration</div>
-                      <div className="text-sm text-muted-foreground">Force reset every 90 days</div>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={localSettings.passwordExpiration ?? true}
-                    onCheckedChange={(v) => updateLocalSetting('passwordExpiration', v)}
-                    data-testid="switch-password-expiration"
-                  />
-                </div>
-                <Button onClick={saveAuthSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-auth">
-                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Save Authentication Settings
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Monitor className="w-5 h-5" />
-                  Trusted Devices
-                </CardTitle>
-                <CardDescription>Manage devices that can skip 2FA</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {devices.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No trusted devices registered</p>
-                ) : (
-                  devices.map((device) => (
-                    <div key={device.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">{device.deviceName}</p>
-                        <p className="text-xs text-muted-foreground">{device.ipAddress} • {device.lastUsed ? new Date(device.lastUsed).toLocaleDateString() : 'Never'}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {device.trusted && <Badge variant="secondary">Trusted</Badge>}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive"
-                          onClick={() => deleteDeviceMutation.mutate(device.id)}
-                          data-testid={`button-remove-device-${device.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Login History
-                </CardTitle>
-                <CardDescription>View recent login activity and security events</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowLoginHistory(!showLoginHistory)}
-                  data-testid="button-view-login-history"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  {showLoginHistory ? 'Hide' : 'View'} Login History
-                </Button>
-
-                {showLoginHistory && (
-                  <div className="mt-4 space-y-2 max-h-96 overflow-y-auto border rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-medium">Recent Login Activity</p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => refetchLoginHistory()}
-                        disabled={isRefetchingLoginHistory}
-                      >
-                        <RefreshCw className={`w-3 h-3 ${isRefetchingLoginHistory ? 'animate-spin' : ''}`} />
-                      </Button>
-                    </div>
-                    {loginHistory.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-4">No login history found</p>
-                    ) : (
-                      loginHistory.map((log) => (
-                        <div key={log.id} className="p-2 text-xs border rounded bg-muted/50">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium flex items-center gap-1">
-                              {log.type === 'success' ? (
-                                <CheckCircle className="w-3 h-3 text-green-500" />
-                              ) : log.type === 'error' ? (
-                                <XCircle className="w-3 h-3 text-red-500" />
-                              ) : (
-                                <AlertCircle className="w-3 h-3 text-yellow-500" />
-                              )}
-                              {log.userName || 'Unknown User'}
-                            </span>
-                            <Badge variant={log.type === 'success' ? 'default' : 'destructive'} className="text-[10px]">
-                              {log.type}
-                            </Badge>
-                          </div>
-                          <p className="text-muted-foreground mb-1">{log.action}</p>
-                          <p className="text-muted-foreground/70">
-                            {log.createdAt ? new Date(log.createdAt).toLocaleString() : 'N/A'}
-                          </p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* RECAPTCHA TAB */}
-          <TabsContent value="recaptcha" className="space-y-4">
+          <TabsContent value="authentication" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ShieldAlert className="w-5 h-5" />
-                    Bot Protection Settings
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Fingerprint className="w-5 h-5 text-primary" />
+                    Authentication Methods
                   </CardTitle>
-                  <CardDescription>Configure CAPTCHA protection for forms and login</CardDescription>
+                  <CardDescription>Configure how users authenticate</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className={`p-4 border rounded-lg space-y-3 ${localSettings.captchaType === 'disabled' ? 'border-primary/50 bg-primary/5' : ''}`}>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="captcha"
-                          value="disabled"
-                          checked={localSettings.captchaType === 'disabled'}
-                          onChange={() => updateLocalSetting('captchaType', 'disabled')}
-                          className="w-4 h-4 text-primary"
-                          data-testid="radio-captcha-disabled"
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium text-sm flex items-center gap-2">
-                            <XCircle className="w-4 h-4 text-muted-foreground" />
-                            Disabled
-                          </div>
-                          <div className="text-xs text-muted-foreground">No bot protection (not recommended)</div>
+                <CardContent className="space-y-4">
+                  <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${user?.twoFactorEnabled ? 'bg-green-500/5 border-green-500/30' : 'bg-muted/30'}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${user?.twoFactorEnabled ? 'bg-green-500/10' : 'bg-muted'}`}>
+                        <Smartphone className={`w-5 h-5 ${user?.twoFactorEnabled ? 'text-green-500' : 'text-muted-foreground'}`} />
+                      </div>
+                      <div>
+                        <div className="font-medium flex items-center gap-2">
+                          Two-Factor Authentication
+                          {user?.twoFactorEnabled && <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30 text-xs">Active</Badge>}
                         </div>
-                      </label>
+                        <div className="text-sm text-muted-foreground">Secure with authenticator app</div>
+                      </div>
                     </div>
-
-                    <div className={`p-4 border rounded-lg space-y-3 ${localSettings.captchaType === 'local' ? 'border-primary/50 bg-primary/5' : ''}`}>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="captcha"
-                          value="local"
-                          checked={localSettings.captchaType === 'local' || !localSettings.captchaType}
-                          onChange={() => updateLocalSetting('captchaType', 'local')}
-                          className="w-4 h-4 text-primary"
-                          data-testid="radio-captcha-local"
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium text-sm flex items-center gap-2">
-                            <Server className="w-4 h-4 text-muted-foreground" />
-                            Local Verification
-                            {(localSettings.captchaType === 'local' || !localSettings.captchaType) && <Badge variant="secondary" className="text-[10px]">Active</Badge>}
-                          </div>
-                          <div className="text-xs text-muted-foreground">Server-side honeypot + rate limiting</div>
-                        </div>
-                      </label>
-                      {(localSettings.captchaType === 'local' || !localSettings.captchaType) && (
-                        <div className="ml-7 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs">Honeypot Fields</span>
-                            <Switch
-                              checked={localSettings.captchaSettings?.honeypotEnabled ?? true}
-                              onCheckedChange={(v) => updateNestedSetting('captchaSettings', 'honeypotEnabled', v)}
-                              data-testid="switch-honeypot"
-                            />
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs">Time-based Validation</span>
-                            <Switch
-                              checked={localSettings.captchaSettings?.timeValidation ?? true}
-                              onCheckedChange={(v) => updateNestedSetting('captchaSettings', 'timeValidation', v)}
-                              data-testid="switch-time-validation"
-                            />
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs">IP Rate Limiting</span>
-                            <Switch
-                              checked={localSettings.captchaSettings?.ipRateLimit ?? true}
-                              onCheckedChange={(v) => updateNestedSetting('captchaSettings', 'ipRateLimit', v)}
-                              data-testid="switch-ip-rate-limit"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className={`p-4 border rounded-lg space-y-3 ${localSettings.captchaType === 'google' ? 'border-primary/50 bg-primary/5' : ''}`}>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="captcha"
-                          value="google"
-                          checked={localSettings.captchaType === 'google'}
-                          onChange={() => updateLocalSetting('captchaType', 'google')}
-                          className="w-4 h-4 text-primary"
-                          data-testid="radio-captcha-google"
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium text-sm flex items-center gap-2">
-                            <Globe className="w-4 h-4 text-muted-foreground" />
-                            Google reCAPTCHA v3
-                          </div>
-                          <div className="text-xs text-muted-foreground">Invisible, score-based protection</div>
-                        </div>
-                      </label>
-                      {localSettings.captchaType === 'google' && (
-                        <div className="ml-7 space-y-3 pt-2">
-                          <div className="space-y-1">
-                            <Label className="text-xs">Site Key</Label>
-                            <Input
-                              placeholder="Enter Google reCAPTCHA site key"
-                              className="text-sm"
-                              value={localSettings.captchaSettings?.googleSiteKey || ''}
-                              onChange={(e) => updateNestedSetting('captchaSettings', 'googleSiteKey', e.target.value)}
-                              data-testid="input-google-site-key"
-                            />
-                            {localSettings.captchaType === 'google' && !localSettings.captchaSettings?.googleSiteKey && (
-                              <p className="text-xs text-yellow-600 dark:text-yellow-500 flex items-center gap-1">
-                                <AlertTriangle className="w-3 h-3" />
-                                Site key is required for Google reCAPTCHA to work
-                              </p>
-                            )}
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Secret Key</Label>
-                            <div className="relative">
-                              <Input
-                                type={showGoogleSecret ? "text" : "password"}
-                                placeholder="Enter secret key"
-                                className="text-sm pr-10"
-                                value={localSettings.captchaSettings?.googleSecretKey || ''}
-                                onChange={(e) => updateNestedSetting('captchaSettings', 'googleSecretKey', e.target.value)}
-                                data-testid="input-google-secret-key"
-                              />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="absolute right-0 top-0 h-full"
-                                onClick={() => setShowGoogleSecret(!showGoogleSecret)}
-                              >
-                                {showGoogleSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Minimum Score (0.0 - 1.0)</Label>
-                            <Input
-                              type="number"
-                              value={localSettings.captchaSettings?.googleMinScore ?? 0.5}
-                              onChange={(e) => updateNestedSetting('captchaSettings', 'googleMinScore', parseFloat(e.target.value))}
-                              step="0.1"
-                              min="0"
-                              max="1"
-                              className="text-sm"
-                              data-testid="input-google-min-score"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className={`p-4 border rounded-lg space-y-3 ${localSettings.captchaType === 'cloudflare' ? 'border-primary/50 bg-primary/5' : ''}`}>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="captcha"
-                          value="cloudflare"
-                          checked={localSettings.captchaType === 'cloudflare'}
-                          onChange={() => updateLocalSetting('captchaType', 'cloudflare')}
-                          className="w-4 h-4 text-primary"
-                          data-testid="radio-captcha-cloudflare"
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium text-sm flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-muted-foreground" />
-                            Cloudflare Turnstile
-                          </div>
-                          <div className="text-xs text-muted-foreground">Privacy-friendly, works with adblockers</div>
-                        </div>
-                      </label>
-                      {localSettings.captchaType === 'cloudflare' && (
-                        <div className="ml-7 space-y-3 pt-2">
-                          <div className="space-y-1">
-                            <Label className="text-xs">Site Key</Label>
-                            <Input
-                              placeholder="Enter Cloudflare site key"
-                              className="text-sm"
-                              value={localSettings.captchaSettings?.cloudflareSiteKey || ''}
-                              onChange={(e) => updateNestedSetting('captchaSettings', 'cloudflareSiteKey', e.target.value)}
-                              data-testid="input-cloudflare-site-key"
-                            />
-                            {localSettings.captchaType === 'cloudflare' && !localSettings.captchaSettings?.cloudflareSiteKey && (
-                              <p className="text-xs text-yellow-600 dark:text-yellow-500 flex items-center gap-1">
-                                <AlertTriangle className="w-3 h-3" />
-                                Site key is required for Cloudflare Turnstile to work
-                              </p>
-                            )}
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Secret Key</Label>
-                            <div className="relative">
-                              <Input
-                                type={showCloudflareSecret ? "text" : "password"}
-                                placeholder="Enter secret key"
-                                className="text-sm pr-10"
-                                value={localSettings.captchaSettings?.cloudflareSecretKey || ''}
-                                onChange={(e) => updateNestedSetting('captchaSettings', 'cloudflareSecretKey', e.target.value)}
-                                data-testid="input-cloudflare-secret-key"
-                              />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="absolute right-0 top-0 h-full"
-                                onClick={() => setShowCloudflareSecret(!showCloudflareSecret)}
-                              >
-                                {showCloudflareSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={localSettings.captchaSettings?.cloudflareManagedMode || false}
-                              onCheckedChange={(v) => updateNestedSetting('captchaSettings', 'cloudflareManagedMode', v)}
-                              data-testid="switch-cloudflare-managed"
-                            />
-                            <Label className="text-xs">Managed Challenge Mode</Label>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <Switch
+                      checked={user?.twoFactorEnabled || settings.twoFactorEnabled || false}
+                      onCheckedChange={handle2FAToggle}
+                      disabled={generate2FAMutation.isPending}
+                      data-testid="switch-2fa"
+                    />
                   </div>
 
-                  <Button className="w-full" onClick={saveCaptchaSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-captcha">
+                  <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${localSettings.passwordExpiration ? 'bg-blue-500/5 border-blue-500/30' : 'bg-muted/30'}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${localSettings.passwordExpiration ? 'bg-blue-500/10' : 'bg-muted'}`}>
+                        <Clock className={`w-5 h-5 ${localSettings.passwordExpiration ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                      </div>
+                      <div>
+                        <div className="font-medium">Password Expiration</div>
+                        <div className="text-sm text-muted-foreground">Force reset every 90 days</div>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={localSettings.passwordExpiration ?? false}
+                      onCheckedChange={(v) => updateLocalSetting('passwordExpiration', v)}
+                      data-testid="switch-password-expiration"
+                    />
+                  </div>
+
+                  <Button onClick={saveAuthSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-auth">
                     {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Save Captcha Settings
+                    Save Authentication Settings
                   </Button>
                 </CardContent>
               </Card>
 
-              <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Monitor className="w-5 h-5 text-primary" />
+                    Trusted Devices
+                  </CardTitle>
+                  <CardDescription>Devices that can skip 2FA verification</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[200px]">
+                    {devices.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center py-8">
+                        <Monitor className="w-10 h-10 text-muted-foreground/30 mb-3" />
+                        <p className="text-sm text-muted-foreground">No trusted devices registered</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {devices.map((device) => (
+                          <div key={device.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-muted">
+                                <Monitor className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{device.deviceName}</p>
+                                <p className="text-xs text-muted-foreground">{device.ipAddress} • {device.lastUsed ? new Date(device.lastUsed).toLocaleDateString() : 'Never'}</p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive"
+                              onClick={() => deleteDeviceMutation.mutate(device.id)}
+                              data-testid={`button-remove-device-${device.id}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Clock className="w-5 h-5 text-primary" />
+                      Login History
+                    </CardTitle>
+                    <CardDescription>Recent authentication attempts</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => { setShowLoginHistory(!showLoginHistory); refetchLoginHistory(); }} data-testid="button-toggle-login-history">
+                    {isRefetchingLoginHistory ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                    <span className="ml-2">{showLoginHistory ? 'Hide' : 'Show'}</span>
+                  </Button>
+                </div>
+              </CardHeader>
+              {showLoginHistory && (
+                <CardContent>
+                  <ScrollArea className="h-[300px]">
+                    {loginHistory.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Clock className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                        <p>No login history available</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {loginHistory.slice(0, 20).map((log) => (
+                          <div key={log.id} className={`flex items-center justify-between p-3 rounded-lg border ${log.blocked ? 'border-red-500/30 bg-red-500/5' : 'border-green-500/30 bg-green-500/5'}`}>
+                            <div className="flex items-center gap-3">
+                              {log.blocked ? (
+                                <XCircle className="w-5 h-5 text-red-500" />
+                              ) : (
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                              )}
+                              <div>
+                                <p className="font-medium text-sm">{log.userName || 'Unknown'}</p>
+                                <p className="text-xs text-muted-foreground">{log.ipAddress} • {log.eventType}</p>
+                              </div>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {log.createdAt ? new Date(log.createdAt).toLocaleString() : ''}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              )}
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="recaptcha" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5" />
-                      Protection Coverage
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Radio className="w-5 h-5 text-primary" />
+                      Bot Protection Method
                     </CardTitle>
-                    <CardDescription>Choose which forms to protect</CardDescription>
+                    <CardDescription>Choose how to protect forms from automated submissions</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">Login Form</p>
-                        <p className="text-xs text-muted-foreground">Admin login page</p>
-                      </div>
-                      <Switch
-                        checked={localSettings.protectionCoverage?.loginForm ?? true}
-                        onCheckedChange={(v) => updateNestedSetting('protectionCoverage', 'loginForm', v)}
-                        data-testid="switch-protect-login"
-                      />
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {[
+                        { value: 'disabled', label: 'Disabled', desc: 'No bot protection', icon: XCircle, color: 'text-red-500' },
+                        { value: 'local', label: 'Local Protection', desc: 'Honeypot + rate limiting', icon: Shield, color: 'text-blue-500' },
+                        { value: 'google', label: 'Google reCAPTCHA', desc: 'Invisible v3 protection', icon: Globe, color: 'text-green-500' },
+                        { value: 'cloudflare', label: 'Cloudflare Turnstile', desc: 'Privacy-focused CAPTCHA', icon: Zap, color: 'text-orange-500' },
+                      ].map((option) => (
+                        <label
+                          key={option.value}
+                          data-testid={`radio-captcha-${option.value}`}
+                          className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                            localSettings.captchaType === option.value 
+                              ? 'border-primary bg-primary/5 ring-2 ring-primary/20' 
+                              : 'hover:bg-muted/50'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="captchaType"
+                            value={option.value}
+                            checked={localSettings.captchaType === option.value}
+                            onChange={(e) => updateLocalSetting('captchaType', e.target.value)}
+                            className="sr-only"
+                          />
+                          <div className={`p-2 rounded-lg bg-muted`}>
+                            <option.icon className={`w-5 h-5 ${option.color}`} />
+                          </div>
+                          <div>
+                            <div className="font-medium">{option.label}</div>
+                            <div className="text-xs text-muted-foreground">{option.desc}</div>
+                          </div>
+                        </label>
+                      ))}
                     </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">Contact Form</p>
-                        <p className="text-xs text-muted-foreground">Public contact form</p>
+
+                    {localSettings.captchaType === 'google' && (
+                      <div className="space-y-3 p-4 rounded-lg bg-muted/50 mt-4">
+                        <div>
+                          <Label>Google Site Key</Label>
+                          <Input
+                            value={localSettings.captchaSettings?.googleSiteKey || ''}
+                            onChange={(e) => updateNestedSetting('captchaSettings', 'googleSiteKey', e.target.value)}
+                            placeholder="6L..."
+                            className="mt-1"
+                            data-testid="input-google-site-key"
+                          />
+                        </div>
+                        <div>
+                          <Label>Google Secret Key</Label>
+                          <div className="relative mt-1">
+                            <Input
+                              type={showGoogleSecret ? 'text' : 'password'}
+                              value={localSettings.captchaSettings?.googleSecretKey || ''}
+                              onChange={(e) => updateNestedSetting('captchaSettings', 'googleSecretKey', e.target.value)}
+                              placeholder="6L..."
+                              data-testid="input-google-secret-key"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0"
+                              onClick={() => setShowGoogleSecret(!showGoogleSecret)}
+                              data-testid="button-toggle-google-secret"
+                            >
+                              {showGoogleSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <Switch
-                        checked={localSettings.protectionCoverage?.contactForm ?? true}
-                        onCheckedChange={(v) => updateNestedSetting('protectionCoverage', 'contactForm', v)}
-                        data-testid="switch-protect-contact"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">Newsletter Signup</p>
-                        <p className="text-xs text-muted-foreground">Email subscription form</p>
+                    )}
+
+                    {localSettings.captchaType === 'cloudflare' && (
+                      <div className="space-y-3 p-4 rounded-lg bg-muted/50 mt-4">
+                        <div>
+                          <Label>Cloudflare Site Key</Label>
+                          <Input
+                            value={localSettings.captchaSettings?.cloudflareSiteKey || ''}
+                            onChange={(e) => updateNestedSetting('captchaSettings', 'cloudflareSiteKey', e.target.value)}
+                            placeholder="0x..."
+                            className="mt-1"
+                            data-testid="input-cloudflare-site-key"
+                          />
+                        </div>
+                        <div>
+                          <Label>Cloudflare Secret Key</Label>
+                          <div className="relative mt-1">
+                            <Input
+                              type={showCloudflareSecret ? 'text' : 'password'}
+                              value={localSettings.captchaSettings?.cloudflareSecretKey || ''}
+                              onChange={(e) => updateNestedSetting('captchaSettings', 'cloudflareSecretKey', e.target.value)}
+                              placeholder="0x..."
+                              data-testid="input-cloudflare-secret-key"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0"
+                              onClick={() => setShowCloudflareSecret(!showCloudflareSecret)}
+                              data-testid="button-toggle-cloudflare-secret"
+                            >
+                              {showCloudflareSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <Switch
-                        checked={localSettings.protectionCoverage?.newsletterForm ?? true}
-                        onCheckedChange={(v) => updateNestedSetting('protectionCoverage', 'newsletterForm', v)}
-                        data-testid="switch-protect-newsletter"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">Comment Forms</p>
-                        <p className="text-xs text-muted-foreground">Blog post comments</p>
-                      </div>
-                      <Switch
-                        checked={localSettings.protectionCoverage?.commentForms ?? true}
-                        onCheckedChange={(v) => updateNestedSetting('protectionCoverage', 'commentForms', v)}
-                        data-testid="switch-protect-comments"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">Registration Form</p>
-                        <p className="text-xs text-muted-foreground">User registration (if enabled)</p>
-                      </div>
-                      <Switch
-                        checked={localSettings.protectionCoverage?.registrationForm || false}
-                        onCheckedChange={(v) => updateNestedSetting('protectionCoverage', 'registrationForm', v)}
-                        data-testid="switch-protect-registration"
-                      />
-                    </div>
-                    <Button className="w-full" onClick={saveCaptchaSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-coverage">
-                      Save Coverage Settings
+                    )}
+
+                    <Button onClick={saveCaptchaSettings} disabled={updateSettingsMutation.isPending} className="w-full mt-4" data-testid="button-save-captcha">
+                      {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Save Bot Protection Settings
                     </Button>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5" />
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Layers className="w-5 h-5 text-primary" />
+                      Protection Coverage
+                    </CardTitle>
+                    <CardDescription>Choose which forms to protect</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {[
+                        { key: 'loginForm', label: 'Login Form', desc: 'Admin login page' },
+                        { key: 'contactForm', label: 'Contact Form', desc: 'Public contact form' },
+                        { key: 'newsletterForm', label: 'Newsletter', desc: 'Email subscription' },
+                        { key: 'commentForms', label: 'Comments', desc: 'Blog comments' },
+                        { key: 'registrationForm', label: 'Registration', desc: 'User signup' },
+                      ].map((form) => (
+                        <div key={form.key} className="flex items-center justify-between p-3 rounded-lg border">
+                          <div>
+                            <p className="font-medium text-sm">{form.label}</p>
+                            <p className="text-xs text-muted-foreground">{form.desc}</p>
+                          </div>
+                          <Switch
+                            checked={(localSettings.protectionCoverage as any)?.[form.key] ?? true}
+                            onCheckedChange={(v) => updateNestedSetting('protectionCoverage', form.key, v)}
+                            data-testid={`switch-protect-${form.key}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <BarChart3 className="w-5 h-5 text-primary" />
                       Bot Detection Stats
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                        <p className="text-2xl font-bold text-green-500" data-testid="text-allowed-count">{stats?.totalAllowed || 0}</p>
-                        <p className="text-xs text-muted-foreground">Legitimate Submissions</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
+                        <p className="text-3xl font-bold text-green-500">{stats?.totalAllowed || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Legitimate</p>
                       </div>
-                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p className="text-2xl font-bold text-red-500" data-testid="text-blocked-count">{stats?.totalBlocked || 0}</p>
-                        <p className="text-xs text-muted-foreground">Blocked Bots</p>
+                      <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
+                        <p className="text-3xl font-bold text-red-500">{stats?.totalBlocked || 0}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Blocked Bots</p>
                       </div>
                     </div>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-muted-foreground">Protection Rate</span>
-                        <span className="text-sm font-medium">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Protection Rate</span>
+                        <span className="font-medium">
                           {stats && stats.totalBlocked + stats.totalAllowed > 0
                             ? ((stats.totalAllowed / (stats.totalBlocked + stats.totalAllowed)) * 100).toFixed(1)
                             : 100}%
                         </span>
                       </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-green-500 rounded-full"
-                          style={{ width: `${stats && stats.totalBlocked + stats.totalAllowed > 0 ? (stats.totalAllowed / (stats.totalBlocked + stats.totalAllowed)) * 100 : 100}%` }}
-                        />
-                      </div>
+                      <Progress 
+                        value={stats && stats.totalBlocked + stats.totalAllowed > 0 
+                          ? (stats.totalAllowed / (stats.totalBlocked + stats.totalAllowed)) * 100 
+                          : 100} 
+                        className="h-2"
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -1062,612 +985,603 @@ export default function AdminSecurityEnhanced() {
             </div>
           </TabsContent>
 
-          {/* FIREWALL TAB */}
           <TabsContent value="firewall" className="space-y-4">
             <EnhancedFirewall />
           </TabsContent>
 
-          {/* THREAT PROTECTION TAB */}
-          <TabsContent value="threat" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ShieldAlert className="w-5 h-5" /> DDoS Protection
-                </CardTitle>
-                <CardDescription>Protect against distributed denial-of-service attacks</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className={`flex items-center justify-between p-3 border rounded-lg ${localSettings.ddosProtection?.enabled ? 'bg-green-500/5 border-green-500/20' : ''}`}>
-                  <div>
-                    <p className="font-medium text-sm">DDoS Protection</p>
-                    <p className="text-xs text-muted-foreground">Automatically detect and mitigate attacks</p>
+          <TabsContent value="threat" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Zap className="w-5 h-5 text-yellow-500" />
+                    DDoS Protection
+                  </CardTitle>
+                  <CardDescription>Mitigate denial-of-service attacks</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className={`flex items-center justify-between p-3 rounded-lg border ${localSettings.ddosProtection?.enabled ? 'bg-green-500/5 border-green-500/30' : ''}`}>
+                    <span className="font-medium text-sm">Enable Protection</span>
+                    <Switch
+                      checked={localSettings.ddosProtection?.enabled ?? true}
+                      onCheckedChange={(v) => updateNestedSetting('ddosProtection', 'enabled', v)}
+                      data-testid="switch-ddos-protection"
+                    />
                   </div>
-                  <Switch
-                    checked={localSettings.ddosProtection?.enabled ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('ddosProtection', 'enabled', v)}
-                    data-testid="switch-ddos-protection"
-                  />
-                </div>
-                {localSettings.ddosProtection?.enabled !== false && (
-                  <>
-                    <div>
-                      <label className="text-sm font-medium">Request Threshold (per minute)</label>
-                      <Input
-                        value={localSettings.ddosProtection?.threshold ?? 100}
-                        onChange={(e) => updateNestedSetting('ddosProtection', 'threshold', parseInt(e.target.value) || 100)}
-                        type="number"
-                        className="mt-1"
-                        data-testid="input-ddos-threshold"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Trigger protection when requests exceed this limit</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Block Duration (minutes)</label>
-                      <Input
-                        value={localSettings.ddosProtection?.blockDuration ?? 30}
-                        onChange={(e) => updateNestedSetting('ddosProtection', 'blockDuration', parseInt(e.target.value) || 30)}
-                        type="number"
-                        className="mt-1"
-                        data-testid="input-ddos-block-duration"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">How long to block suspicious IPs</p>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                  {localSettings.ddosProtection?.enabled !== false && (
+                    <>
+                      <div>
+                        <Label className="text-xs">Request Threshold (per min)</Label>
+                        <Input
+                          value={localSettings.ddosProtection?.threshold ?? 100}
+                          onChange={(e) => updateNestedSetting('ddosProtection', 'threshold', parseInt(e.target.value) || 100)}
+                          type="number"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Block Duration (min)</Label>
+                        <Input
+                          value={localSettings.ddosProtection?.blockDuration ?? 30}
+                          onChange={(e) => updateNestedSetting('ddosProtection', 'blockDuration', parseInt(e.target.value) || 30)}
+                          type="number"
+                          className="mt-1"
+                        />
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5" /> SQL Injection Detection
-                </CardTitle>
-                <CardDescription>Detect and block SQL injection attempts</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className={`flex items-center justify-between p-3 border rounded-lg ${localSettings.sqlInjectionProtection?.enabled ? 'bg-green-500/5 border-green-500/20' : ''}`}>
-                  <div>
-                    <p className="font-medium text-sm">SQL Injection Protection</p>
-                    <p className="text-xs text-muted-foreground">Scan requests for malicious SQL patterns</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <AlertTriangle className="w-5 h-5 text-orange-500" />
+                    SQL Injection
+                  </CardTitle>
+                  <CardDescription>Block malicious SQL queries</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className={`flex items-center justify-between p-3 rounded-lg border ${localSettings.sqlInjectionProtection?.enabled ? 'bg-green-500/5 border-green-500/30' : ''}`}>
+                    <span className="font-medium text-sm">Enable Detection</span>
+                    <Switch
+                      checked={localSettings.sqlInjectionProtection?.enabled ?? true}
+                      onCheckedChange={(v) => updateNestedSetting('sqlInjectionProtection', 'enabled', v)}
+                      data-testid="switch-sql-injection"
+                    />
                   </div>
-                  <Switch
-                    checked={localSettings.sqlInjectionProtection?.enabled ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('sqlInjectionProtection', 'enabled', v)}
-                    data-testid="switch-sql-injection"
-                  />
-                </div>
-                {localSettings.sqlInjectionProtection?.enabled !== false && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm">Log Attempts</p>
-                        <p className="text-xs text-muted-foreground">Record all detected injection attempts</p>
+                  {localSettings.sqlInjectionProtection?.enabled !== false && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Log Attempts</span>
+                        <Switch
+                          checked={localSettings.sqlInjectionProtection?.logAttempts ?? true}
+                          onCheckedChange={(v) => updateNestedSetting('sqlInjectionProtection', 'logAttempts', v)}
+                        />
                       </div>
-                      <Switch
-                        checked={localSettings.sqlInjectionProtection?.logAttempts ?? true}
-                        onCheckedChange={(v) => updateNestedSetting('sqlInjectionProtection', 'logAttempts', v)}
-                        data-testid="switch-sql-log"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm">Block Requests</p>
-                        <p className="text-xs text-muted-foreground">Automatically block suspicious requests</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Block Requests</span>
+                        <Switch
+                          checked={localSettings.sqlInjectionProtection?.blockRequests ?? true}
+                          onCheckedChange={(v) => updateNestedSetting('sqlInjectionProtection', 'blockRequests', v)}
+                        />
                       </div>
-                      <Switch
-                        checked={localSettings.sqlInjectionProtection?.blockRequests ?? true}
-                        onCheckedChange={(v) => updateNestedSetting('sqlInjectionProtection', 'blockRequests', v)}
-                        data-testid="switch-sql-block"
-                      />
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="w-5 h-5" /> XSS Protection
-                </CardTitle>
-                <CardDescription>Protect against cross-site scripting attacks</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className={`flex items-center justify-between p-3 border rounded-lg ${localSettings.xssProtection?.enabled ? 'bg-green-500/5 border-green-500/20' : ''}`}>
-                  <div>
-                    <p className="font-medium text-sm">XSS Protection</p>
-                    <p className="text-xs text-muted-foreground">Detect and sanitize malicious scripts</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Shield className="w-5 h-5 text-red-500" />
+                    XSS Protection
+                  </CardTitle>
+                  <CardDescription>Prevent cross-site scripting</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className={`flex items-center justify-between p-3 rounded-lg border ${localSettings.xssProtection?.enabled ? 'bg-green-500/5 border-green-500/30' : ''}`}>
+                    <span className="font-medium text-sm">Enable Protection</span>
+                    <Switch
+                      checked={localSettings.xssProtection?.enabled ?? true}
+                      onCheckedChange={(v) => updateNestedSetting('xssProtection', 'enabled', v)}
+                      data-testid="switch-xss-protection"
+                    />
                   </div>
-                  <Switch
-                    checked={localSettings.xssProtection?.enabled ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('xssProtection', 'enabled', v)}
-                    data-testid="switch-xss-protection"
-                  />
-                </div>
-                {localSettings.xssProtection?.enabled !== false && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm">Sanitize Input</p>
-                        <p className="text-xs text-muted-foreground">Automatically clean user input</p>
+                  {localSettings.xssProtection?.enabled !== false && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Sanitize Input</span>
+                        <Switch
+                          checked={localSettings.xssProtection?.sanitizeInput ?? true}
+                          onCheckedChange={(v) => updateNestedSetting('xssProtection', 'sanitizeInput', v)}
+                        />
                       </div>
-                      <Switch
-                        checked={localSettings.xssProtection?.sanitizeInput ?? true}
-                        onCheckedChange={(v) => updateNestedSetting('xssProtection', 'sanitizeInput', v)}
-                        data-testid="switch-xss-sanitize"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm">Block Requests</p>
-                        <p className="text-xs text-muted-foreground">Block requests with malicious content</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Block Requests</span>
+                        <Switch
+                          checked={localSettings.xssProtection?.blockRequests ?? true}
+                          onCheckedChange={(v) => updateNestedSetting('xssProtection', 'blockRequests', v)}
+                        />
                       </div>
-                      <Switch
-                        checked={localSettings.xssProtection?.blockRequests ?? true}
-                        onCheckedChange={(v) => updateNestedSetting('xssProtection', 'blockRequests', v)}
-                        data-testid="switch-xss-block"
-                      />
-                    </div>
-                  </>
-                )}
-                <Button onClick={saveThreatSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-threat">
-                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Save Threat Protection Settings
-                </Button>
-              </CardContent>
-            </Card>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+            <Button onClick={saveThreatSettings} disabled={updateSettingsMutation.isPending} data-testid="button-save-threat">
+              {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Save Threat Protection Settings
+            </Button>
           </TabsContent>
 
-          {/* SESSIONS TAB */}
-          <TabsContent value="sessions" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" /> Active Sessions
-                </CardTitle>
-                <CardDescription>Manage active user sessions</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {sessions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No active sessions</p>
-                ) : (
-                  <div className="space-y-2">
-                    {sessions.map((session) => (
-                      <div key={session.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-green-500" />
-                          <div>
-                            <p className="font-medium text-sm">{session.deviceInfo || 'Unknown Device'}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {session.ipAddress || 'Unknown IP'} • {session.location || 'Unknown Location'}
-                              {session.lastActivity && ` • ${new Date(session.lastActivity).toLocaleString()}`}
-                            </p>
+          <TabsContent value="sessions" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Users className="w-5 h-5 text-primary" />
+                        Active Sessions
+                      </CardTitle>
+                      <CardDescription>{sessions.length} active session(s)</CardDescription>
+                    </div>
+                    <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
+                      <div className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse" />
+                      Live
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[300px]">
+                    {sessions.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full py-8">
+                        <Users className="w-10 h-10 text-muted-foreground/30 mb-3" />
+                        <p className="text-sm text-muted-foreground">No active sessions</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {sessions.map((session) => (
+                          <div key={session.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <div className="p-2 rounded-lg bg-muted">
+                                  <Monitor className="w-4 h-4" />
+                                </div>
+                                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{session.deviceInfo || 'Unknown Device'}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {session.ipAddress || 'Unknown IP'} • {session.location || 'Unknown'}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => terminateSessionMutation.mutate(session.id)}
+                              disabled={terminateSessionMutation.isPending}
+                              data-testid={`button-terminate-session-${session.id}`}
+                            >
+                              <LogOut className="w-4 h-4" />
+                            </Button>
                           </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => terminateSessionMutation.mutate(session.id)}
-                          disabled={terminateSessionMutation.isPending}
-                          data-testid={`button-terminate-session-${session.id}`}
-                        >
-                          <LogOut className="w-4 h-4" />
-                        </Button>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    )}
+                  </ScrollArea>
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      logoutAllDevicesMutation.mutate();
-                    }}
-                    disabled={logoutAllDevicesMutation.isPending}
-                    data-testid="button-logout-all-devices"
-                  >
-                    {logoutAllDevicesMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    <LogOut className="w-4 h-4 mr-2" /> Logout All Devices
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="flex-1"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      terminateAllSessionsMutation.mutate();
-                    }}
-                    disabled={terminateAllSessionsMutation.isPending}
-                    data-testid="button-force-logout-all"
-                  >
-                    {terminateAllSessionsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    <LogOut className="w-4 h-4 mr-2" /> Force Logout All Users
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" /> Session Policies
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Session Timeout (Idle)</Label>
-                    <select
-                      className="w-full p-2 rounded-md border border-input bg-background"
-                      value={localSettings.sessionSettings?.idleTimeout || '30 minutes'}
-                      onChange={(e) => updateNestedSetting('sessionSettings', 'idleTimeout', e.target.value)}
-                      data-testid="select-idle-timeout"
+                  <div className="flex gap-2 mt-4 pt-4 border-t">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => logoutAllDevicesMutation.mutate()}
+                      disabled={logoutAllDevicesMutation.isPending}
+                      data-testid="button-logout-all-devices"
                     >
-                      <option value="15 minutes">15 minutes</option>
-                      <option value="30 minutes">30 minutes</option>
-                      <option value="1 hour">1 hour</option>
-                      <option value="4 hours">4 hours</option>
-                      <option value="Never">Never</option>
+                      {logoutAllDevicesMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Logout All
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
+                      onClick={() => terminateAllSessionsMutation.mutate()}
+                      disabled={terminateAllSessionsMutation.isPending}
+                      data-testid="button-force-logout-all"
+                    >
+                      {terminateAllSessionsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Force Terminate
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Clock className="w-5 h-5 text-primary" />
+                    Session Policies
+                  </CardTitle>
+                  <CardDescription>Configure session timeouts and limits</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Idle Timeout</Label>
+                      <select
+                        className="w-full p-2 rounded-md border border-input bg-background text-sm"
+                        value={localSettings.sessionSettings?.idleTimeout || '30 minutes'}
+                        onChange={(e) => updateNestedSetting('sessionSettings', 'idleTimeout', e.target.value)}
+                        data-testid="select-idle-timeout"
+                      >
+                        <option value="15 minutes">15 minutes</option>
+                        <option value="30 minutes">30 minutes</option>
+                        <option value="1 hour">1 hour</option>
+                        <option value="4 hours">4 hours</option>
+                        <option value="Never">Never</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Max Duration</Label>
+                      <select
+                        className="w-full p-2 rounded-md border border-input bg-background text-sm"
+                        value={localSettings.sessionSettings?.maxDuration || '24 hours'}
+                        onChange={(e) => updateNestedSetting('sessionSettings', 'maxDuration', e.target.value)}
+                        data-testid="select-max-duration"
+                      >
+                        <option value="8 hours">8 hours</option>
+                        <option value="24 hours">24 hours</option>
+                        <option value="7 days">7 days</option>
+                        <option value="30 days">30 days</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <p className="font-medium text-sm">Force Logout Inactive</p>
+                      <p className="text-xs text-muted-foreground">Auto-logout after idle timeout</p>
+                    </div>
+                    <Switch
+                      checked={localSettings.sessionSettings?.forceLogoutInactive ?? true}
+                      onCheckedChange={(v) => updateNestedSetting('sessionSettings', 'forceLogoutInactive', v)}
+                      data-testid="switch-force-logout-inactive"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">Concurrent Sessions</Label>
+                    <select
+                      className="w-full p-2 rounded-md border border-input bg-background text-sm"
+                      value={localSettings.sessionSettings?.concurrentSessionLimit || 'Unlimited'}
+                      onChange={(e) => updateNestedSetting('sessionSettings', 'concurrentSessionLimit', e.target.value)}
+                      data-testid="select-concurrent-sessions"
+                    >
+                      <option value="Unlimited">Unlimited</option>
+                      <option value="1 session per user">1 session</option>
+                      <option value="3 sessions per user">3 sessions</option>
+                      <option value="5 sessions per user">5 sessions</option>
                     </select>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Max Session Duration</Label>
-                    <select
-                      className="w-full p-2 rounded-md border border-input bg-background"
-                      value={localSettings.sessionSettings?.maxDuration || '24 hours'}
-                      onChange={(e) => updateNestedSetting('sessionSettings', 'maxDuration', e.target.value)}
-                      data-testid="select-max-duration"
-                    >
-                      <option value="8 hours">8 hours</option>
-                      <option value="24 hours">24 hours</option>
-                      <option value="7 days">7 days</option>
-                      <option value="30 days">30 days</option>
-                    </select>
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between">
+                  <Button onClick={saveSessionSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-session-policies">
+                    {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Save Session Policies
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="compliance" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <FileText className="w-5 h-5 text-primary" />
+                    GDPR Compliance
+                  </CardTitle>
+                  <CardDescription>Data protection and privacy regulations</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className={`flex items-center justify-between p-3 rounded-lg border ${localSettings.compliance?.gdprEnabled ? 'bg-green-500/5 border-green-500/30' : ''}`}>
+                    <div>
+                      <p className="font-medium text-sm">GDPR Mode</p>
+                      <p className="text-xs text-muted-foreground">Enable compliance features</p>
+                    </div>
+                    <Switch
+                      checked={localSettings.compliance?.gdprEnabled ?? true}
+                      onCheckedChange={(v) => updateNestedSetting('compliance', 'gdprEnabled', v)}
+                      data-testid="switch-gdpr"
+                    />
+                  </div>
+
                   <div>
-                    <p className="font-medium text-sm">Force Logout Inactive Users</p>
-                    <p className="text-xs text-muted-foreground">Auto-logout users after idle timeout</p>
+                    <Label className="text-xs">Data Retention (days)</Label>
+                    <Input
+                      value={localSettings.compliance?.dataRetentionDays ?? 365}
+                      onChange={(e) => updateNestedSetting('compliance', 'dataRetentionDays', parseInt(e.target.value) || 365)}
+                      type="number"
+                      className="mt-1"
+                      data-testid="input-retention-days"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Auto-delete data after this period</p>
                   </div>
-                  <Switch
-                    checked={localSettings.sessionSettings?.forceLogoutInactive ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('sessionSettings', 'forceLogoutInactive', v)}
-                    data-testid="switch-force-logout-inactive"
-                  />
+
+                  <div>
+                    <Label className="text-xs">Privacy Policy URL</Label>
+                    <Input
+                      value={localSettings.compliance?.privacyPolicyUrl || ''}
+                      onChange={(e) => updateNestedSetting('compliance', 'privacyPolicyUrl', e.target.value)}
+                      placeholder="https://example.com/privacy"
+                      className="mt-1"
+                      data-testid="input-privacy-url"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <p className="font-medium text-sm">Cookie Consent</p>
+                      <p className="text-xs text-muted-foreground">Require explicit consent</p>
+                    </div>
+                    <Switch
+                      checked={localSettings.compliance?.cookieConsentEnabled ?? true}
+                      onCheckedChange={(v) => updateNestedSetting('compliance', 'cookieConsentEnabled', v)}
+                      data-testid="switch-cookie-consent"
+                    />
+                  </div>
+
+                  <Button onClick={saveComplianceSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-compliance">
+                    {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Save Compliance Settings
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Layers className="w-5 h-5 text-primary" />
+                    Content Security Policy
+                  </CardTitle>
+                  <CardDescription>Control allowed content sources</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className={`flex items-center justify-between p-3 rounded-lg border ${localSettings.cspSettings?.enabled ? 'bg-green-500/5 border-green-500/30' : ''}`}>
+                    <div>
+                      <p className="font-medium text-sm">Enable CSP</p>
+                      <p className="text-xs text-muted-foreground">Add security headers</p>
+                    </div>
+                    <Switch
+                      checked={localSettings.cspSettings?.enabled ?? false}
+                      onCheckedChange={(v) => updateNestedSetting('cspSettings', 'enabled', v)}
+                      data-testid="switch-csp"
+                    />
+                  </div>
+
+                  {localSettings.cspSettings?.enabled && (
+                    <>
+                      <div className="flex items-center justify-between p-3 rounded-lg border">
+                        <div>
+                          <p className="font-medium text-sm">Strict Mode</p>
+                          <p className="text-xs text-muted-foreground">Maximum security restrictions</p>
+                        </div>
+                        <Switch
+                          checked={localSettings.cspSettings?.strictMode ?? false}
+                          onCheckedChange={(v) => updateNestedSetting('cspSettings', 'strictMode', v)}
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-xs">Report URI</Label>
+                        <Input
+                          value={localSettings.cspSettings?.reportUri || ''}
+                          onChange={(e) => updateNestedSetting('cspSettings', 'reportUri', e.target.value)}
+                          placeholder="https://example.com/csp-report"
+                          className="mt-1"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <Button onClick={saveCSPSettings} disabled={updateSettingsMutation.isPending} className="w-full">
+                    {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Save CSP Settings
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="advanced" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Activity className="w-5 h-5 text-primary" />
+                  Security Scanner
+                </CardTitle>
+                <CardDescription>Automated vulnerability scanning</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className={`flex items-center justify-between p-4 rounded-xl border ${localSettings.scannerSettings?.vulnerabilityScanEnabled ? 'bg-green-500/5 border-green-500/30' : ''}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted">
+                        <Shield className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">Vulnerability Scan</p>
+                        <p className="text-xs text-muted-foreground">Check for weaknesses</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={localSettings.scannerSettings?.vulnerabilityScanEnabled ?? false}
+                      onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'vulnerabilityScanEnabled', v)}
+                    />
+                  </div>
+
+                  <div className={`flex items-center justify-between p-4 rounded-xl border ${localSettings.scannerSettings?.sslScanEnabled ? 'bg-green-500/5 border-green-500/30' : ''}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted">
+                        <Lock className="w-5 h-5 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">SSL Scan</p>
+                        <p className="text-xs text-muted-foreground">Certificate health</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={localSettings.scannerSettings?.sslScanEnabled ?? false}
+                      onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'sslScanEnabled', v)}
+                    />
+                  </div>
+
+                  <div className={`flex items-center justify-between p-4 rounded-xl border ${localSettings.scannerSettings?.malwareScanEnabled ? 'bg-green-500/5 border-green-500/30' : ''}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted">
+                        <AlertCircle className="w-5 h-5 text-red-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">Malware Scan</p>
+                        <p className="text-xs text-muted-foreground">Detect malicious code</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={localSettings.scannerSettings?.malwareScanEnabled ?? false}
+                      onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'malwareScanEnabled', v)}
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Concurrent Session Limit</Label>
+                <div className="mt-4 space-y-2">
+                  <Label className="text-xs">Scan Frequency</Label>
                   <select
-                    className="w-full p-2 rounded-md border border-input bg-background"
-                    value={localSettings.sessionSettings?.concurrentSessionLimit || 'Unlimited'}
-                    onChange={(e) => updateNestedSetting('sessionSettings', 'concurrentSessionLimit', e.target.value)}
-                    data-testid="select-concurrent-sessions"
-                  >
-                    <option value="Unlimited">Unlimited</option>
-                    <option value="1 session per user">1 session per user</option>
-                    <option value="3 sessions per user">3 sessions per user</option>
-                    <option value="5 sessions per user">5 sessions per user</option>
-                  </select>
-                </div>
-
-                <Button onClick={saveSessionSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-session-policies">
-                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Save Session Policies
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* COMPLIANCE TAB */}
-          <TabsContent value="compliance" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" /> GDPR Compliance
-                </CardTitle>
-                <CardDescription>Manage data protection and privacy regulations</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">GDPR Enabled</p>
-                    <p className="text-xs text-muted-foreground">Enable GDPR compliance features</p>
-                  </div>
-                  <Switch
-                    checked={localSettings.compliance?.gdprEnabled ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('compliance', 'gdprEnabled', v)}
-                    data-testid="switch-gdpr"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Data Retention Period (days)</label>
-                  <Input
-                    value={localSettings.compliance?.dataRetentionDays ?? 365}
-                    onChange={(e) => updateNestedSetting('compliance', 'dataRetentionDays', parseInt(e.target.value) || 365)}
-                    type="number"
-                    className="mt-1"
-                    data-testid="input-retention-days"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Automatically delete user data after this period</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Privacy Policy URL</label>
-                  <Input
-                    value={localSettings.compliance?.privacyPolicyUrl || ''}
-                    onChange={(e) => updateNestedSetting('compliance', 'privacyPolicyUrl', e.target.value)}
-                    placeholder="https://example.com/privacy"
-                    className="mt-1"
-                    data-testid="input-privacy-url"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Cookie Consent</p>
-                    <p className="text-xs text-muted-foreground">Require explicit cookie consent from users</p>
-                  </div>
-                  <Switch
-                    checked={localSettings.compliance?.cookieConsentEnabled ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('compliance', 'cookieConsentEnabled', v)}
-                    data-testid="switch-cookie-consent"
-                  />
-                </div>
-                <Button onClick={saveComplianceSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-compliance">
-                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Save Compliance Settings
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* CSP TAB */}
-          <TabsContent value="csp" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Layers className="w-5 h-5" /> Content Security Policy
-                </CardTitle>
-                <CardDescription>Control resource loading and execution</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">CSP Enabled</p>
-                    <p className="text-xs text-muted-foreground">Apply content security policy headers</p>
-                  </div>
-                  <Switch
-                    checked={localSettings.cspSettings?.enabled ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('cspSettings', 'enabled', v)}
-                    data-testid="switch-csp-enabled"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Strict Mode</p>
-                    <p className="text-xs text-muted-foreground">Enforce strict CSP violations</p>
-                  </div>
-                  <Switch
-                    checked={localSettings.cspSettings?.strictMode ?? false}
-                    onCheckedChange={(v) => updateNestedSetting('cspSettings', 'strictMode', v)}
-                    data-testid="switch-csp-strict"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Report URI</label>
-                  <Input
-                    value={localSettings.cspSettings?.reportUri || ''}
-                    onChange={(e) => updateNestedSetting('cspSettings', 'reportUri', e.target.value)}
-                    placeholder="https://example.com/csp-report"
-                    className="mt-1"
-                    data-testid="input-csp-report-uri"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Endpoint to receive CSP violation reports</p>
-                </div>
-                <Button onClick={saveCSPSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-csp">
-                  {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Save CSP Settings
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* SCANNER TAB */}
-          <TabsContent value="scanner" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5" /> Security Scanning
-                </CardTitle>
-                <CardDescription>Automated security vulnerability scanning</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Vulnerability Scanning</p>
-                    <p className="text-xs text-muted-foreground">Scan for known vulnerabilities</p>
-                  </div>
-                  <Switch
-                    checked={localSettings.scannerSettings?.vulnerabilityScanEnabled ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'vulnerabilityScanEnabled', v)}
-                    data-testid="switch-vuln-scan"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">SSL Certificate Scanning</p>
-                    <p className="text-xs text-muted-foreground">Monitor SSL certificate validity</p>
-                  </div>
-                  <Switch
-                    checked={localSettings.scannerSettings?.sslScanEnabled ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'sslScanEnabled', v)}
-                    data-testid="switch-ssl-scan"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">Malware Scanning</p>
-                    <p className="text-xs text-muted-foreground">Scan uploaded files for malware</p>
-                  </div>
-                  <Switch
-                    checked={localSettings.scannerSettings?.malwareScanEnabled ?? true}
-                    onCheckedChange={(v) => updateNestedSetting('scannerSettings', 'malwareScanEnabled', v)}
-                    data-testid="switch-malware-scan"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Scan Frequency</label>
-                  <select
-                    className="w-full p-2 rounded-md border border-input bg-background mt-1"
+                    className="w-full p-2 rounded-md border border-input bg-background text-sm"
                     value={localSettings.scannerSettings?.scanFrequency || 'weekly'}
                     onChange={(e) => updateNestedSetting('scannerSettings', 'scanFrequency', e.target.value)}
-                    data-testid="select-scan-frequency"
                   >
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
                   </select>
                 </div>
-                <Button onClick={saveScannerSettings} disabled={updateSettingsMutation.isPending} className="w-full" data-testid="button-save-scanner">
+
+                <Button onClick={saveScannerSettings} disabled={updateSettingsMutation.isPending} className="w-full mt-4">
                   {updateSettingsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save Scanner Settings
                 </Button>
               </CardContent>
             </Card>
           </TabsContent>
-
         </Tabs>
-      </div>
 
-      {/* 2FA Setup Modal */}
-      <Dialog open={show2FASetup} onOpenChange={setShow2FASetup}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Set up Two-Factor Authentication</DialogTitle>
-            <DialogDescription>
-              Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {qrCode && (
-              <div className="flex justify-center p-4 bg-white rounded-lg">
-                <img src={qrCode} alt="2FA QR Code" className="w-48 h-48" />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Or enter this code manually:</Label>
-              <div className="flex gap-2">
-                <Input value={secret} readOnly className="font-mono text-sm" />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={copySecret}
-                >
-                  {secretCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </Button>
+        <Dialog open={show2FASetup} onOpenChange={setShow2FASetup}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <QrCode className="w-5 h-5" />
+                Set Up Two-Factor Authentication
+              </DialogTitle>
+              <DialogDescription>
+                Scan this QR code with your authenticator app
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center space-y-4 py-4">
+              {qrCode && (
+                <div className="p-4 bg-white rounded-xl">
+                  <img src={qrCode} alt="2FA QR Code" className="w-48 h-48" />
+                </div>
+              )}
+              <div className="w-full space-y-2">
+                <Label className="text-xs text-muted-foreground">Or enter this code manually:</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-2 bg-muted rounded text-xs font-mono break-all">{secret}</code>
+                  <Button variant="outline" size="icon" onClick={copySecret}>
+                    {secretCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              onClick={() => {
-                setShow2FASetup(false);
-                setShow2FAVerify(true);
-              }}
-            >
-              Continue to Verification
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setShow2FASetup(false)} className="w-full sm:w-auto">
+                Cancel
+              </Button>
+              <Button onClick={() => { setShow2FASetup(false); setShow2FAVerify(true); }} className="w-full sm:w-auto">
+                Continue to Verify
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {/* 2FA Verify Modal */}
-      <Dialog open={show2FAVerify} onOpenChange={setShow2FAVerify}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Verify 2FA Setup</DialogTitle>
-            <DialogDescription>
-              Enter the 6-digit code from your authenticator app
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center py-6">
-            <InputOTP maxLength={6} value={verifyCode} onChange={setVerifyCode}>
-              <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
-              </InputOTPGroup>
-            </InputOTP>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShow2FAVerify(false);
-                setVerifyCode("");
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => verify2FAMutation.mutate(verifyCode)}
-              disabled={verifyCode.length !== 6 || verify2FAMutation.isPending}
-            >
-              {verify2FAMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Verify & Enable
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <Dialog open={show2FAVerify} onOpenChange={setShow2FAVerify}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Verify 2FA Setup</DialogTitle>
+              <DialogDescription>
+                Enter the 6-digit code from your authenticator app
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-center py-6">
+              <InputOTP maxLength={6} value={verifyCode} onChange={setVerifyCode}>
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => verify2FAMutation.mutate(verifyCode)}
+                disabled={verifyCode.length !== 6 || verify2FAMutation.isPending}
+                className="w-full"
+              >
+                {verify2FAMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Verify and Enable
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {/* 2FA Disable Modal */}
-      <Dialog open={show2FADisable} onOpenChange={setShow2FADisable}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Disable Two-Factor Authentication</DialogTitle>
-            <DialogDescription>
-              Enter your 6-digit code to confirm disabling 2FA
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center py-6">
-            <InputOTP maxLength={6} value={disableCode} onChange={setDisableCode}>
-              <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
-              </InputOTPGroup>
-            </InputOTP>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShow2FADisable(false);
-                setDisableCode("");
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => disable2FAMutation.mutate(disableCode)}
-              disabled={disableCode.length !== 6 || disable2FAMutation.isPending}
-            >
-              {disable2FAMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Disable 2FA
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <Dialog open={show2FADisable} onOpenChange={setShow2FADisable}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-destructive">Disable 2FA</DialogTitle>
+              <DialogDescription>
+                Enter your current 2FA code to disable two-factor authentication
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-center py-6">
+              <InputOTP maxLength={6} value={disableCode} onChange={setDisableCode}>
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="destructive"
+                onClick={() => disable2FAMutation.mutate(disableCode)}
+                disabled={disableCode.length !== 6 || disable2FAMutation.isPending}
+                className="w-full"
+              >
+                {disable2FAMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Disable 2FA
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </AdminLayout>
   );
 }
