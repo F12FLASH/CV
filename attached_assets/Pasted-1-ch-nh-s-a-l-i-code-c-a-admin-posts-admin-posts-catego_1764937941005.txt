@@ -1,0 +1,29 @@
+1: chỉnh sửa lại code của admin/posts,admin/posts/categories hãy chia code từng chức năng (VD: thêm, sửa, xóa,...) ra một file và gom chúng vào thư mục adminposts
+
+2:  chỉnh sửa lại code của admin/projects,admin/projects/categories hãy chia code từng chức năng (VD: thêm, sửa, xóa,...) ra một file và gom chúng vào thư mục adminprojects
+
+3: chỉnh sửa lại code của admin/services hãy chia code từng chức năng (VD: thêm, sửa, xóa,...) ra một file và gom chúng vào thư mục adminservices 
+
+4: chỉnh sửa lại code của admin/skills hãy chia code từng chức năng (VD: thêm, sửa, xóa,...) ra một file và gom chúng vào thư mục adminskills 
+
+5: chỉnh sửa lại code của admin/testimonials hãy chia code từng chức năng (VD: thêm, sửa, xóa,...) ra một file và gom chúng vào thư mục admintestimonials
+
+6: admin/comments đổi thành admin/interactions và chỉnh sửa lại code của nó hãy chia code từng chức năng (VD: thêm, sửa, xóa, các tab comments, tab reviews, tab FAQs...) ra một file và gom chúng vào thư mục admininteractions 
+
+7: chỉnh sửa lại code của admin/newsletter hãy chia code từng chức năng (VD: thêm, sửa, xóa,...) ra một file và gom chúng vào thư mục adminnewsletter 
+
+8: chỉnh sửa lại code của admin/inbox hãy chia code từng chức năng (VD: thêm, sửa, xóa,...) ra một file và gom chúng vào thư mục admininbox
+
+9: chỉnh sửa lại code của admin/analytics hãy chia code từng chức năng (VD: thêm, sửa, xóa, các tab overview, tab content, tab Engagement...) ra một file và gom chúng vào thư mục adminanalytics
+
+10: chỉnh sửa lại code của admin/system hãy chia code từng chức năng (VD: các tab overview, tab database, tab server,...) ra một file và gom chúng vào thư mục adminsystem 
+
+11: chỉnh sửa lại code của admin/theme hãy chia code từng chức năng (VD: các tab colors, tab Typography, tab Layout, tab Presets, tab Preview,...) ra một file và gom chúng vào thư mục admintheme
+
+12: chỉnh sửa lại code của admin/security hãy chia code từng chức năng (VD: các tab Authentication, tab  Bot Protection, tab  Firewall, tab  Threats, tab  Sessions, tab  Compliance, tab  Advanced, và trong các tab có những chức năng gì cũng cắt ra từng file...) ra một file và gom chúng vào thư mục adminsecurity 
+
+13: chỉnh sửa lại code của admin/settings hãy chia code từng chức năng (VD: các tab General, tab Branding, tab SEO, tab Email, tab Storage, tab Performance, tab Notifications, tab Developer, tab Localization, tab Database,...) ra một file và gom chúng vào thư mục adminsettings
+
+14: tạo thư mục Dashboard chứa các file của mục Dashboard
+
+15: tìm lỗi và sửa lỗi
