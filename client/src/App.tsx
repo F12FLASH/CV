@@ -31,25 +31,25 @@ import AdminLogin from "@/pages/admin/auth/Login";
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard/Dashboard"));
 const AdminAnalytics = lazy(() => import("@/pages/admin/dashboard/Analytics"));
 
-// Admin Content - Posts
-const AdminPosts = lazy(() => import("@/pages/admin/content/posts/Posts"));
+// Admin Content - Posts (modular)
+const AdminPosts = lazy(() => import("@/pages/admin/content/adminposts"));
 const AdminPostCategories = lazy(() => import("@/pages/admin/content/posts/PostCategories"));
 
-// Admin Content - Projects
-const AdminProjects = lazy(() => import("@/pages/admin/content/projects/Projects"));
+// Admin Content - Projects (modular)
+const AdminProjects = lazy(() => import("@/pages/admin/content/adminprojects"));
 const AdminProjectCategories = lazy(() => import("@/pages/admin/content/projects/ProjectCategories"));
 
-// Admin Content - Services
-const AdminServices = lazy(() => import("@/pages/admin/content/services/Services"));
+// Admin Content - Services (modular)
+const AdminServices = lazy(() => import("@/pages/admin/content/adminservices"));
 
-// Admin Content - Skills
-const AdminSkills = lazy(() => import("@/pages/admin/content/skills/Skills"));
+// Admin Content - Skills (modular)
+const AdminSkills = lazy(() => import("@/pages/admin/content/adminskills"));
 
-// Admin Content - Testimonials
-const AdminTestimonials = lazy(() => import("@/pages/admin/content/testimonials/Testimonials"));
+// Admin Content - Testimonials (modular)
+const AdminTestimonials = lazy(() => import("@/pages/admin/content/admintestimonials"));
 
-// Admin Communications
-const AdminComments = lazy(() => import("@/pages/admin/communications/Comments"));
+// Admin Communications - Interactions (modular - replaces Comments)
+const AdminInteractions = lazy(() => import("@/pages/admin/communications/admininteractions"));
 const AdminInbox = lazy(() => import("@/pages/admin/communications/Inbox"));
 const AdminNotifications = lazy(() => import("@/pages/admin/communications/Notifications"));
 const AdminNewsletter = lazy(() => import("@/pages/admin/communications/Newsletter"));
@@ -178,12 +178,15 @@ function Router() {
           </Suspense>
         )}
       </Route>
-      <Route path="/admin/comments">
+      <Route path="/admin/interactions">
         {() => (
           <Suspense fallback={<PageLoader />}>
-            <AdminComments />
+            <AdminInteractions />
           </Suspense>
         )}
+      </Route>
+      <Route path="/admin/comments">
+        {() => <Redirect to="/admin/interactions" />}
       </Route>
       <Route path="/admin/faqs">
         {() => (
